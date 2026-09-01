@@ -7,172 +7,425 @@ const DELETE_AFTER = 20_000;
 
 const LANGS = {
   fa: {
-    n: "🇮🇷 فارسی",
-    w: "🎬 به ربات فیلم خوش آمدید!",
-    j: "⚠️ ابتدا عضو کانال شوید.",
-    g: "🎬 دریافت فیلم",
-    s: "📤 ارسال فیلم",
-    l: "🌐 تغییر زبان"
+    n:"🇮🇷 فارسی",
+    w:"🎬 به ربات فیلم خوش آمدید!",
+    j:"⚠️ ابتدا عضو کانال شوید.",
+    g:"🎬 دریافت فیلم",
+    s:"📤 ارسال فیلم",
+    l:"🌐 تغییر زبان",
+    menu:"☰ منو",
+    title:"📋 منوی اصلی",
+    prompt:"📤 فیلم یا ویدیوی خودت را همینجا ارسال کن.",
+    empty:"🎬 فیلم جدیدی برای شما باقی نمانده است.\n📤 می‌توانید فیلم‌های خودتان را ارسال کنید تا به گسترش آرشیو ربات کمک کنید.",
+    selected:"✅ زبان انتخاب شد.",
+    notMember:"❌ هنوز عضو کانال نیستید.",
+    memberOk:"✅ عضویت تأیید شد.",
+    admin:"👑 پنل مدیریت",
+    stats:"📊 آمار",
+    pending:"📥 درخواست‌ها",
+    back:"🔙 بازگشت",
+    sent:"✅ فیلم شما برای بررسی مدیر ارسال شد."
   },
+
   en: {
-    n: "🇬🇧 English",
-    w: "🎬 Welcome!",
-    j: "⚠️ Join the channel first.",
-    g: "🎬 Get Movie",
-    s: "📤 Send Movie",
-    l: "🌐 Change Language"
+    n:"🇬🇧 English",
+    w:"🎬 Welcome to the movie bot!",
+    j:"⚠️ Please join the channel first.",
+    g:"🎬 Get Movie",
+    s:"📤 Send Movie",
+    l:"🌐 Change Language",
+    menu:"☰ Menu",
+    title:"📋 Main Menu",
+    prompt:"📤 Send your movie or video here.",
+    empty:"🎬 There are no new movies left for you.\n📤 You can send your own movies to help expand the bot archive.",
+    selected:"✅ Language selected.",
+    notMember:"❌ You have not joined the channel yet.",
+    memberOk:"✅ Membership confirmed.",
+    admin:"👑 Admin Panel",
+    stats:"📊 Statistics",
+    pending:"📥 Requests",
+    back:"🔙 Back",
+    sent:"✅ Your movie was sent to the admin for review."
   },
+
   ar: {
-    n: "🇸🇦 العربية",
-    w: "🎬 أهلاً بك!",
-    j: "⚠️ انضم إلى القناة أولاً.",
-    g: "🎬 الحصول على فيلم",
-    s: "📤 إرسال فيلم",
-    l: "🌐 تغيير اللغة"
+    n:"🇸🇦 العربية",
+    w:"🎬 أهلاً بك في بوت الأفلام!",
+    j:"⚠️ انضم إلى القناة أولاً.",
+    g:"🎬 الحصول على فيلم",
+    s:"📤 إرسال فيلم",
+    l:"🌐 تغيير اللغة",
+    menu:"☰ القائمة",
+    title:"📋 القائمة الرئيسية",
+    prompt:"📤 أرسل الفيلم أو الفيديو هنا.",
+    empty:"🎬 لا توجد أفلام جديدة متبقية لك.\n📤 يمكنك إرسال أفلامك للمساعدة في توسيع أرشيف البوت.",
+    selected:"✅ تم اختيار اللغة.",
+    notMember:"❌ لم تنضم إلى القناة بعد.",
+    memberOk:"✅ تم تأكيد العضوية.",
+    admin:"👑 لوحة الإدارة",
+    stats:"📊 الإحصائيات",
+    pending:"📥 الطلبات",
+    back:"🔙 رجوع",
+    sent:"✅ تم إرسال فيلمك إلى المدير للمراجعة."
   },
+
   tr: {
-    n: "🇹🇷 Türkçe",
-    w: "🎬 Hoş geldiniz!",
-    j: "⚠️ Önce kanala katılın.",
-    g: "🎬 Film Al",
-    s: "📤 Film Gönder",
-    l: "🌐 Dil Değiştir"
+    n:"🇹🇷 Türkçe",
+    w:"🎬 Film botuna hoş geldiniz!",
+    j:"⚠️ Önce kanala katılın.",
+    g:"🎬 Film Al",
+    s:"📤 Film Gönder",
+    l:"🌐 Dil Değiştir",
+    menu:"☰ Menü",
+    title:"📋 Ana Menü",
+    prompt:"📤 Filminizi veya videonuzu buraya gönderin.",
+    empty:"🎬 Sizin için yeni film kalmadı.\n📤 Kendi filmlerinizi göndererek arşivin büyümesine yardımcı olabilirsiniz.",
+    selected:"✅ Dil seçildi.",
+    notMember:"❌ Henüz kanala katılmadınız.",
+    memberOk:"✅ Üyelik doğrulandı.",
+    admin:"👑 Yönetici Paneli",
+    stats:"📊 İstatistikler",
+    pending:"📥 İstekler",
+    back:"🔙 Geri",
+    sent:"✅ Filminiz yöneticiye inceleme için gönderildi."
   },
+
   de: {
-    n: "🇩🇪 Deutsch",
-    w: "🎬 Willkommen!",
-    j: "⚠️ Bitte zuerst beitreten.",
-    g: "🎬 Film erhalten",
-    s: "📤 Film senden",
-    l: "🌐 Sprache ändern"
+    n:"🇩🇪 Deutsch",
+    w:"🎬 Willkommen beim Film-Bot!",
+    j:"⚠️ Bitte zuerst dem Kanal beitreten.",
+    g:"🎬 Film erhalten",
+    s:"📤 Film senden",
+    l:"🌐 Sprache ändern",
+    menu:"☰ Menü",
+    title:"📋 Hauptmenü",
+    prompt:"📤 Senden Sie Ihren Film oder Ihr Video hier.",
+    empty:"🎬 Es sind keine neuen Filme mehr für Sie vorhanden.\n📤 Sie können eigene Filme senden, um das Archiv zu erweitern.",
+    selected:"✅ Sprache ausgewählt.",
+    notMember:"❌ Sie sind dem Kanal noch nicht beigetreten.",
+    memberOk:"✅ Mitgliedschaft bestätigt.",
+    admin:"👑 Admin-Panel",
+    stats:"📊 Statistiken",
+    pending:"📥 Anfragen",
+    back:"🔙 Zurück",
+    sent:"✅ Ihr Film wurde zur Überprüfung an den Administrator gesendet."
   },
+
   fr: {
-    n: "🇫🇷 Français",
-    w: "🎬 Bienvenue!",
-    j: "⚠️ Rejoignez d'abord le canal.",
-    g: "🎬 Obtenir un film",
-    s: "📤 Envoyer un film",
-    l: "🌐 Changer la langue"
+    n:"🇫🇷 Français",
+    w:"🎬 Bienvenue sur le bot de films !",
+    j:"⚠️ Rejoignez d'abord le canal.",
+    g:"🎬 Obtenir un film",
+    s:"📤 Envoyer un film",
+    l:"🌐 Changer la langue",
+    menu:"☰ Menu",
+    title:"📋 Menu principal",
+    prompt:"📤 Envoyez votre film ou vidéo ici.",
+    empty:"🎬 Il ne reste aucun nouveau film pour vous.\n📤 Vous pouvez envoyer vos propres films pour aider à développer l'archive.",
+    selected:"✅ Langue sélectionnée.",
+    notMember:"❌ Vous n'avez pas encore rejoint le canal.",
+    memberOk:"✅ Adhésion confirmée.",
+    admin:"👑 Panneau admin",
+    stats:"📊 Statistiques",
+    pending:"📥 Demandes",
+    back:"🔙 Retour",
+    sent:"✅ Votre film a été envoyé à l'administrateur pour vérification."
   },
+
   es: {
-    n: "🇪🇸 Español",
-    w: "🎬 ¡Bienvenido!",
-    j: "⚠️ Únete primero al canal.",
-    g: "🎬 Obtener película",
-    s: "📤 Enviar película",
-    l: "🌐 Cambiar idioma"
+    n:"🇪🇸 Español",
+    w:"🎬 ¡Bienvenido al bot de películas!",
+    j:"⚠️ Únete primero al canal.",
+    g:"🎬 Obtener película",
+    s:"📤 Enviar película",
+    l:"🌐 Cambiar idioma",
+    menu:"☰ Menú",
+    title:"📋 Menú principal",
+    prompt:"📤 Envía tu película o vídeo aquí.",
+    empty:"🎬 No quedan películas nuevas para ti.\n📤 Puedes enviar tus propias películas para ayudar a ampliar el archivo.",
+    selected:"✅ Idioma seleccionado.",
+    notMember:"❌ Aún no te has unido al canal.",
+    memberOk:"✅ Membresía confirmada.",
+    admin:"👑 Panel de administración",
+    stats:"📊 Estadísticas",
+    pending:"📥 Solicitudes",
+    back:"🔙 Volver",
+    sent:"✅ Tu película fue enviada al administrador para su revisión."
   },
+
   pt: {
-    n: "🇵🇹 Português",
-    w: "🎬 Bem-vindo!",
-    j: "⚠️ Entre primeiro no canal.",
-    g: "🎬 Obter filme",
-    s: "📤 Enviar filme",
-    l: "🌐 Mudar idioma"
+    n:"🇵🇹 Português",
+    w:"🎬 Bem-vindo ao bot de filmes!",
+    j:"⚠️ Entre primeiro no canal.",
+    g:"🎬 Obter filme",
+    s:"📤 Enviar filme",
+    l:"🌐 Mudar idioma",
+    menu:"☰ Menu",
+    title:"📋 Menu principal",
+    prompt:"📤 Envie seu filme ou vídeo aqui.",
+    empty:"🎬 Não há mais filmes novos para você.\n📤 Você pode enviar seus próprios filmes para ajudar a expandir o arquivo.",
+    selected:"✅ Idioma selecionado.",
+    notMember:"❌ Você ainda não entrou no canal.",
+    memberOk:"✅ Associação confirmada.",
+    admin:"👑 Painel de administração",
+    stats:"📊 Estatísticas",
+    pending:"📥 Solicitações",
+    back:"🔙 Voltar",
+    sent:"✅ Seu filme foi enviado ao administrador para análise."
   },
+
   ru: {
-    n: "🇷🇺 Русский",
-    w: "🎬 Добро пожаловать!",
-    j: "⚠️ Сначала вступите в канал.",
-    g: "🎬 Получить фильм",
-    s: "📤 Отправить фильм",
-    l: "🌐 Изменить язык"
+    n:"🇷🇺 Русский",
+    w:"🎬 Добро пожаловать в бот фильмов!",
+    j:"⚠️ Сначала вступите в канал.",
+    g:"🎬 Получить фильм",
+    s:"📤 Отправить фильм",
+    l:"🌐 Изменить язык",
+    menu:"☰ Меню",
+    title:"📋 Главное меню",
+    prompt:"📤 Отправьте фильм или видео сюда.",
+    empty:"🎬 Для вас больше нет новых фильмов.\n📤 Вы можете отправить свои фильмы, чтобы помочь расширить архив.",
+    selected:"✅ Язык выбран.",
+    notMember:"❌ Вы ещё не вступили в канал.",
+    memberOk:"✅ Участие подтверждено.",
+    admin:"👑 Панель администратора",
+    stats:"📊 Статистика",
+    pending:"📥 Запросы",
+    back:"🔙 Назад",
+    sent:"✅ Ваш фильм отправлен администратору на проверку."
   },
+
   uk: {
-    n: "🇺🇦 Українська",
-    w: "🎬 Ласкаво просимо!",
-    j: "⚠️ Спочатку приєднайтесь.",
-    g: "🎬 Отримати фільм",
-    s: "📤 Надіслати фільм",
-    l: "🌐 Змінити мову"
+    n:"🇺🇦 Українська",
+    w:"🎬 Ласкаво просимо до бота фільмів!",
+    j:"⚠️ Спочатку приєднайтесь до каналу.",
+    g:"🎬 Отримати фільм",
+    s:"📤 Надіслати фільм",
+    l:"🌐 Змінити мову",
+    menu:"☰ Меню",
+    title:"📋 Головне меню",
+    prompt:"📤 Надішліть свій фільм або відео сюди.",
+    empty:"🎬 Для вас більше не залишилося нових фільмів.\n📤 Ви можете надсилати власні фільми, щоб допомогти розширити архів.",
+    selected:"✅ Мову вибрано.",
+    notMember:"❌ Ви ще не приєдналися до каналу.",
+    memberOk:"✅ Участь підтверджено.",
+    admin:"👑 Панель адміністратора",
+    stats:"📊 Статистика",
+    pending:"📥 Запити",
+    back:"🔙 Назад",
+    sent:"✅ Ваш фільм надіслано адміністратору на перевірку."
   },
+
   hi: {
-    n: "🇮🇳 हिन्दी",
-    w: "🎬 स्वागत है!",
-    j: "⚠️ पहले चैनल से जुड़ें।",
-    g: "🎬 फिल्म प्राप्त करें",
-    s: "📤 फिल्म भेजें",
-    l: "🌐 भाषा बदलें"
+    n:"🇮🇳 हिन्दी",
+    w:"🎬 फिल्म बॉट में आपका स्वागत है!",
+    j:"⚠️ पहले चैनल से जुड़ें।",
+    g:"🎬 फिल्म प्राप्त करें",
+    s:"📤 फिल्म भेजें",
+    l:"🌐 भाषा बदलें",
+    menu:"☰ मेनू",
+    title:"📋 मुख्य मेनू",
+    prompt:"📤 अपनी फिल्म या वीडियो यहाँ भेजें।",
+    empty:"🎬 आपके लिए कोई नई फिल्म बाकी नहीं है।\n📤 आप अपनी फिल्में भेजकर बॉट के संग्रह को बढ़ाने में मदद कर सकते हैं।",
+    selected:"✅ भाषा चुनी गई।",
+    notMember:"❌ आप अभी तक चैनल से नहीं जुड़े हैं।",
+    memberOk:"✅ सदस्यता सत्यापित हुई।",
+    admin:"👑 एडमिन पैनल",
+    stats:"📊 आँकड़े",
+    pending:"📥 अनुरोध",
+    back:"🔙 वापस",
+    sent:"✅ आपकी फिल्म समीक्षा के लिए एडमिन को भेज दी गई है।"
   },
+
   ur: {
-    n: "🇵🇰 اردو",
-    w: "🎬 خوش آمدید!",
-    j: "⚠️ پہلے چینل میں شامل ہوں۔",
-    g: "🎬 فلم حاصل کریں",
-    s: "📤 فلم بھیجیں",
-    l: "🌐 زبان تبدیل کریں"
+    n:"🇵🇰 اردو",
+    w:"🎬 فلم بوٹ میں خوش آمدید!",
+    j:"⚠️ پہلے چینل میں شامل ہوں۔",
+    g:"🎬 فلم حاصل کریں",
+    s:"📤 فلم بھیجیں",
+    l:"🌐 زبان تبدیل کریں",
+    menu:"☰ مینو",
+    title:"📋 مین مینو",
+    prompt:"📤 اپنی فلم یا ویڈیو یہاں بھیجیں۔",
+    empty:"🎬 آپ کے لیے کوئی نئی فلم باقی نہیں رہی۔\n📤 آپ اپنی فلمیں بھیج کر بوٹ کے آرکائیو کو بڑھانے میں مدد کر سکتے ہیں۔",
+    selected:"✅ زبان منتخب ہو گئی۔",
+    notMember:"❌ آپ ابھی چینل میں شامل نہیں ہوئے۔",
+    memberOk:"✅ رکنیت کی تصدیق ہو گئی۔",
+    admin:"👑 ایڈمن پینل",
+    stats:"📊 اعداد و شمار",
+    pending:"📥 درخواستیں",
+    back:"🔙 واپس",
+    sent:"✅ آپ کی فلم جائزے کے لیے ایڈمن کو بھیج دی گئی ہے۔"
   },
+
   zh: {
-    n: "🇨🇳 中文",
-    w: "🎬 欢迎!",
-    j: "⚠️ 请先加入频道。",
-    g: "🎬 获取电影",
-    s: "📤 发送电影",
-    l: "🌐 更改语言"
+    n:"🇨🇳 中文",
+    w:"🎬 欢迎使用电影机器人！",
+    j:"⚠️ 请先加入频道。",
+    g:"🎬 获取电影",
+    s:"📤 发送电影",
+    l:"🌐 更改语言",
+    menu:"☰ 菜单",
+    title:"📋 主菜单",
+    prompt:"📤 请在这里发送您的电影或视频。",
+    empty:"🎬 没有更多新电影了。\n📤 您可以发送自己的电影来帮助扩展机器人档案。",
+    selected:"✅ 已选择语言。",
+    notMember:"❌ 您还没有加入频道。",
+    memberOk:"✅ 已确认加入。",
+    admin:"👑 管理面板",
+    stats:"📊 统计",
+    pending:"📥 请求",
+    back:"🔙 返回",
+    sent:"✅ 您的电影已发送给管理员审核。"
   },
+
   ja: {
-    n: "🇯🇵 日本語",
-    w: "🎬 ようこそ!",
-    j: "⚠️ 先にチャンネルへ参加してください。",
-    g: "🎬 映画を取得",
-    s: "📤 映画を送信",
-    l: "🌐 言語を変更"
+    n:"🇯🇵 日本語",
+    w:"🎬 映画ボットへようこそ！",
+    j:"⚠️ 先にチャンネルへ参加してください。",
+    g:"🎬 映画を取得",
+    s:"📤 映画を送信",
+    l:"🌐 言語を変更",
+    menu:"☰ メニュー",
+    title:"📋 メインメニュー",
+    prompt:"📤 映画または動画をここに送信してください。",
+    empty:"🎬 新しい映画は残っていません。\n📤 自分の映画を送信してアーカイブの拡大に協力できます。",
+    selected:"✅ 言語が選択されました。",
+    notMember:"❌ まだチャンネルに参加していません。",
+    memberOk:"✅ 参加を確認しました。",
+    admin:"👑 管理パネル",
+    stats:"📊 統計",
+    pending:"📥 リクエスト",
+    back:"🔙 戻る",
+    sent:"✅ 映画を管理者に送信しました。"
   },
+
   ko: {
-    n: "🇰🇷 한국어",
-    w: "🎬 환영합니다!",
-    j: "⚠️ 먼저 채널에 가입하세요.",
-    g: "🎬 영화 받기",
-    s: "📤 영화 보내기",
-    l: "🌐 언어 변경"
+    n:"🇰🇷 한국어",
+    w:"🎬 영화 봇에 오신 것을 환영합니다!",
+    j:"⚠️ 먼저 채널에 가입하세요.",
+    g:"🎬 영화 받기",
+    s:"📤 영화 보내기",
+    l:"🌐 언어 변경",
+    menu:"☰ 메뉴",
+    title:"📋 메인 메뉴",
+    prompt:"📤 영화 또는 동영상을 여기로 보내주세요.",
+    empty:"🎬 새로운 영화가 더 이상 없습니다.\n📤 직접 영화를 보내 봇의 보관함을 확장하는 데 도움을 줄 수 있습니다.",
+    selected:"✅ 언어가 선택되었습니다.",
+    notMember:"❌ 아직 채널에 가입하지 않았습니다.",
+    memberOk:"✅ 가입이 확인되었습니다.",
+    admin:"👑 관리자 패널",
+    stats:"📊 통계",
+    pending:"📥 요청",
+    back:"🔙 뒤로",
+    sent:"✅ 영화가 관리자에게 검토를 위해 전송되었습니다."
   },
+
   it: {
-    n: "🇮🇹 Italiano",
-    w: "🎬 Benvenuto!",
-    j: "⚠️ Prima entra nel canale.",
-    g: "🎬 Ottieni film",
-    s: "📤 Invia film",
-    l: "🌐 Cambia lingua"
+    n:"🇮🇹 Italiano",
+    w:"🎬 Benvenuto nel bot dei film!",
+    j:"⚠️ Prima entra nel canale.",
+    g:"🎬 Ottieni film",
+    s:"📤 Invia film",
+    l:"🌐 Cambia lingua",
+    menu:"☰ Menu",
+    title:"📋 Menu principale",
+    prompt:"📤 Invia qui il tuo film o video.",
+    empty:"🎬 Non ci sono più nuovi film per te.\n📤 Puoi inviare i tuoi film per aiutare ad ampliare l'archivio.",
+    selected:"✅ Lingua selezionata.",
+    notMember:"❌ Non hai ancora aderito al canale.",
+    memberOk:"✅ Iscrizione confermata.",
+    admin:"👑 Pannello amministratore",
+    stats:"📊 Statistiche",
+    pending:"📥 Richieste",
+    back:"🔙 Indietro",
+    sent:"✅ Il tuo film è stato inviato all'amministratore per la revisione."
   },
+
   nl: {
-    n: "🇳🇱 Nederlands",
-    w: "🎬 Welkom!",
-    j: "⚠️ Word eerst lid van het kanaal.",
-    g: "🎬 Film ophalen",
-    s: "📤 Film sturen",
-    l: "🌐 Taal wijzigen"
+    n:"🇳🇱 Nederlands",
+    w:"🎬 Welkom bij de filmbot!",
+    j:"⚠️ Word eerst lid van het kanaal.",
+    g:"🎬 Film ophalen",
+    s:"📤 Film sturen",
+    l:"🌐 Taal wijzigen",
+    menu:"☰ Menu",
+    title:"📋 Hoofdmenu",
+    prompt:"📤 Stuur hier je film of video.",
+    empty:"🎬 Er zijn geen nieuwe films meer voor je.\n📤 Je kunt je eigen films sturen om het archief uit te breiden.",
+    selected:"✅ Taal geselecteerd.",
+    notMember:"❌ Je bent nog geen lid van het kanaal.",
+    memberOk:"✅ Lidmaatschap bevestigd.",
+    admin:"👑 Beheerderspaneel",
+    stats:"📊 Statistieken",
+    pending:"📥 Verzoeken",
+    back:"🔙 Terug",
+    sent:"✅ Je film is naar de beheerder gestuurd voor controle."
   },
+
   pl: {
-    n: "🇵🇱 Polski",
-    w: "🎬 Witamy!",
-    j: "⚠️ Najpierw dołącz do kanału.",
-    g: "🎬 Pobierz film",
-    s: "📤 Wyślij film",
-    l: "🌐 Zmień język"
+    n:"🇵🇱 Polski",
+    w:"🎬 Witamy w bocie filmowym!",
+    j:"⚠️ Najpierw dołącz do kanału.",
+    g:"🎬 Pobierz film",
+    s:"📤 Wyślij film",
+    l:"🌐 Zmień język",
+    menu:"☰ Menu",
+    title:"📋 Menu główne",
+    prompt:"📤 Wyślij tutaj swój film lub wideo.",
+    empty:"🎬 Nie ma już dla Ciebie nowych filmów.\n📤 Możesz wysyłać własne filmy, aby pomóc rozszerzyć archiwum.",
+    selected:"✅ Wybrano język.",
+    notMember:"❌ Nie dołączyłeś jeszcze do kanału.",
+    memberOk:"✅ Członkostwo potwierdzone.",
+    admin:"👑 Panel administratora",
+    stats:"📊 Statystyki",
+    pending:"📥 Żądania",
+    back:"🔙 Wstecz",
+    sent:"✅ Twój film został wysłany administratorowi do sprawdzenia."
   },
+
   id: {
-    n: "🇮🇩 Bahasa Indonesia",
-    w: "🎬 Selamat datang!",
-    j: "⚠️ Bergabunglah terlebih dahulu.",
-    g: "🎬 Dapatkan Film",
-    s: "📤 Kirim Film",
-    l: "🌐 Ganti Bahasa"
+    n:"🇮🇩 Bahasa Indonesia",
+    w:"🎬 Selamat datang di bot film!",
+    j:"⚠️ Bergabunglah dengan saluran terlebih dahulu.",
+    g:"🎬 Dapatkan Film",
+    s:"📤 Kirim Film",
+    l:"🌐 Ganti Bahasa",
+    menu:"☰ Menu",
+    title:"📋 Menu Utama",
+    prompt:"📤 Kirim film atau video Anda di sini.",
+    empty:"🎬 Tidak ada film baru yang tersisa untuk Anda.\n📤 Anda dapat mengirim film sendiri untuk membantu memperluas arsip bot.",
+    selected:"✅ Bahasa dipilih.",
+    notMember:"❌ Anda belum bergabung dengan saluran.",
+    memberOk:"✅ Keanggotaan dikonfirmasi.",
+    admin:"👑 Panel Admin",
+    stats:"📊 Statistik",
+    pending:"📥 Permintaan",
+    back:"🔙 Kembali",
+    sent:"✅ Film Anda dikirim ke admin untuk ditinjau."
   },
+
   vi: {
-    n: "🇻🇳 Tiếng Việt",
-    w: "🎬 Chào mừng!",
-    j: "⚠️ Hãy tham gia kênh trước.",
-    g: "🎬 Nhận phim",
-    s: "📤 Gửi phim",
-    l: "🌐 Đổi ngôn ngữ"
+    n:"🇻🇳 Tiếng Việt",
+    w:"🎬 Chào mừng bạn đến với bot phim!",
+    j:"⚠️ Hãy tham gia kênh trước.",
+    g:"🎬 Nhận phim",
+    s:"📤 Gửi phim",
+    l:"🌐 Đổi ngôn ngữ",
+    menu:"☰ Menu",
+    title:"📋 Menu chính",
+    prompt:"📤 Gửi phim hoặc video của bạn tại đây.",
+    empty:"🎬 Không còn phim mới cho bạn.\n📤 Bạn có thể gửi phim của mình để giúp mở rộng kho lưu trữ.",
+    selected:"✅ Đã chọn ngôn ngữ.",
+    notMember:"❌ Bạn chưa tham gia kênh.",
+    memberOk:"✅ Đã xác nhận thành viên.",
+    admin:"👑 Bảng quản trị",
+    stats:"📊 Thống kê",
+    pending:"📥 Yêu cầu",
+    back:"🔙 Quay lại",
+    sent:"✅ Phim của bạn đã được gửi cho quản trị viên để xem xét."
   }
 };
-
-
-/* =========================
-   پایگاه داده اصلی ربات
-========================= */
-
 export class FilmBot extends DurableObject {
 
   constructor(ctx, env) {
@@ -237,16 +490,18 @@ export class FilmBot extends DurableObject {
   }
 
   async getUser(userId) {
-  const rows = this.ctx.storage.sql
-    .exec(
-      `SELECT *
-       FROM users
-       WHERE id = ?`,
-      userId
-    )
-    .toArray();
+    const rows = this.ctx.storage.sql
+      .exec(
+        `SELECT *
+         FROM users
+         WHERE id = ?`,
+        userId
+      )
+      .toArray();
 
-  return rows.length > 0 ? rows[0] : null;
+    return rows.length > 0
+      ? rows[0]
+      : null;
   }
 
   async setState(userId, state) {
@@ -293,7 +548,8 @@ export class FilmBot extends DurableObject {
   }
 
   async approvePending(id) {
-    const item = await this.getPending(id);
+    const item =
+      await this.getPending(id);
 
     if (!item) {
       return null;
@@ -316,7 +572,8 @@ export class FilmBot extends DurableObject {
   }
 
   async rejectPending(id) {
-    const item = await this.getPending(id);
+    const item =
+      await this.getPending(id);
 
     if (!item) {
       return null;
@@ -326,15 +583,13 @@ export class FilmBot extends DurableObject {
 
     return item;
   }
-
-  async getRandomMovie(userId) {
+    async getRandomMovie(userId) {
     const row = this.ctx.storage.sql
       .exec(
         `SELECT m.*
          FROM movies m
          WHERE NOT EXISTS (
-           SELECT 1
-           FROM history h
+           SELECT 1 FROM history h
            WHERE h.user_id = ?
            AND h.movie_id = m.id
          )
@@ -431,19 +686,11 @@ export class FilmBot extends DurableObject {
       ratings
     };
   }
-    }
-/* =========================
-   Worker اصلی
-========================= */
-
+}
 export default {
   async fetch(request, env, ctx) {
-
     try {
-
       const url = new URL(request.url);
-
-      /* صفحه تست */
 
       if (
         request.method === "GET" &&
@@ -454,14 +701,10 @@ export default {
         );
       }
 
-
-      /* تنظیم Webhook */
-
       if (
         request.method === "GET" &&
         url.pathname === "/setup"
       ) {
-
         const key =
           url.searchParams.get("key");
 
@@ -471,9 +714,7 @@ export default {
         ) {
           return new Response(
             "Unauthorized",
-            {
-              status: 401
-            }
+            { status: 401 }
           );
         }
 
@@ -492,18 +733,12 @@ export default {
         return Response.json(result);
       }
 
-
-      /* فقط POST از طرف تلگرام */
-
       if (request.method !== "POST") {
         return new Response("OK");
       }
 
       const update =
         await request.json();
-
-
-      /* پیام */
 
       if (update.message) {
         await handleMessage(
@@ -512,9 +747,6 @@ export default {
           ctx
         );
       }
-
-
-      /* دکمه‌های شیشه‌ای */
 
       if (update.callback_query) {
         await handleCallback(
@@ -527,7 +759,6 @@ export default {
       return new Response("OK");
 
     } catch (error) {
-
       console.log(
         "WORKER ERROR:",
         error
@@ -538,54 +769,26 @@ export default {
   }
 };
 
-
-/* =========================
-   اتصال به FilmBot
-========================= */
-
 function db(env) {
-
   const id =
     env.FILM_BOT.idFromName("main");
 
   return env.FILM_BOT.get(id);
 }
-
-
-/* =========================
-   پیام‌های کاربر
-========================= */
-
-async function handleMessage(
-  m,
-  env,
-  ctx
-) {
-
-  if (!m.chat) {
-    return;
-  }
+async function handleMessage(m, env, ctx) {
+  if (!m.chat) return;
 
   const userId =
     m.from?.id || m.chat.id;
 
-  const chatId =
-    m.chat.id;
-
-  const text =
-    m.text || "";
-
-  const object =
-    db(env);
+  const chatId = m.chat.id;
+  const text = m.text || "";
+  const object = db(env);
 
   let user =
     await object.getUser(userId);
 
-
-  /* ساخت کاربر */
-
   if (!user) {
-
     await object.setUser(
       userId,
       "fa",
@@ -596,11 +799,7 @@ async function handleMessage(
       await object.getUser(userId);
   }
 
-
-  /* /start */
-
   if (text === "/start") {
-
     await object.setState(
       userId,
       "normal"
@@ -614,14 +813,10 @@ async function handleMessage(
     return;
   }
 
-
-  /* /admin */
-
   if (
     text === "/admin" &&
     isAdmin(userId, env)
   ) {
-
     await adminMenu(
       chatId,
       env
@@ -629,15 +824,11 @@ async function handleMessage(
 
     return;
   }
-
-
-  /* دکمه پنل */
 
   if (
     text === "👑 پنل مدیریت" &&
     isAdmin(userId, env)
   ) {
-
     await adminMenu(
       chatId,
       env
@@ -645,51 +836,44 @@ async function handleMessage(
 
     return;
   }
-
-
-  /* اجبار عضویت */
-
-  if (
-    !(await member(userId, env))
-  ) {
-
-    await join(
-      chatId,
-      user.lang,
-      env
-    );
-
-    return;
-  }
-
 
   const lang =
     LANGS[user.lang]
       ? user.lang
       : "fa";
 
-  const l =
-    LANGS[lang];
+  const l = LANGS[lang];
 
+  if (text === l.menu) {
+    await mainMenu(
+      chatId,
+      userId,
+      env
+    );
+    return;
+  }
 
-  /* دریافت فیلم */
+  if (
+    !(await member(userId, env))
+  ) {
+    await join(
+      chatId,
+      lang,
+      env
+    );
+    return;
+  }
 
   if (text === l.g) {
-
     await getMovie(
       chatId,
       userId,
       env
     );
-
     return;
   }
 
-
-  /* ارسال فیلم */
-
   if (text === l.s) {
-
     await object.setState(
       userId,
       "waiting_movie"
@@ -700,39 +884,24 @@ async function handleMessage(
       "sendMessage",
       {
         chat_id: chatId,
-        text:
-          "📤 فیلم یا ویدیوی خودت را همینجا ارسال کن."
+        text: l.prompt
       }
     );
 
     return;
   }
 
-
-  /* تغییر زبان */
-
   if (text === l.l) {
-
     await languageMenu(
       chatId,
       env
     );
-
     return;
   }
 
-
-  /* دریافت فیلم از کاربر */
-
-  if (
-    m.video ||
-    m.photo
-  ) {
-
+  if (m.video || m.photo) {
     const freshUser =
-      await object.getUser(
-        userId
-      );
+      await object.getUser(userId);
 
     if (
       freshUser?.state !==
@@ -745,60 +914,33 @@ async function handleMessage(
       m,
       env
     );
-
-    return;
   }
 }
-
-
-/* =========================
-   دکمه‌های شیشه‌ای
-========================= */
-
-async function handleCallback(
-  q,
-  env,
-  ctx
-) {
-
-  const data =
-    q.data || "";
-
-  const userId =
-    q.from.id;
-
-  const chatId =
-    q.message?.chat?.id;
-
-  const object =
-    db(env);
+async function handleCallback(q, env, ctx) {
+  const data = q.data || "";
+  const userId = q.from.id;
+  const chatId = q.message?.chat?.id;
+  const object = db(env);
 
   const user =
-    await object.getUser(
-      userId
-    );
+    await object.getUser(userId);
 
   const lang =
     user?.lang || "fa";
 
+  const l =
+    LANGS[lang] || LANGS.fa;
 
-  /* انتخاب زبان */
-
-  if (
-    data.startsWith("lang|")
-  ) {
-
+  if (data.startsWith("lang|")) {
     const selected =
       data.split("|")[1];
 
     if (!LANGS[selected]) {
-
       await answer(
         q.id,
-        "❌ زبان نامعتبر است.",
+        "❌ Invalid language.",
         env
       );
-
       return;
     }
 
@@ -810,7 +952,7 @@ async function handleCallback(
 
     await answer(
       q.id,
-      "✅ زبان انتخاب شد.",
+      LANGS[selected].selected,
       env
     );
 
@@ -823,23 +965,54 @@ async function handleCallback(
     return;
   }
 
+  if (data === "menu") {
+    await mainMenu(
+      chatId,
+      userId,
+      env
+    );
 
-  /* بررسی عضویت */
+    await answer(
+      q.id,
+      "",
+      env
+    );
 
-  if (
-    data.startsWith("check|")
-  ) {
+    return;
+  }
 
+  if (data === "close_menu") {
+    await answer(
+      q.id,
+      "",
+      env
+    );
+
+    if (q.message) {
+      await tg(
+        env,
+        "deleteMessage",
+        {
+          chat_id: chatId,
+          message_id:
+            q.message.message_id
+        }
+      );
+    }
+
+    return;
+  }
+
+  if (data.startsWith("check|")) {
     if (
       !(await member(
         userId,
         env
       ))
     ) {
-
       await answer(
         q.id,
-        "❌ هنوز عضو کانال نیستید.",
+        l.notMember,
         env
       );
 
@@ -854,7 +1027,7 @@ async function handleCallback(
 
     await answer(
       q.id,
-      "✅ عضویت تأیید شد.",
+      l.memberOk,
       env
     );
 
@@ -863,7 +1036,7 @@ async function handleCallback(
       "sendMessage",
       {
         chat_id: chatId,
-        text: LANGS[lang].w,
+        text: l.w,
         reply_markup:
           keyboard(
             lang,
@@ -878,19 +1051,12 @@ async function handleCallback(
     return;
   }
 
-
-  /* امتیاز */
-
-  if (
-    data.startsWith("rate|")
-  ) {
-
+  if (data.startsWith("rate|")) {
     const [
       ,
       movieId,
       ratingText
-    ] =
-      data.split("|");
+    ] = data.split("|");
 
     const rating =
       Number(ratingText);
@@ -903,27 +1069,23 @@ async function handleCallback(
 
     await answer(
       q.id,
-      `⭐ امتیاز ${rating} ثبت شد.`,
+      `⭐ ${rating}/5`,
       env
     );
 
-
     if (q.message) {
-
       await tg(
         env,
         "editMessageReplyMarkup",
         {
           chat_id: chatId,
-
           message_id:
             q.message.message_id,
-
           reply_markup: {
             inline_keyboard: [[
               {
                 text:
-                  `⭐ امتیاز شما: ${rating}/5`,
+                  `⭐ ${rating}/5`,
                 callback_data:
                   "rated"
               }
@@ -935,35 +1097,26 @@ async function handleCallback(
 
     return;
   }
-
-
-  /* تأیید یا رد فیلم */
-
-  if (
+    if (
     data.startsWith("approve|") ||
     data.startsWith("reject|")
   ) {
-
     if (
       !isAdmin(
         userId,
         env
       )
     ) {
-
       await answer(
         q.id,
         "⛔ دسترسی ندارید.",
         env
       );
-
       return;
     }
 
     const approve =
-      data.startsWith(
-        "approve|"
-      );
+      data.startsWith("approve|");
 
     const id =
       data.split("|")[1];
@@ -973,18 +1126,14 @@ async function handleCallback(
         ? await object.approvePending(id)
         : await object.rejectPending(id);
 
-
     if (!item) {
-
       await answer(
         q.id,
         "❌ درخواست پیدا نشد.",
         env
       );
-
       return;
     }
-
 
     await answer(
       q.id,
@@ -994,6 +1143,14 @@ async function handleCallback(
       env
     );
 
+    const targetLang =
+      (await object.getUser(
+        item.user_id
+      ))?.lang || "fa";
+
+    const target =
+      LANGS[targetLang] ||
+      LANGS.fa;
 
     await tg(
       env,
@@ -1004,14 +1161,12 @@ async function handleCallback(
 
         text:
           approve
-            ? "🎉 فیلم شما تأیید شد و وارد آرشیو شد."
+            ? `🎉 ${target.sent}`
             : "❌ فیلم شما تأیید نشد."
       }
     );
 
-
     if (q.message) {
-
       await tg(
         env,
         "editMessageReplyMarkup",
@@ -1032,11 +1187,7 @@ async function handleCallback(
     return;
   }
 
-
-  /* پنل مدیریت */
-
   if (data === "admin") {
-
     if (
       !isAdmin(
         userId,
@@ -1053,20 +1204,14 @@ async function handleCallback(
 
     await answer(
       q.id,
-      "👑 پنل مدیریت",
+      "👑",
       env
     );
 
     return;
   }
 
-
-  /* آمار */
-
-  if (
-    data === "admin_stats"
-  ) {
-
+  if (data === "admin_stats") {
     if (
       !isAdmin(
         userId,
@@ -1097,20 +1242,14 @@ async function handleCallback(
 
     await answer(
       q.id,
-      "📊 آمار ارسال شد.",
+      "📊",
       env
     );
 
     return;
   }
 
-
-  /* درخواست‌های در انتظار */
-
-  if (
-    data === "admin_pending"
-  ) {
-
+  if (data === "admin_pending") {
     if (
       !isAdmin(
         userId,
@@ -1135,72 +1274,40 @@ async function handleCallback(
       "📥",
       env
     );
-
-    return;
   }
 }
-
-
-/* =========================
-   منوی زبان
-========================= */
-
-async function languageMenu(
-  chatId,
-  env
-) {
-
-  const keys =
-    Object.keys(LANGS);
-
+async function languageMenu(chatId, env) {
+  const keys = Object.keys(LANGS);
   const rows = [];
 
-
-  for (
-    let i = 0;
-    i < keys.length;
-    i += 2
-  ) {
-
+  for (let i = 0; i < keys.length; i += 2) {
     const row = [
       {
-        text:
-          LANGS[keys[i]].n,
-
+        text: LANGS[keys[i]].n,
         callback_data:
-          "lang|" +
-          keys[i]
+          "lang|" + keys[i]
       }
     ];
 
-
     if (keys[i + 1]) {
-
       row.push({
         text:
-          LANGS[
-            keys[i + 1]
-          ].n,
-
+          LANGS[keys[i + 1]].n,
         callback_data:
-          "lang|" +
-          keys[i + 1]
+          "lang|" + keys[i + 1]
       });
     }
 
     rows.push(row);
   }
 
-
   await tg(
     env,
     "sendMessage",
     {
       chat_id: chatId,
-
       text:
         "🌐 لطفاً زبان خود را انتخاب کنید:",
-
       reply_markup: {
         inline_keyboard: rows
       }
@@ -1208,46 +1315,25 @@ async function languageMenu(
   );
 }
 
-
-/* =========================
-   منوی اصلی
-========================= */
-
-function keyboard(
-  lang,
-  admin
-) {
-
+function keyboard(lang, admin) {
   const l =
-    LANGS[lang];
+    LANGS[lang] || LANGS.fa;
 
   const rows = [
     [
       {
-        text: l.g
-      },
-      {
-        text: l.s
-      }
-    ],
-    [
-      {
-        text: l.l
+        text: l.menu
       }
     ]
   ];
 
-
   if (admin) {
-
     rows.push([
       {
-        text:
-          "👑 پنل مدیریت"
+        text: l.admin
       }
     ]);
   }
-
 
   return {
     keyboard: rows,
@@ -1256,38 +1342,99 @@ function keyboard(
   };
 }
 
-
-/* =========================
-   پنل مدیریت
-========================= */
-
-async function adminMenu(
+async function mainMenu(
   chatId,
+  userId,
   env
 ) {
+  const user =
+    await db(env).getUser(userId);
+
+  const lang =
+    user?.lang || "fa";
+
+  const l =
+    LANGS[lang] || LANGS.fa;
+
+  const buttons = [
+    [
+      {
+        text: l.g,
+        callback_data: "get_movie"
+      }
+    ],
+    [
+      {
+        text: l.s,
+        callback_data: "send_movie"
+      }
+    ],
+    [
+      {
+        text: l.l,
+        callback_data: "change_language"
+      }
+    ]
+  ];
+
+  if (isAdmin(userId, env)) {
+    buttons.push([
+      {
+        text: l.admin,
+        callback_data: "admin"
+      }
+    ]);
+  }
+
+  buttons.push([
+    {
+      text: l.back,
+      callback_data: "close_menu"
+    }
+  ]);
 
   await tg(
     env,
     "sendMessage",
     {
       chat_id: chatId,
+      text: l.title,
+      reply_markup: {
+        inline_keyboard: buttons
+      }
+    }
+  );
+}
+async function join(chatId, lang, env) {
+  const l =
+    LANGS[lang] || LANGS.fa;
 
-      text:
-        "👑 پنل مدیریت\n\n" +
-        "مدیریت ربات از این قسمت انجام می‌شود.",
-
+  await tg(
+    env,
+    "sendMessage",
+    {
+      chat_id: chatId,
+      text: l.j,
       reply_markup: {
         inline_keyboard: [
           [
             {
-              text: "📊 آمار",
-              callback_data:
-                "admin_stats"
-            },
+              text: "📢 " +
+                (lang === "fa"
+                  ? "عضویت در کانال"
+                  : "Join Channel"),
+              url: CHANNEL_LINK
+            }
+          ],
+          [
             {
-              text: "📥 درخواست‌ها",
+              text:
+                "✅ " +
+                (lang === "fa"
+                  ? "بررسی عضویت"
+                  : "Check Membership"),
               callback_data:
-                "admin_pending"
+                "check|" + lang
             }
           ]
         ]
@@ -1296,74 +1443,17 @@ async function adminMenu(
   );
 }
 
-
-/* =========================
-   اجبار عضویت
-========================= */
-
-async function join(
-  chatId,
-  lang,
-  env
-) {
-
-  const l =
-    LANGS[lang] ||
-    LANGS.fa;
-
-  await tg(
-    env,
-    "sendMessage",
-    {
-      chat_id: chatId,
-
-      text: l.j,
-
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text:
-                "📢 عضویت در کانال",
-
-              url:
-                CHANNEL_LINK
-            }
-          ],
-          [
-            {
-              text:
-                "✅ بررسی عضویت",
-
-              callback_data:
-                "check|" +
-                lang
-            }
-          ]
-        ]
-      }
-    }
-  );
-      }
-/* =========================
-   دریافت فیلم
-========================= */
-
 async function getMovie(
   chatId,
   userId,
   env
 ) {
-
-  /* بررسی عضویت */
-
   if (
     !(await member(
       userId,
       env
     ))
   ) {
-
     const user =
       await db(env)
         .getUser(userId);
@@ -1377,34 +1467,30 @@ async function getMovie(
     return;
   }
 
-
-  /* انتخاب فیلم */
-
   const movie =
     await db(env)
-      .getRandomMovie(
-        userId
-      );
-
+      .getRandomMovie(userId);
 
   if (!movie) {
+    const user =
+      await db(env)
+        .getUser(userId);
+
+    const l =
+      LANGS[user?.lang] ||
+      LANGS.fa;
 
     await tg(
       env,
       "sendMessage",
       {
         chat_id: chatId,
-
-        text:
-          "😕 هنوز فیلمی در آرشیو وجود ندارد."
+        text: l.empty
       }
     );
 
     return;
   }
-
-
-  /* مشخص کردن نوع فایل */
 
   const method =
     movie.type === "video"
@@ -1415,9 +1501,6 @@ async function getMovie(
     movie.type === "video"
       ? "video"
       : "photo";
-
-
-  /* ارسال فیلم */
 
   const result =
     await tg(
@@ -1436,71 +1519,53 @@ async function getMovie(
 
         reply_markup: {
           inline_keyboard: [[
-
             {
               text: "⭐ 1",
               callback_data:
                 `rate|${movie.id}|1`
             },
-
             {
               text: "⭐ 2",
               callback_data:
                 `rate|${movie.id}|2`
             },
-
             {
               text: "⭐ 3",
               callback_data:
                 `rate|${movie.id}|3`
             },
-
             {
               text: "⭐ 4",
               callback_data:
                 `rate|${movie.id}|4`
             },
-
             {
               text: "⭐ 5",
               callback_data:
                 `rate|${movie.id}|5`
             }
-
           ]]
         }
       }
     );
 
-
-  /* بررسی ارسال موفق */
-
   if (!result.ok) {
-
     console.log(
       "Send movie error:",
       result
     );
-
     return;
   }
-
-
-  /* =========================
-     Durable Object حذف فیلم
-  ========================= */
 
   const deleteId =
     env.FILM_DELETE.idFromName(
       `delete:${chatId}:${result.result.message_id}`
     );
 
-
   const deleteObject =
     env.FILM_DELETE.get(
       deleteId
     );
-
 
   await deleteObject.scheduleDelete(
     chatId,
@@ -1508,20 +1573,9 @@ async function getMovie(
     DELETE_AFTER
   );
 }
-
-
-/* =========================
-   دریافت فیلم از کاربر
-========================= */
-
-async function receiveMovie(
-  m,
-  env
-) {
-
+async function receiveMovie(m, env) {
   const userId =
-    m.from?.id ||
-    m.chat.id;
+    m.from?.id || m.chat.id;
 
   const chatId =
     m.chat.id;
@@ -1530,70 +1584,40 @@ async function receiveMovie(
     db(env);
 
   const user =
-    await object.getUser(
-      userId
-    );
-
+    await object.getUser(userId);
 
   if (
     !user ||
-    user.state !==
-      "waiting_movie"
+    user.state !== "waiting_movie"
   ) {
     return;
   }
 
-
   let fileId;
   let type;
 
-
-  /* ویدیو */
-
   if (m.video) {
-
     fileId =
       m.video.file_id;
-
-    type =
-      "video";
-
-  }
-
-
-  /* عکس */
-
-  else if (m.photo) {
-
+    type = "video";
+  } else if (m.photo) {
     fileId =
       m.photo[
         m.photo.length - 1
       ].file_id;
-
-    type =
-      "photo";
-
-  }
-
-
-  else {
-
+    type = "photo";
+  } else {
     await tg(
       env,
       "sendMessage",
       {
         chat_id: chatId,
-
         text:
           "❌ فقط فیلم یا عکس ارسال کنید."
       }
     );
-
     return;
   }
-
-
-  /* شناسه درخواست */
 
   const id =
     Date.now() +
@@ -1604,9 +1628,6 @@ async function receiveMovie(
       .toString(36)
       .slice(2, 8);
 
-
-  /* ذخیره درخواست */
-
   await object.addPending({
     id,
     fileId,
@@ -1615,16 +1636,10 @@ async function receiveMovie(
     chatId
   });
 
-
-  /* برگشت حالت کاربر */
-
   await object.setState(
     userId,
     "normal"
   );
-
-
-  /* ارسال به آرشیو مدیر */
 
   const result =
     await tg(
@@ -1636,11 +1651,9 @@ async function receiveMovie(
         chat_id:
           ARCHIVE_CHAT_ID,
 
-        [
-          type === "video"
-            ? "video"
-            : "photo"
-        ]:
+        [type === "video"
+          ? "video"
+          : "photo"]:
           fileId,
 
         caption:
@@ -1653,50 +1666,34 @@ async function receiveMovie(
 
         reply_markup: {
           inline_keyboard: [[
-
             {
-              text:
-                "✅ تأیید",
-
+              text: "✅ تأیید",
               callback_data:
-                "approve|" +
-                id
+                "approve|" + id
             },
-
             {
-              text:
-                "❌ رد",
-
+              text: "❌ رد",
               callback_data:
-                "reject|" +
-                id
+                "reject|" + id
             }
-
           ]]
         }
       }
     );
 
-
-  /* اگر ارسال به آرشیو شکست خورد */
-
   if (!result.ok) {
-
     console.log(
       "Archive send error:",
       result
     );
 
-    await object.deletePending(
-      id
-    );
+    await object.deletePending(id);
 
     await tg(
       env,
       "sendMessage",
       {
         chat_id: chatId,
-
         text:
           "❌ ارسال فیلم برای مدیر انجام نشد. دوباره تلاش کنید."
       }
@@ -1705,46 +1702,32 @@ async function receiveMovie(
     return;
   }
 
+  const lang =
+    user.lang || "fa";
 
-  /* اطلاع به کاربر */
+  const l =
+    LANGS[lang] || LANGS.fa;
 
   await tg(
     env,
     "sendMessage",
     {
       chat_id: chatId,
-
-      text:
-        "✅ فیلم شما برای بررسی مدیر ارسال شد."
+      text: l.sent
     }
   );
 }
-
-
-/* =========================
-   بررسی عضویت کاربر
-========================= */
-
-async function member(
-  userId,
-  env
-) {
-
+async function member(userId, env) {
   try {
-
     const result =
       await tg(
         env,
         "getChatMember",
         {
-          chat_id:
-            CHANNEL,
-
-          user_id:
-            userId
+          chat_id: CHANNEL,
+          user_id: userId
         }
       );
-
 
     return (
       result.ok &&
@@ -1759,76 +1742,48 @@ async function member(
     );
 
   } catch {
-
     return false;
   }
 }
 
-
-/* =========================
-   بررسی مدیر بودن
-========================= */
-
-function isAdmin(
-  userId,
-  env
-) {
-
+function isAdmin(userId, env) {
   return (
     String(userId) ===
     String(env.ADMIN_ID)
   );
 }
 
-
-/* =========================
-   پاسخ به دکمه
-========================= */
-
 async function answer(
   id,
   text,
   env
 ) {
-
   await tg(
     env,
     "answerCallbackQuery",
     {
-      callback_query_id:
-        id,
-
-      text:
-        text
+      callback_query_id: id,
+      text: text
     }
   );
 }
-
-
-/* =========================
-   ارتباط با Telegram Bot API
-========================= */
 
 async function tg(
   env,
   method,
   body
 ) {
-
   if (!env.BOT_TOKEN) {
-
     throw new Error(
       "BOT_TOKEN missing"
     );
   }
 
-
   const response =
     await fetch(
       `https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`,
       {
-        method:
-          "POST",
+        method: "POST",
 
         headers: {
           "Content-Type":
@@ -1840,39 +1795,21 @@ async function tg(
       }
     );
 
-
   return response.json();
 }
-
-
-/* =========================
-   Durable Object حذف خودکار
-========================= */
-
 export class FilmMessageDelete
   extends DurableObject {
 
-  constructor(
-    ctx,
-    env
-  ) {
-
-    super(
-      ctx,
-      env
-    );
-
-    this.env =
-      env;
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.env = env;
   }
-
 
   async scheduleDelete(
     chatId,
     messageId,
     delay
   ) {
-
     await this.ctx.storage.put(
       "chatId",
       chatId
@@ -1883,15 +1820,12 @@ export class FilmMessageDelete
       messageId
     );
 
-
     await this.ctx.storage.setAlarm(
       Date.now() + delay
     );
   }
 
-
   async alarm() {
-
     const chatId =
       await this.ctx.storage.get(
         "chatId"
@@ -1902,7 +1836,6 @@ export class FilmMessageDelete
         "messageId"
       );
 
-
     if (
       chatId === undefined ||
       messageId === undefined
@@ -1910,25 +1843,18 @@ export class FilmMessageDelete
       return;
     }
 
-
     try {
-
       const result =
         await tg(
           this.env,
           "deleteMessage",
           {
-            chat_id:
-              chatId,
-
-            message_id:
-              messageId
+            chat_id: chatId,
+            message_id: messageId
           }
         );
 
-
       if (!result.ok) {
-
         console.log(
           "Delete message failed:",
           result
@@ -1936,14 +1862,12 @@ export class FilmMessageDelete
       }
 
     } catch (error) {
-
       console.log(
         "Delete message error:",
         error
       );
     }
 
-
-    await this.ctx.storage.deleteAll();
+    await this.ctx.storage.deleteAllگ();
   }
-    }
+  }
