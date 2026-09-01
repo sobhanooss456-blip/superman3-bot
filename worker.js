@@ -1,7 +1,9 @@
+import { DurableObject } from "cloudflare:workers";
+
 const CHANNEL = "@Super_Pump2";
 const CHANNEL_LINK = "https://t.me/Super_Pump2";
 const ARCHIVE_CHAT_ID = "-1004374846750";
-const DELETE_AFTER = 20000;
+const DELETE_AFTER = 20_000;
 
 const LANGS = {
   fa:{n:"🇮🇷 فارسی",w:"🎬 به ربات فیلم خوش آمدید!",j:"⚠️ ابتدا عضو کانال شوید.",g:"🎬 دریافت فیلم",s:"📤 ارسال فیلم",l:"🌐 تغییر زبان"},
@@ -26,386 +28,796 @@ const LANGS = {
   vi:{n:"🇻🇳 Tiếng Việt",w:"🎬 Chào mừng!",j:"⚠️ Hãy tham gia kênh trước.",g:"🎬 Nhận phim",s:"📤 Gửi phim",l:"🌐 Đổi ngôn ngữ"}
 };
 
+export class FilmBot extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.env = env;
+
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        lang TEXT NOT NULL DEFAULT 'fa',
+        state TEXT NOT NULL DEFAULT 'normal',
+        created_at INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS movies (
+        id TEXT PRIMARY KEY,
+        file_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        owner_id INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS pending (
+        id TEXT PRIMARY KEY,
+        file_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        chat_id INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS history (
+        user_id INTEGER NOT NULL,
+        movie_id TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        PRIMARY KEY(user_id, movie_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS ratings (
+        movie_id TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        PRIMARY KEY(movie_id, user_id)
+      );
+    `);
+  }
+
+  async setUser(userId, lang, state = "normal") {
+    this.ctx.storage.sql.exec(
+      `INSERT INTO users(id,lang,state,created_at)
+       VALUES(?,?,?,?)
+       ON CONFLICT(id) DO UPDATE SET lang=excluded.lang,state=excluded.state`,
+      userId,
+      lang,
+      state,
+      Date.now()
+    );
+  }
+
+  async getUser(userId) {
+    return this.ctx.storage.sql
+      .exec(`SELECT * FROM users WHERE id=?`, userId)
+      .one();
+  }
+
+  async setState(userId, state) {
+    this.ctx.storage.sql.exec(
+      `UPDATE users SET state=? WHERE id=?`,
+      state,
+      userId
+    );
+  }
+
+  async addPending(item) {
+    this.ctx.storage.sql.exec(
+      `INSERT INTO pending(id,file_id,type,user_id,chat_id,created_at)
+       VALUES(?,?,?,?,?,?)`,
+      item.id,
+      item.fileId,
+      item.type,
+      item.userId,
+      item.chatId,
+      Date.now()
+    );
+  }
+
+  async getPending(id) {
+    return this.ctx.storage.sql
+      .exec(`SELECT * FROM pending WHERE id=?`, id)
+      .one();
+  }
+
+  async deletePending(id) {
+    this.ctx.storage.sql.exec(`DELETE FROM pending WHERE id=?`, id);
+  }
+
+  async approvePending(id) {
+    const item = await this.getPending(id);
+    if (!item) return null;
+
+    this.ctx.storage.sql.exec(
+      `INSERT OR IGNORE INTO movies(id,file_id,type,owner_id,created_at)
+       VALUES(?,?,?,?,?)`,
+      item.id,
+      item.file_id,
+      item.type,
+      item.user_id,
+      Date.now()
+    );
+
+    await this.deletePending(id);
+    return item;
+  }
+
+  async rejectPending(id) {
+    const item = await this.getPending(id);
+    if (!item) return null;
+
+    await this.deletePending(id);
+    return item;
+  }
+
+  async getRandomMovie(userId) {
+    const row = this.ctx.storage.sql
+      .exec(`
+        SELECT m.*
+        FROM movies m
+        WHERE NOT EXISTS (
+          SELECT 1 FROM history h
+          WHERE h.user_id=? AND h.movie_id=m.id
+        )
+        ORDER BY RANDOM()
+        LIMIT 1
+      `, userId)
+      .one();
+
+    if (row) {
+      this.ctx.storage.sql.exec(
+        `INSERT OR IGNORE INTO history(user_id,movie_id,created_at)
+         VALUES(?,?,?)`,
+        userId,
+        row.id,
+        Date.now()
+      );
+
+      return row;
+    }
+
+    // اگر کاربر همه فیلم‌ها را دیده باشد، تاریخچه‌اش پاک می‌شود
+    this.ctx.storage.sql.exec(
+      `DELETE FROM history WHERE user_id=?`,
+      userId
+    );
+
+    return this.ctx.storage.sql
+      .exec(`SELECT * FROM movies ORDER BY RANDOM() LIMIT 1`)
+      .one();
+  }
+
+  async rate(movieId, userId, rating) {
+    if (rating < 1 || rating > 5) return false;
+
+    this.ctx.storage.sql.exec(
+      `INSERT INTO ratings(movie_id,user_id,rating,created_at)
+       VALUES(?,?,?,?)
+       ON CONFLICT(movie_id,user_id)
+       DO UPDATE SET rating=excluded.rating,created_at=excluded.created_at`,
+      movieId,
+      userId,
+      rating,
+      Date.now()
+    );
+
+    return true;
+  }
+
+  async stats() {
+    const users = this.ctx.storage.sql
+      .exec(`SELECT COUNT(*) AS c FROM users`)
+      .one().c;
+
+    const movies = this.ctx.storage.sql
+      .exec(`SELECT COUNT(*) AS c FROM movies`)
+      .one().c;
+
+    const pending = this.ctx.storage.sql
+      .exec(`SELECT COUNT(*) AS c FROM pending`)
+      .one().c;
+
+    const ratings = this.ctx.storage.sql
+      .exec(`SELECT COUNT(*) AS c FROM ratings`)
+      .one().c;
+
+    return { users, movies, pending, ratings };
+  }
+
+  async getAllUsers() {
+    return this.ctx.storage.sql
+      .exec(`SELECT id FROM users`)
+      .toArray()
+      .map(x => x.id);
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     try {
-      const u = new URL(request.url);
+      const url = new URL(request.url);
 
-      if (request.method === "GET" && u.pathname === "/setup") {
-        if (!env.SETUP_KEY || u.searchParams.get("key") !== env.SETUP_KEY)
-          return new Response("Unauthorized",{status:401});
-
-        return Response.json(await tg(env,"setWebhook",{
-          url:u.origin+"/",
-          allowed_updates:["message","callback_query"]
-        }));
+      if (request.method === "GET" && url.pathname === "/") {
+        return new Response("🎬 FILM BOT ONLINE");
       }
 
-      if (request.method === "GET") return new Response("FILM BOT ONLINE");
-      if (request.method !== "POST") return new Response("OK");
+      if (request.method === "GET" && url.pathname === "/setup") {
+        const key = url.searchParams.get("key");
 
-      const x = await request.json();
+        if (!env.SETUP_KEY || key !== env.SETUP_KEY) {
+          return new Response("Unauthorized", { status: 401 });
+        }
 
-      if (x.callback_query) await callback(x.callback_query,env,ctx);
-      if (x.message) await message(x.message,env,ctx);
+        const result = await tg(env, "setWebhook", {
+          url: url.origin + "/",
+          allowed_updates: ["message", "callback_query"]
+        });
+
+        return Response.json(result);
+      }
+
+      if (request.method !== "POST") {
+        return new Response("OK");
+      }
+
+      const update = await request.json();
+
+      if (update.message) {
+        await handleMessage(update.message, env, ctx);
+      }
+
+      if (update.callback_query) {
+        await handleCallback(update.callback_query, env, ctx);
+      }
 
       return new Response("OK");
-    } catch(e) {
-      console.log(e);
+
+    } catch (err) {
+      console.log(err);
       return new Response("OK");
     }
   }
 };
 
-async function message(m,e,c) {
-  if (!m.chat) return;
-
-  const chat=m.chat.id;
-  const user=m.from?.id || chat;
-  const text=m.text || "";
-
-  if (text==="/start") {
-    await languageMenu(chat,e);
-    return;
-  }
-
-  const lang=await getLang(user,e);
-  const l=LANGS[lang];
-
-  if (text===l.g) {
-    await getMovie(chat,user,e,c);
-    return;
-  }
-
-  if (text===l.s) {
-    await sendMovie(chat,user,lang,e);
-    return;
-  }
-
-  if (text===l.l) {
-    await languageMenu(chat,e);
-    return;
-  }
-
-  if (m.video) await receive(m,"video",e);
-  else if (m.photo) await receive(m,"photo",e);
+function db(env) {
+  const id = env.FILM_BOT.idFromName("main");
+  return env.FILM_BOT.get(id);
 }
 
-async function callback(q,e,c) {
-  const d=q.data;
-  const user=q.from.id;
-  const chat=q.message?.chat?.id;
+async function handleMessage(m, env, ctx) {
+  if (!m.chat) return;
 
-  if (d.startsWith("lang|")) {
-    const lang=d.split("|")[1];
+  const userId = m.from?.id || m.chat.id;
+  const chatId = m.chat.id;
+  const text = m.text || "";
 
-    if (!LANGS[lang]) return answer(q.id,"❌ زبان نامعتبر است.",e);
+  const object = db(env);
+  let user = await object.getUser(userId);
 
-    await put(e,"lang:"+user,lang);
-    await answer(q.id,"✅ زبان تغییر کرد.",e);
+  if (!user) {
+    await object.setUser(userId, "fa", "normal");
+    user = await object.getUser(userId);
+  }
 
-    await join(chat,lang,e);
+  // استارت
+  if (text === "/start") {
+    await object.setState(userId, "normal");
+    await languageMenu(chatId, env);
     return;
   }
 
-  if (d.startsWith("check|")) {
-    const lang=d.split("|")[1] || "fa";
+  // پنل مدیریت
+  if (text === "/admin" && isAdmin(userId, env)) {
+    await adminMenu(chatId, env);
+    return;
+  }
 
-    if (!await member(user,e)) {
-      await answer(q.id,"❌ هنوز عضو کانال نیستید.",e);
-      await join(chat,lang,e);
-      return;
-    }
+  // اگر عضو نیست
+  if (!(await member(userId, env))) {
+    await join(chatId, user.lang, env);
+    return;
+  }
 
-    await answer(q.id,"✅ عضویت تأیید شد.",e);
+  const lang = LANGS[user.lang] ? user.lang : "fa";
+  const l = LANGS[lang];
 
-    await tg(e,"sendMessage",{
-      chat_id:chat,
-      text:LANGS[lang].w,
-      reply_markup:keyboard(lang)
+  if (text === l.g) {
+    await getMovie(chatId, userId, env, ctx);
+    return;
+  }
+
+  if (text === l.s) {
+    await object.setState(userId, "waiting_movie");
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      text: "📤 فیلم یا ویدیوی خودت را همینجا ارسال کن."
     });
     return;
   }
 
-  if (d.startsWith("rate|")) {
-    const [_,id,r]=d.split("|");
+  if (text === l.l) {
+    await languageMenu(chatId, env);
+    return;
+  }
 
-    await put(e,"rating:"+id+":"+user,Number(r));
-    await answer(q.id,"⭐ امتیاز شما ثبت شد.",e);
+  // دریافت فیلم ارسالی کاربر فقط وقتی دکمه ارسال فیلم زده شده
+  if (m.video || m.photo) {
+    const freshUser = await object.getUser(userId);
 
-    if (chat && q.message) {
-      await tg(e,"editMessageReplyMarkup",{
-        chat_id:chat,
-        message_id:q.message.message_id,
-        reply_markup:{
-          inline_keyboard:[[
-            {text:"⭐ امتیاز ثبت شد: "+r+"/5",callback_data:"done"}
+    if (freshUser?.state !== "waiting_movie") {
+      return;
+    }
+
+    await receiveMovie(m, env);
+  }
+}
+
+async function handleCallback(q, env, ctx) {
+  const data = q.data || "";
+  const userId = q.from.id;
+  const chatId = q.message?.chat?.id;
+
+  const object = db(env);
+  const user = await object.getUser(userId);
+  const lang = user?.lang || "fa";
+
+  // انتخاب زبان
+  if (data.startsWith("lang|")) {
+    const selected = data.split("|")[1];
+
+    if (!LANGS[selected]) {
+      await answer(q.id, "❌ زبان نامعتبر است.", env);
+      return;
+    }
+
+    await object.setUser(userId, selected, "normal");
+
+    await answer(q.id, "✅ زبان انتخاب شد.", env);
+    await join(chatId, selected, env);
+    return;
+  }
+
+  // بررسی عضویت
+  if (data.startsWith("check|")) {
+    if (!(await member(userId, env))) {
+      await answer(q.id, "❌ هنوز عضو کانال نیستید.", env);
+      await join(chatId, lang, env);
+      return;
+    }
+
+    await answer(q.id, "✅ عضویت تأیید شد.", env);
+
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      text: LANGS[lang].w,
+      reply_markup: keyboard(lang, isAdmin(userId, env))
+    });
+
+    return;
+  }
+
+  // امتیاز
+  if (data.startsWith("rate|")) {
+    const [, movieId, ratingText] = data.split("|");
+    const rating = Number(ratingText);
+
+    await object.rate(movieId, userId, rating);
+    await answer(q.id, `⭐ امتیاز ${rating} ثبت شد.`, env);
+
+    if (q.message) {
+      await tg(env, "editMessageReplyMarkup", {
+        chat_id: chatId,
+        message_id: q.message.message_id,
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: `⭐ امتیاز شما: ${rating}/5`,
+              callback_data: "rated"
+            }
           ]]
         }
       });
     }
+
+    return;
   }
 
-  if (d.startsWith("approve|") || d.startsWith("reject|")) {
-    if (String(user)!==String(e.ADMIN_ID))
-      return answer(q.id,"⛔ دسترسی ندارید.",e);
+  // تأیید / رد فیلم
+  if (data.startsWith("approve|") || data.startsWith("reject|")) {
+    if (!isAdmin(userId, env)) {
+      await answer(q.id, "⛔ دسترسی ندارید.", env);
+      return;
+    }
 
-    const ok=d.startsWith("approve|");
-    const id=d.split("|")[1];
-    const item=await get(e,"pending:"+id);
+    const approve = data.startsWith("approve|");
+    const id = data.split("|")[1];
 
-    if (!item) return answer(q.id,"❌ درخواست پیدا نشد.",e);
+    const item = approve
+      ? await object.approvePending(id)
+      : await object.rejectPending(id);
 
-    if (ok) {
-      let list=await get(e,"approved") || [];
-      list.push(item);
-      await put(e,"approved",list);
-      await tg(e,"sendMessage",{
-        chat_id:item.chatId,
-        text:"🎉 فیلم شما تأیید شد و وارد آرشیو شد."
-      });
-    } else {
-      await tg(e,"sendMessage",{
-        chat_id:item.chatId,
-        text:"❌ فیلم شما تأیید نشد."
+    if (!item) {
+      await answer(q.id, "❌ درخواست پیدا نشد.", env);
+      return;
+    }
+
+    await answer(
+      q.id,
+      approve ? "✅ فیلم تأیید شد." : "❌ فیلم رد شد.",
+      env
+    );
+
+    await tg(env, "sendMessage", {
+      chat_id: item.chat_id,
+      text: approve
+        ? "🎉 فیلم شما تأیید شد و وارد آرشیو شد."
+        : "❌ فیلم شما تأیید نشد."
+    });
+
+    if (q.message) {
+      await tg(env, "editMessageReplyMarkup", {
+        chat_id: q.message.chat.id,
+        message_id: q.message.message_id,
+        reply_markup: { inline_keyboard: [] }
       });
     }
 
-    await del(e,"pending:"+id);
-    await answer(q.id,ok?"✅ تأیید شد.":"❌ رد شد.",e);
+    return;
+  }
 
-    await tg(e,"editMessageReplyMarkup",{
-      chat_id:q.message.chat.id,
-      message_id:q.message.message_id,
-      reply_markup:{inline_keyboard:[]}
+  // پنل مدیریت
+  if (data === "admin") {
+    if (!isAdmin(userId, env)) return;
+
+    await adminMenu(chatId, env);
+    await answer(q.id, "👑 پنل مدیریت", env);
+    return;
+  }
+
+  if (data === "admin_stats") {
+    if (!isAdmin(userId, env)) return;
+
+    const stats = await object.stats();
+
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      text:
+`📊 آمار ربات
+
+👥 کاربران: ${stats.users}
+🎬 فیلم‌های تأییدشده: ${stats.movies}
+📥 درخواست‌های در انتظار: ${stats.pending}
+⭐ تعداد امتیازها: ${stats.ratings}`
     });
+
+    await answer(q.id, "📊 آمار ارسال شد.", env);
+    return;
+  }
+
+  if (data === "admin_broadcast") {
+    if (!isAdmin(userId, env)) return;
+
+    await object.setUser(userId, lang, "broadcast");
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      text: "📢 پیام موردنظر برای ارسال همگانی را بفرست."
+    });
+
+    await answer(q.id, "📢 آماده دریافت پیام.", env);
+    return;
+  }
+
+  if (data === "admin_pending") {
+    if (!isAdmin(userId, env)) return;
+
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      text: "📥 درخواست‌های جدید از طریق آرشیو و دکمه‌های تأیید/رد مدیریت می‌شوند."
+    });
+
+    await answer(q.id, "📥", env);
   }
 }
 
-async function languageMenu(chat,e) {
-  const keys=Object.keys(LANGS);
-  const rows=[];
+async function languageMenu(chatId, env) {
+  const keys = Object.keys(LANGS);
+  const rows = [];
 
-  for(let i=0;i<keys.length;i+=2) {
-    const row=[{
-      text:LANGS[keys[i]].n,
-      callback_data:"lang|"+keys[i]
-    }];
+  for (let i = 0; i < keys.length; i += 2) {
+    const row = [
+      {
+        text: LANGS[keys[i]].n,
+        callback_data: "lang|" + keys[i]
+      }
+    ];
 
-    if(keys[i+1])
+    if (keys[i + 1]) {
       row.push({
-        text:LANGS[keys[i+1]].n,
-        callback_data:"lang|"+keys[i+1]
+        text: LANGS[keys[i + 1]].n,
+        callback_data: "lang|" + keys[i + 1]
       });
+    }
 
     rows.push(row);
   }
 
-  await tg(e,"sendMessage",{
-    chat_id:chat,
-    text:"🌐 لطفاً زبان خود را انتخاب کنید:",
-    reply_markup:{inline_keyboard:rows}
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    text: "🌐 لطفاً زبان خود را انتخاب کنید:",
+    reply_markup: {
+      inline_keyboard: rows
+    }
   });
 }
 
-function keyboard(lang) {
-  const l=LANGS[lang];
+function keyboard(lang, admin) {
+  const l = LANGS[lang];
+
+  const rows = [
+    [{ text: l.g }, { text: l.s }],
+    [{ text: l.l }]
+  ];
+
+  if (admin) {
+    rows.push([{ text: "👑 پنل مدیریت" }]);
+  }
 
   return {
-    keyboard:[
-      [{text:l.g},{text:l.s}],
-      [{text:l.l}]
-    ],
-    resize_keyboard:true,
-    is_persistent:true
+    keyboard: rows,
+    resize_keyboard: true,
+    is_persistent: true
   };
 }
 
-async function join(chat,lang,e) {
-  const l=LANGS[lang] || LANGS.fa;
-
-  await tg(e,"sendMessage",{
-    chat_id:chat,
-    text:l.j,
-    reply_markup:{
-      inline_keyboard:[
-        [{text:"📢 عضویت در کانال",url:CHANNEL_LINK}],
-        [{text:"✅ بررسی عضویت",callback_data:"check|"+lang}]
+async function adminMenu(chatId, env) {
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    text: "👑 پنل مدیریت\n\nمدیریت ربات از این قسمت انجام می‌شود.",
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "📊 آمار", callback_data: "admin_stats" },
+          { text: "📥 درخواست‌ها", callback_data: "admin_pending" }
+        ],
+        [
+          { text: "📢 ارسال پیام همگانی", callback_data: "admin_broadcast" }
+        ]
       ]
     }
   });
 }
 
-async function getMovie(chat,user,e,c) {
-  if (!await member(user,e)) {
-    await join(chat,await getLang(user,e),e);
+async function join(chatId, lang, env) {
+  const l = LANGS[lang] || LANGS.fa;
+
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    text: l.j,
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: "📢 عضویت در کانال",
+            url: CHANNEL_LINK
+          }
+        ],
+        [
+          {
+            text: "✅ بررسی عضویت",
+            callback_data: "check|" + lang
+          }
+        ]
+      ]
+    }
+  });
+}
+
+async function getMovie(chatId, userId, env, ctx) {
+  if (!(await member(userId, env))) {
+    const user = await db(env).getUser(userId);
+    await join(chatId, user?.lang || "fa", env);
     return;
   }
 
-  const list=await get(e,"approved") || [];
+  const movie = await db(env).getRandomMovie(userId);
 
-  if (!list.length) {
-    await tg(e,"sendMessage",{
-      chat_id:chat,
-      text:"😕 هنوز فیلمی در آرشیو وجود ندارد."
+  if (!movie) {
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      text: "😕 هنوز فیلمی در آرشیو وجود ندارد."
     });
     return;
   }
 
-  let history=await get(e,"history:"+user) || [];
-  let available=list.filter(x=>!history.includes(x.id));
-
-  if (!available.length) {
-    history=[];
-    available=list;
-  }
-
-  const item=available[Math.floor(Math.random()*available.length)];
-  history.push(item.id);
-
-  await put(e,"history:"+user,history);
-
-  const r=await tg(e,item.type==="video"?"sendVideo":"sendPhoto",{
-    chat_id:chat,
-    [item.type==="video"?"video":"photo"]:item.fileId,
-    caption:"🎬 فیلم برای شما ارسال شد.\n\n⏳ این پیام بعد از ۲۰ ثانیه حذف می‌شود.\n⭐ امتیاز بدهید:",
-    reply_markup:{
-      inline_keyboard:[[
-        {text:"⭐ 1",callback_data:"rate|"+item.id+"|1"},
-        {text:"⭐ 2",callback_data:"rate|"+item.id+"|2"},
-        {text:"⭐ 3",callback_data:"rate|"+item.id+"|3"},
-        {text:"⭐ 4",callback_data:"rate|"+item.id+"|4"},
-        {text:"⭐ 5",callback_data:"rate|"+item.id+"|5"}
-      ]]
+  const result = await tg(
+    env,
+    movie.type === "video" ? "sendVideo" : "sendPhoto",
+    {
+      chat_id: chatId,
+      [movie.type === "video" ? "video" : "photo"]: movie.file_id,
+      caption:
+        "🎬 فیلم برای شما ارسال شد.\n\n" +
+        "⏳ این پیام بعد از ۲۰ ثانیه حذف می‌شود.\n" +
+        "⭐ امتیاز خودت را انتخاب کن:",
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "⭐ 1", callback_data: `rate|${movie.id}|1` },
+          { text: "⭐ 2", callback_data: `rate|${movie.id}|2` },
+          { text: "⭐ 3", callback_data: `rate|${movie.id}|3` },
+          { text: "⭐ 4", callback_data: `rate|${movie.id}|4` },
+          { text: "⭐ 5", callback_data: `rate|${movie.id}|5` }
+        ]]
+      }
     }
-  });
+  );
 
-  if(r.ok && c)
-    c.waitUntil(new Promise(resolve=>setTimeout(async()=>{
-      await tg(e,"deleteMessage",{
-        chat_id:chat,
-        message_id:r.result.message_id
-      });
-      resolve();
-    },DELETE_AFTER)));
+  if (!result.ok) return;
+
+  // برای حذف مطمئن‌تر، از Alarm یک Durable Object اختصاصی برای همان پیام استفاده می‌کنیم.
+  const deleteId = env.FILM_BOT.idFromName(
+    `delete:${chatId}:${result.result.message_id}`
+  );
+
+  const deleteObject = env.FILM_BOT.get(deleteId);
+
+  await deleteObject.scheduleDelete(
+    chatId,
+    result.result.message_id,
+    DELETE_AFTER
+  );
 }
 
-async function sendMovie(chat,user,lang,e) {
-  if (!await member(user,e)) {
-    await join(chat,lang,e);
+async function receiveMovie(m, env) {
+  const userId = m.from?.id || m.chat.id;
+  const chatId = m.chat.id;
+
+  const object = db(env);
+  const user = await object.getUser(userId);
+
+  if (!user || user.state !== "waiting_movie") return;
+
+  let fileId;
+  let type;
+
+  if (m.video) {
+    fileId = m.video.file_id;
+    type = "video";
+  } else if (m.photo) {
+    fileId = m.photo[m.photo.length - 1].file_id;
+    type = "photo";
+  } else {
     return;
   }
 
-  await tg(e,"sendMessage",{
-    chat_id:chat,
-    text:"📤 فیلم یا عکس خودت را همینجا ارسال کن."
-  });
-}
+  const id =
+    Date.now() +
+    "_" +
+    userId +
+    "_" +
+    Math.random().toString(36).slice(2, 8);
 
-async function receive(m,type,e) {
-  const user=m.from?.id || m.chat.id;
-  const chat=m.chat.id;
-  const lang=await getLang(user,e);
-
-  if (!await member(user,e)) {
-    await join(chat,lang,e);
-    return;
-  }
-
-  const fileId=type==="video"
-    ? m.video.file_id
-    : m.photo[m.photo.length-1].file_id;
-
-  const id=Date.now()+"_"+user+"_"+Math.random().toString(36).slice(2,7);
-
-  const item={
+  await object.addPending({
     id,
     fileId,
     type,
-    chatId:chat,
-    userId:user
-  };
-
-  await put(e,"pending:"+id,item);
-
-  await tg(e,type==="video"?"sendVideo":"sendPhoto",{
-    chat_id:ARCHIVE_CHAT_ID,
-    [type==="video"?"video":"photo"]:fileId,
-    caption:"📥 محتوای جدید برای بررسی\n👤 "+user+"\n🆔 "+id,
-    reply_markup:{
-      inline_keyboard:[[
-        {text:"✅ تأیید",callback_data:"approve|"+id},
-        {text:"❌ رد",callback_data:"reject|"+id}
-      ]]
-    }
+    userId,
+    chatId
   });
 
-  await tg(e,"sendMessage",{
-    chat_id:chat,
-    text:"✅ محتوای شما برای بررسی مدیر ارسال شد."
+  await object.setState(userId, "normal");
+
+  await tg(
+    env,
+    type === "video" ? "sendVideo" : "sendPhoto",
+    {
+      chat_id: ARCHIVE_CHAT_ID,
+      [type === "video" ? "video" : "photo"]: fileId,
+      caption:
+        "📥 محتوای جدید برای بررسی\n\n" +
+        "👤 کاربر: " + userId + "\n" +
+        "🆔 درخواست: " + id,
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: "✅ تأیید",
+            callback_data: "approve|" + id
+          },
+          {
+            text: "❌ رد",
+            callback_data: "reject|" + id
+          }
+        ]]
+      }
+    }
+  );
+
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    text: "✅ فیلم شما برای بررسی مدیر ارسال شد."
   });
 }
 
-async function member(user,e) {
+async function member(userId, env) {
   try {
-    const r=await tg(e,"getChatMember",{
-      chat_id:CHANNEL,
-      user_id:user
+    const result = await tg(env, "getChatMember", {
+      chat_id: CHANNEL,
+      user_id: userId
     });
 
-    return r.ok &&
-      ["creator","administrator","member","restricted"].includes(r.result.status);
+    return result.ok &&
+      [
+        "creator",
+        "administrator",
+        "member",
+        "restricted"
+      ].includes(result.result.status);
+
   } catch {
     return false;
   }
 }
 
-async function getLang(user,e) {
-  const x=await get(e,"lang:"+user);
-  return LANGS[x]?x:"fa";
+function isAdmin(userId, env) {
+  return String(userId) === String(env.ADMIN_ID);
 }
 
-async function answer(id,text,e) {
-  await tg(e,"answerCallbackQuery",{
-    callback_query_id:id,
+async function answer(id, text, env) {
+  await tg(env, "answerCallbackQuery", {
+    callback_query_id: id,
     text
   });
 }
 
-async function get(e,key) {
-  if(!e.FILM_KV) throw new Error("FILM_KV missing");
+async function tg(env, method, body) {
+  if (!env.BOT_TOKEN) {
+    throw new Error("BOT_TOKEN missing");
+  }
 
-  const x=await e.FILM_KV.get(key);
-  if(x===null) return null;
-
-  try { return JSON.parse(x); }
-  catch { return x; }
-}
-
-async function put(e,key,value) {
-  if(!e.FILM_KV) throw new Error("FILM_KV missing");
-
-  await e.FILM_KV.put(
-    key,
-    typeof value==="string"?value:JSON.stringify(value)
-  );
-}
-
-async function del(e,key) {
-  if(e.FILM_KV) await e.FILM_KV.delete(key);
-}
-
-async function tg(e,method,body) {
-  if(!e.BOT_TOKEN) throw new Error("BOT_TOKEN missing");
-
-  const r=await fetch(
-    "https://api.telegram.org/bot"+e.BOT_TOKEN+"/"+method,
+  const response = await fetch(
+    `https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`,
     {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(body)
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
     }
   );
 
-  return r.json();
+  return response.json();
+}
+
+
+/*
+ * Durable Object مخصوص حذف خودکار پیام‌های فیلم
+ */
+export class FilmMessageDelete extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.env = env;
+  }
+
+  async scheduleDelete(chatId, messageId, delay) {
+    await this.ctx.storage.put("chatId", chatId);
+    await this.ctx.storage.put("messageId", messageId)
+        await this.ctx.storage.setAlarm(Date.now() + delay);
+  }
+
+  async alarm() {
+    const chatId = await this.ctx.storage.get("chatId");
+    const messageId = await this.ctx.storage.get("messageId");
+
+    if (chatId && messageId) {
+      try {
+        await tg(this.env, "deleteMessage", {
+          chat_id: chatId,
+          message_id: messageId
+        });
+      } catch (err) {
+        console.log(err);
       }
+    }
+
+    await this.ctx.storage.deleteAll();
+  }
+}
