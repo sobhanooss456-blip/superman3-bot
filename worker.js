@@ -502,3 +502,328 @@ function db(env) {
 
   return env.FILM_BOT.get(id);
 }
+export class FilmMessageDelete extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.env = env;
+  }
+
+  async scheduleDelete(chatId, messageId, delay) {
+    await this.ctx.storage.put("chatId", chatId);
+    await this.ctx.storage.put("messageId", messageId);
+
+    await this.ctx.storage.setAlarm(
+      Date.now() + delay
+    );
+  }
+
+  async alarm() {
+    const chatId =
+      await this.ctx.storage.get("chatId");
+
+    const messageId =
+      await this.ctx.storage.get("messageId");
+
+    if (!chatId || !messageId) {
+      return;
+    }
+
+    try {
+      await tg(
+        this.env,
+        "deleteMessage",
+        {
+          chat_id: chatId,
+          message_id: messageId
+        }
+      );
+    } catch (error) {
+      console.log(
+        "Delete message error:",
+        error
+      );
+    }
+
+    await this.ctx.storage.deleteAll();
+  }
+}
+function isAdmin(userId, env) {
+  return String(userId) === String(env.ADMIN_ID);
+}
+
+async function answer(id, text, env) {
+  await tg(env, "answerCallbackQuery", {
+    callback_query_id: id,
+    text: text
+  });
+}
+
+async function tg(env, method, body) {
+  if (!env.BOT_TOKEN) {
+    throw new Error("BOT_TOKEN missing");
+  }
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    }
+  );
+
+  const data = await response.json();
+
+  if (!data.ok) {
+    console.log(
+      "Telegram API error:",
+      data
+    );
+  }
+
+  return data;
+}
+async function languageMenu(chatId, env) {
+  const keys = Object.keys(LANGS);
+  const rows = [];
+
+  for (let i = 0; i < keys.length; i += 2) {
+    const row = [
+      {
+        text: LANGS[keys[i]].n,
+        callback_data: "lang|" + keys[i]
+      }
+    ];
+
+    if (keys[i + 1]) {
+      row.push({
+        text: LANGS[keys[i + 1]].n,
+        callback_data: "lang|" + keys[i + 1]
+      });
+    }
+
+    rows.push(row);
+  }
+
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    text: "🌐 لطفاً زبان خود را انتخاب کنید:",
+    reply_markup: {
+      inline_keyboard: rows
+    }
+  });
+}
+
+
+function keyboard(lang, admin) {
+  const l = LANGS[lang] || LANGS.fa;
+
+  const rows = [
+    [
+      { text: l.g },
+      { text: l.s }
+    ],
+    [
+      { text: l.l }
+    ]
+  ];
+
+  if (admin) {
+    rows.push([
+      { text: "👑 پنل مدیریت" }
+    ]);
+  }
+
+  return {
+    keyboard: rows,
+    resize_keyboard: true,
+    is_persistent: true
+  };
+}
+
+
+async function adminMenu(chatId, env) {
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    text:
+      "👑 پنل مدیریت\n\n" +
+      "مدیریت ربات از این قسمت انجام می‌شود.",
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: "📊 آمار",
+            callback_data: "admin_stats"
+          },
+          {
+            text: "📥 درخواست‌ها",
+            callback_data: "admin_pending"
+          }
+        ]
+      ]
+    }
+  });
+}
+async function member(userId, env) {
+  try {
+    const result = await tg(
+      env,
+      "getChatMember",
+      {
+        chat_id: CHANNEL,
+        user_id: userId
+      }
+    );
+
+    if (!result.ok) {
+      return false;
+    }
+
+    return [
+      "creator",
+      "administrator",
+      "member",
+      "restricted"
+    ].includes(result.result.status);
+
+  } catch (error) {
+    console.log(
+      "Membership check error:",
+      error
+    );
+
+    return false;
+  }
+}
+
+
+async function join(chatId, lang, env) {
+  const l = LANGS[lang] || LANGS.fa;
+
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    text: l.j,
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: "📢 عضویت در کانال",
+            url: CHANNEL_LINK
+          }
+        ],
+        [
+          {
+            text: "✅ بررسی عضویت",
+            callback_data: "check|" + lang
+          }
+        ]
+      ]
+    }
+  });
+}
+async function getMovie(chatId, userId, env) {
+  const isMember = await member(userId, env);
+
+  if (!isMember) {
+    const user = await db(env).getUser(userId);
+
+    await join(
+      chatId,
+      user?.lang || "fa",
+      env
+    );
+
+    return;
+  }
+
+  const movie =
+    await db(env).getRandomMovie(userId);
+
+  if (!movie) {
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      text: "😕 هنوز فیلمی در آرشیو وجود ندارد."
+    });
+
+    return;
+  }
+
+  const method =
+    movie.type === "video"
+      ? "sendVideo"
+      : "sendPhoto";
+
+  const mediaField =
+    movie.type === "video"
+      ? "video"
+      : "photo";
+
+  const result = await tg(
+    env,
+    method,
+    {
+      chat_id: chatId,
+
+      [mediaField]: movie.file_id,
+
+      caption:
+        "🎬 فیلم برای شما ارسال شد.\n\n" +
+        "⏳ این پیام بعد از ۲۰ ثانیه حذف می‌شود.\n" +
+        "⭐ امتیاز خودت را انتخاب کن:",
+
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: "⭐ 1",
+            callback_data:
+              `rate|${movie.id}|1`
+          },
+          {
+            text: "⭐ 2",
+            callback_data:
+              `rate|${movie.id}|2`
+          },
+          {
+            text: "⭐ 3",
+            callback_data:
+              `rate|${movie.id}|3`
+          },
+          {
+            text: "⭐ 4",
+            callback_data:
+              `rate|${movie.id}|4`
+          },
+          {
+            text: "⭐ 5",
+            callback_data:
+              `rate|${movie.id}|5`
+          }
+        ]]
+      }
+    }
+  );
+
+  if (!result.ok) {
+    console.log(
+      "Send movie error:",
+      result
+    );
+    return;
+  }
+
+  const deleteId =
+    env.FILM_DELETE.idFromName(
+      `delete:${chatId}:${result.result.message_id}`
+    );
+
+  const deleteObject =
+    env.FILM_DELETE.get(deleteId);
+
+  await deleteObject.scheduleDelete(
+    chatId,
+    result.result.message_id,
+    DELETE_AFTER
+  );
+}
