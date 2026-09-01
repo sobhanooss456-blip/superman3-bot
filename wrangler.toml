@@ -2,11 +2,13 @@ name = "superman3-bot"
 main = "worker.js"
 compatibility_date = "2026-08-31"
 
-[durable_objects]
-bindings = [
-  { name = "FILM_BOT", class_name = "FilmBot" },
-  { name = "FILM_DELETE", class_name = "FilmMessageDelete" }
-]
+[[durable_objects.bindings]]
+name = "FILM_BOT"
+class_name = "FilmBot"
+
+[[durable_objects.bindings]]
+name = "FILM_DELETE"
+class_name = "FilmMessageDelete"
 
 [[migrations]]
 tag = "v1"
