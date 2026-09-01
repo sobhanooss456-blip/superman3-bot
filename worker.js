@@ -237,14 +237,16 @@ export class FilmBot extends DurableObject {
   }
 
   async getUser(userId) {
-    return this.ctx.storage.sql
-      .exec(
-        `SELECT *
-         FROM users
-         WHERE id = ?`,
-        userId
-      )
-      .one();
+  const rows = this.ctx.storage.sql
+    .exec(
+      `SELECT *
+       FROM users
+       WHERE id = ?`,
+      userId
+    )
+    .toArray();
+
+  return rows.length > 0 ? rows[0] : null;
   }
 
   async setState(userId, state) {
