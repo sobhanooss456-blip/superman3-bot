@@ -1,2635 +1,1677 @@
-// ==========================================
-// 🎬 TELEGRAM MOVIE BOT
-// Cloudflare Workers + KV
-// PART 1 / 8
-// ==========================================
-
-const TG = (env) =>
-  `https://api.telegram.org/bot${env.BOT_TOKEN}`;
-
-
-// ==========================================
-// Worker
-// ==========================================
+const TG = "https://api.telegram.org";
 
 export default {
-
   async fetch(request, env, ctx) {
-
-    if (request.method === "GET") {
-
-      return new Response(
-        "🎬 Telegram Movie Bot is running!"
-      );
-
-    }
-
-
-    if (request.method !== "POST") {
-
-      return new Response(
-        "Method Not Allowed",
-        { status: 405 }
-      );
-
-    }
-
-
     try {
+      if (request.method !== "POST") {
+        return new Response("Film Bot is running.");
+      }
 
-      const update =
-        await request.json();
+      const update = await request.json();
 
-      await handleUpdate(
-        update,
-        env,
-        ctx
-      );
+      if (update.callback_query) {
+        await handleCallback(update.callback_query, env, ctx);
+      } else if (update.message) {
+        await handleMessage(update.message, env, ctx);
+      }
 
       return new Response("OK");
-
     } catch (error) {
-
-      console.error(
-        "BOT ERROR:",
-        error
-      );
-
+      console.error("Worker error:", error);
       return new Response("OK");
-
     }
-
   }
-
 };
 
 
-// ==========================================
+// ===============================
 // Telegram API
-// ==========================================
+// ===============================
 
-async function telegram(
-  env,
-  method,
-  data = {}
-) {
+async function telegram(env, method, data = {}) {
+  const response = await fetch(
+    `${TG}/bot${env.BOT_TOKEN}/${method}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    }
+  );
 
-  const response =
-    await fetch(
-      `${TG(env)}/${method}`,
-      {
+  const result = await response.json();
 
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json"
-        },
-
-        body:
-          JSON.stringify(data)
-
-      }
-    );
-
-
-  return await response.json();
-
-}
-
-
-// ==========================================
-// Update
-// ==========================================
-
-async function handleUpdate(
-  update,
-  env,
-  ctx
-) {
-
-  if (update.message) {
-
-    await handleMessage(
-      update.message,
-      env,
-      ctx
-    );
-
-    return;
-
+  if (!result.ok) {
+    console.error("Telegram API error:", method, result);
   }
 
+  return result;
+}
 
-  if (update.callback_query) {
 
-    await handleCallback(
-      update.callback_query,
-      env,
-      ctx
-    );
+// ===============================
+// Helpers
+// ===============================
 
-    return;
+function json(value) {
+  return JSON.stringify(value);
+}
 
+async function getKV(env, key, fallback = null) {
+  const value = await env.BOT_DATA.get(key);
+
+  if (value === null || value === undefined) {
+    return fallback;
   }
 
-}
-// ==========================================
-// PART 2 / 8
-// 🗃️ KV + USERS + LANGUAGE
-// ==========================================
-
-
-// ==========================================
-// KV
-// ==========================================
-
-async function kvGet(
-  env,
-  key
-) {
-
-  return await env.BOT_DATA.get(key);
-
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
 }
 
-
-async function kvJSON(
-  env,
-  key
-) {
-
-  return await env.BOT_DATA.get(
-    key,
-    "json"
-  );
-
+async function putKV(env, key, value) {
+  await env.BOT_DATA.put(key, json(value));
 }
 
-
-async function kvPut(
-  env,
-  key,
-  value
-) {
-
-  await env.BOT_DATA.put(
-    key,
-    value
-  );
-
-}
-
-
-async function kvPutJSON(
-  env,
-  key,
-  value
-) {
-
-  await env.BOT_DATA.put(
-    key,
-    JSON.stringify(value)
-  );
-
-}
-
-
-async function kvDelete(
-  env,
-  key
-) {
-
+async function deleteKV(env, key) {
   await env.BOT_DATA.delete(key);
-
 }
 
+async function getArray(env, key) {
+  const value = await getKV(env, key, []);
+  return Array.isArray(value) ? value : [];
+}
 
-// ==========================================
+async function addToArray(env, key, value) {
+  const array = await getArray(env, key);
+
+  if (!array.includes(value)) {
+    array.push(value);
+    await putKV(env, key, array);
+  }
+
+  return array;
+}
+
+async function removeFromArray(env, key, value) {
+  const array = await getArray(env, key);
+
+  const newArray = array.filter(x => x !== value);
+
+  await putKV(env, key, newArray);
+
+  return newArray;
+  }
+// ===============================
 // User
-// ==========================================
+// ===============================
 
-async function getUser(
-  env,
-  userId
-) {
-
-  return await kvJSON(
-    env,
-    `user:${userId}`
-  );
-
+async function getUser(env, userId) {
+  return await getKV(env, `user:${userId}`, null);
 }
 
+async function saveUser(env, user) {
+  await putKV(env, `user:${user.id}`, user);
+  await addToArray(env, "users:index", user.id);
+}
 
-async function saveUser(
-  env,
-  telegramUser
-) {
+async function ensureUser(env, message) {
+  const tgUser = message.from;
 
-  const userId =
-    String(telegramUser.id);
-
-
-  let user =
-    await getUser(
-      env,
-      userId
-    );
-
+  let user = await getUser(env, tgUser.id);
 
   if (!user) {
-
     user = {
-
-      id: userId,
-
-      username:
-        telegramUser.username || "",
-
-      first_name:
-        telegramUser.first_name || "",
-
+      id: tgUser.id,
+      first_name: tgUser.first_name || "",
+      username: tgUser.username || "",
       language: null,
-
-      created_at:
-        Date.now()
-
+      created_at: Date.now()
     };
 
-  } else {
-
-    user.username =
-      telegramUser.username || "";
-
-    user.first_name =
-      telegramUser.first_name || "";
-
+    await saveUser(env, user);
   }
 
-
-  await kvPutJSON(
-    env,
-    `user:${userId}`,
-    user
-  );
-
-
-  let users =
-    await kvJSON(
-      env,
-      "users:index"
-    );
-
-
-  if (!Array.isArray(users)) {
-
-    users = [];
-
-  }
-
-
-  if (!users.includes(userId)) {
-
-    users.push(userId);
-
-    await kvPutJSON(
-      env,
-      "users:index",
-      users
-    );
-
-  }
-
+  return user;
 }
 
 
-// ==========================================
+// ===============================
 // Language
-// ==========================================
-
-async function getLanguage(
-  env,
-  userId
-) {
-
-  const user =
-    await getUser(
-      env,
-      userId
-    );
-
-
-  return user?.language || "fa";
-
-}
-
-
-async function setLanguage(
-  env,
-  userId,
-  language
-) {
-
-  let user =
-    await getUser(
-      env,
-      userId
-    );
-
-
-  if (!user) {
-
-    user = {
-
-      id: String(userId),
-
-      username: "",
-
-      first_name: "",
-
-      language: language,
-
-      created_at:
-        Date.now()
-
-    };
-
-  } else {
-
-    user.language =
-      language;
-
-  }
-
-
-  await kvPutJSON(
-    env,
-    `user:${userId}`,
-    user
-  );
-
-}
-
-
-// ==========================================
-// User State
-// ==========================================
-
-async function getState(
-  env,
-  userId
-) {
-
-  return await kvGet(
-    env,
-    `state:${userId}`
-  );
-
-}
-
-
-async function setState(
-  env,
-  userId,
-  state
-) {
-
-  if (!state) {
-
-    await kvDelete(
-      env,
-      `state:${userId}`
-    );
-
-    return;
-
-  }
-
-
-  await kvPut(
-    env,
-    `state:${userId}`,
-    state
-  );
-
-}
-// ==========================================
-// PART 3 / 8
-// 🌐 LANGUAGES
-// ==========================================
+// ===============================
 
 const TEXTS = {
-
   fa: {
-
-    selectLanguage:
-      "🌐 لطفاً زبان ربات را انتخاب کنید:",
-
-    languageSelected:
-      "✅ زبان فارسی انتخاب شد.",
+    selectLanguage: "🌐 لطفاً زبان خود را انتخاب کنید:",
 
     welcome:
-      "🎬 به ربات فیلم خوش آمدید!",
-
-    choose:
-      "یکی از گزینه‌های پایین را انتخاب کنید.",
-
-    getMovie:
-      "🎬 دریافت فیلم",
-
-    sendMovie:
-      "📤 ارسال فیلم",
-
-    changeLanguage:
-      "🌐 تغییر زبان",
-
-    adminPanel:
-      "👑 پنل مدیریت",
+      "🎬 به ربات فیلم خوش آمدید!\n\n" +
+      "از گزینه‌های پایین صفحه استفاده کنید.",
 
     joinRequired:
-      "📢 برای استفاده از ربات ابتدا باید در کانال عضو شوید.",
+      "📢 برای استفاده از ربات ابتدا باید در کانال ما عضو شوید.",
 
-    joinChannel:
-      "📢 عضویت در کانال",
+    joinChannel: "📢 عضویت در کانال",
 
-    checkMembership:
-      "✅ بررسی عضویت",
+    checkMembership: "✅ بررسی عضویت",
 
-    notMember:
-      "❌ هنوز در کانال عضو نشده‌اید.",
+    membershipSuccess:
+      "✅ عضویت شما تأیید شد.\n\n" +
+      "حالا می‌توانید از ربات استفاده کنید.",
 
-    membershipOK:
-      "✅ عضویت شما تأیید شد.",
+    membershipFailed:
+      "❌ هنوز عضویت شما تأیید نشده است.\n\n" +
+      "ابتدا در کانال عضو شوید و سپس دوباره «بررسی عضویت» را بزنید.",
+
+    getMovie: "🎬 دریافت فیلم",
+    sendMovie: "📤 ارسال فیلم",
+    changeLanguage: "🌐 تغییر زبان",
+    adminPanel: "👑 پنل مدیریت",
 
     sendMovieHelp:
-      "🎬 لطفاً فیلم خود را ارسال کنید.\n\n" +
-      "فیلم شما برای بررسی مدیر ارسال خواهد شد.",
+      "📤 فیلمی که می‌خواهید به آرشیو اضافه شود را همینجا ارسال کنید.\n\n" +
+      "فیلم ابتدا برای مدیر ارسال می‌شود و بعد از تأیید وارد آرشیو خواهد شد.",
 
     movieReceived:
       "✅ فیلم شما دریافت شد.\n\n" +
-      "⏳ برای بررسی مدیر ارسال شد.",
+      "پس از بررسی مدیر، در صورت تأیید به آرشیو اضافه خواهد شد.",
 
-    onlyVideo:
-      "❌ لطفاً یک فیلم ارسال کنید.",
+    movieApproved:
+      "✅ فیلم شما توسط مدیر تأیید شد و به آرشیو اضافه شد. 🎬",
+
+    movieRejected:
+      "❌ فیلم شما توسط مدیر رد شد.",
 
     noMovies:
-      "😔 فعلاً فیلم جدیدی موجود نیست.\n\n" +
-      "بعداً دوباره امتحان کنید.",
+      "🎬 موجودی فیلم برای شما به پایان رسیده است.\n\n" +
+      "نگران نباشید! 😊\n" +
+      "شما می‌توانید با ارسال فیلم‌های خود، به آرشیو ربات کمک کنید و فیلم‌های جدیدی به مجموعه اضافه کنید. 🍿🎥\n\n" +
+      "📤 برای ارسال فیلم، روی گزینه «ارسال فیلم» بزنید.",
 
-    movieCaption:
-      "🎬 فیلم شما\n\n⭐ به فیلم امتیاز دهید:",
+    alreadyRated:
+      "⭐ شما قبلاً به این فیلم امتیاز داده‌اید.",
 
-    ratingThanks:
-      "⭐ ممنون از امتیاز شما!",
+    ratingSaved:
+      "⭐ امتیاز شما با موفقیت ثبت شد. ممنون از نظرتان!",
 
     adminOnly:
-      "❌ شما اجازه دسترسی به پنل مدیریت را ندارید.",
+      "❌ این بخش فقط برای مدیر قابل دسترسی است.",
 
-    adminNewMovie:
-      "🎬 فیلم جدید برای بررسی\n\n",
+    adminPanelTitle:
+      "👑 پنل مدیریت\n\n" +
+      "یکی از گزینه‌های زیر را انتخاب کنید:",
 
-    approve:
-      "✅ تأیید",
+    stats:
+      "📊 آمار ربات\n\n",
 
-    reject:
-      "❌ رد",
+    pendingEmpty:
+      "📭 در حال حاضر فیلمی برای بررسی وجود ندارد.",
+
+    pendingMovie:
+      "📤 فیلم جدید برای بررسی\n\n" +
+      "یکی از گزینه‌های زیر را انتخاب کنید:",
 
     approved:
-      "✅ فیلم تأیید شد و به ربات اضافه شد.",
+      "✅ فیلم تأیید شد و به آرشیو اضافه شد.",
 
     rejected:
       "❌ فیلم رد شد.",
 
-    userApproved:
-      "✅ فیلم شما توسط مدیر تأیید شد و به ربات اضافه شد.",
+    invalid:
+      "❌ این گزینه معتبر نیست.",
 
-    userRejected:
-      "❌ فیلم شما توسط مدیر رد شد.",
-
-    adminStats:
-      "📊 آمار ربات",
-
-    refresh:
-      "🔄 بروزرسانی",
-
-    users:
-      "👥 کاربران",
-
-    movies:
-      "🎬 فیلم‌های تأییدشده",
-
-    pending:
-      "⏳ در انتظار بررسی",
-
-    ratings:
-      "⭐ تعداد امتیازها"
-
+    languageChanged:
+      "🌐 زبان با موفقیت تغییر کرد."
   },
 
-
   en: {
-
-    selectLanguage:
-      "🌐 Please select your language:",
-
-    languageSelected:
-      "✅ English selected.",
+    selectLanguage: "🌐 Please choose your language:",
 
     welcome:
-      "🎬 Welcome to the Movie Bot!",
-
-    choose:
-      "Choose an option from the menu below.",
-
-    getMovie:
-      "🎬 Get movie",
-
-    sendMovie:
-      "📤 Send movie",
-
-    changeLanguage:
-      "🌐 Change language",
-
-    adminPanel:
-      "👑 Admin panel",
+      "🎬 Welcome to the movie bot!\n\n" +
+      "Use the buttons at the bottom of the chat.",
 
     joinRequired:
-      "📢 You must join the channel before using the bot.",
+      "📢 Please join our channel before using the bot.",
 
-    joinChannel:
-      "📢 Join channel",
+    joinChannel: "📢 Join Channel",
 
-    checkMembership:
-      "✅ Check membership",
+    checkMembership: "✅ Check Membership",
 
-    notMember:
-      "❌ You have not joined the channel yet.",
+    membershipSuccess:
+      "✅ Your membership has been verified.\n\n" +
+      "You can now use the bot.",
 
-    membershipOK:
-      "✅ Your membership was confirmed.",
+    membershipFailed:
+      "❌ Your membership has not been verified yet.\n\n" +
+      "Please join the channel and then tap “Check Membership” again.",
+
+    getMovie: "🎬 Get Movie",
+    sendMovie: "📤 Send Movie",
+    changeLanguage: "🌐 Change Language",
+    adminPanel: "👑 Admin Panel",
 
     sendMovieHelp:
-      "🎬 Please send your movie.\n\n" +
-      "Your movie will be sent to the admin for review.",
+      "📤 Send the movie you want to add to the archive here.\n\n" +
+      "The movie will first be sent to the admin for review and will be added to the archive after approval.",
 
     movieReceived:
-      "✅ Your movie was received.\n\n" +
-      "⏳ It has been sent to the admin for review.",
+      "✅ Your movie has been received.\n\n" +
+      "It will be added to the archive if the admin approves it.",
 
-    onlyVideo:
-      "❌ Please send a video.",
+    movieApproved:
+      "✅ Your movie was approved by the admin and added to the archive. 🎬",
+
+    movieRejected:
+      "❌ Your movie was rejected by the admin.",
 
     noMovies:
-      "😔 There are no new movies available right now.\n\n" +
-      "Please try again later.",
+      "🎬 The available movies have run out for you.\n\n" +
+      "Don’t worry! 😊\n" +
+      "You can help expand the bot’s archive by sending your own movies and adding new titles to the collection. 🍿🎥\n\n" +
+      "📤 To send a movie, simply tap “Send Movie”.",
 
-    movieCaption:
-      "🎬 Your movie\n\n⭐ Rate this movie:",
+    alreadyRated:
+      "⭐ You have already rated this movie.",
 
-    ratingThanks:
-      "⭐ Thank you for your rating!",
+    ratingSaved:
+      "⭐ Your rating has been saved successfully. Thank you!",
 
     adminOnly:
-      "❌ You do not have permission to access the admin panel.",
+      "❌ This section is available to the admin only.",
 
-    adminNewMovie:
-      "🎬 New movie waiting for review\n\n",
+    adminPanelTitle:
+      "👑 Admin Panel\n\n" +
+      "Choose an option below:",
 
-    approve:
-      "✅ Approve",
+    stats:
+      "📊 Bot Statistics\n\n",
 
-    reject:
-      "❌ Reject",
+    pendingEmpty:
+      "📭 There are currently no movies waiting for review.",
+
+    pendingMovie:
+      "📤 New movie waiting for review\n\n" +
+      "Choose an action below:",
 
     approved:
-      "✅ Movie approved and added to the bot.",
+      "✅ Movie approved and added to the archive.",
 
     rejected:
       "❌ Movie rejected.",
 
-    userApproved:
-      "✅ Your movie was approved and added to the bot.",
+    invalid:
+      "❌ Invalid option.",
 
-    userRejected:
-      "❌ Your movie was rejected.",
-
-    adminStats:
-      "📊 Bot statistics",
-
-    refresh:
-      "🔄 Refresh",
-
-    users:
-      "👥 Users",
-
-    movies:
-      "🎬 Approved movies",
-
-    pending:
-      "⏳ Pending review",
-
-    ratings:
-      "⭐ Ratings"
-
+    languageChanged:
+      "🌐 Language changed successfully."
   }
-
 };
 
 
-function t(
-  language,
-  key
-) {
+function t(language, key) {
+  const lang = TEXTS[language] ? language : "fa";
+  return TEXTS[lang][key] || key;
+      }
+// ===============================
+// Main Reply Keyboard
+// ===============================
 
-  const lang =
-    TEXTS[language]
-      ? language
-      : "fa";
+function mainKeyboard(language, isAdmin) {
+  const buttons = [
+    [
+      {
+        text: t(language, "getMovie")
+      },
+      {
+        text: t(language, "sendMovie")
+      }
+    ],
+    [
+      {
+        text: t(language, "changeLanguage")
+      }
+    ]
+  ];
 
+  if (isAdmin) {
+    buttons.push([
+      {
+        text: t(language, "adminPanel")
+      }
+    ]);
+  }
 
-  return TEXTS[lang][key] || "";
-
+  return {
+    keyboard: buttons,
+    resize_keyboard: true,
+    is_persistent: true
+  };
 }
-// ==========================================
-// PART 4 / 8
-// 📢 MEMBERSHIP + ⌨️ MAIN KEYBOARD
-// ==========================================
 
 
-// ==========================================
-// بررسی عضویت
-// ==========================================
+async function showMainMenu(env, chatId, user) {
+  const isAdmin =
+    String(user.id) === String(env.ADMIN_ID);
 
-async function isMember(
-  env,
-  userId
-) {
+  await telegram(env, "sendMessage", {
+    chat_id: chatId,
+    text: t(user.language || "fa", "welcome"),
+    reply_markup: mainKeyboard(
+      user.language || "fa",
+      isAdmin
+    )
+  });
+}
 
+
+// ===============================
+// Language Menu
+// ===============================
+
+async function showLanguageMenu(env, chatId) {
+  await telegram(env, "sendMessage", {
+    chat_id: chatId,
+    text: TEXTS.fa.selectLanguage,
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: "🇮🇷 فارسی",
+            callback_data: "lang:fa"
+          },
+          {
+            text: "🇬🇧 English",
+            callback_data: "lang:en"
+          }
+        ]
+      ]
+    }
+  });
+}
+
+
+// ===============================
+// Membership
+// ===============================
+
+async function isMember(env, userId) {
   try {
-
-    const result =
-      await telegram(
-        env,
-        "getChatMember",
-        {
-
-          chat_id:
-            env.CHANNEL_ID,
-
-          user_id:
-            userId
-
-        }
-      );
-
+    const result = await telegram(
+      env,
+      "getChatMember",
+      {
+        chat_id: env.CHANNEL_ID,
+        user_id: userId
+      }
+    );
 
     if (!result.ok) {
-
-      console.error(
-        "getChatMember:",
-        result
-      );
-
       return false;
-
     }
 
-
-    const status =
-      result.result.status;
-
+    const status = result.result.status;
 
     return [
       "creator",
       "administrator",
       "member"
     ].includes(status);
-
   } catch (error) {
+    console.error("Membership error:", error);
+    return false;
+  }
+}
 
-    console.error(
-      "Membership error:",
-      error
+
+async function sendJoinMessage(env, chatId, language) {
+  await telegram(env, "sendMessage", {
+    chat_id: chatId,
+    text: t(language, "joinRequired"),
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: t(language, "joinChannel"),
+            url: env.CHANNEL_LINK
+          }
+        ],
+        [
+          {
+            text: t(language, "checkMembership"),
+            callback_data: "membership:check"
+          }
+        ]
+      ]
+    }
+  });
+}
+
+
+async function requireMembership(env, message, user) {
+  const member = await isMember(
+    env,
+    message.from.id
+  );
+
+  if (!member) {
+    await sendJoinMessage(
+      env,
+      message.chat.id,
+      user.language || "fa"
     );
 
     return false;
-
   }
 
+  return true;
 }
 
 
-// ==========================================
-// پیام عضویت
-// ==========================================
+// ===============================
+// State
+// ===============================
 
-async function sendJoinMessage(
-  env,
-  chatId,
-  language
-) {
-
-  await telegram(
+async function getState(env, userId) {
+  return await getKV(
     env,
-    "sendMessage",
-    {
+    `state:${userId}`,
+    null
+  );
+}
 
-      chat_id:
-        chatId,
+async function setState(env, userId, state) {
+  await putKV(
+    env,
+    `state:${userId}`,
+    state
+  );
+}
 
-      text:
-        t(
-          language,
-          "joinRequired"
-        ),
-
-      reply_markup: {
-
-        inline_keyboard: [
-
-          [
-
-            {
-              text:
-                t(
-                  language,
-                  "joinChannel"
-                ),
-
-              url:
-                env.CHANNEL_LINK
-
+async function clearState(env, userId) {
+  await deleteKV(
+    env,
+    `state:${userId}`
+  );
             }
+// ===============================
+// Movies
+// ===============================
 
-          ],
+async function getMovie(env, movieId) {
+  return await getKV(
+    env,
+    `movie:${movieId}`,
+    null
+  );
+}
 
-          [
-
-            {
-              text:
-                t(
-                  language,
-                  "checkMembership"
-                ),
-
-              callback_data:
-                "check_membership"
-
-            }
-
-          ]
-
-        ]
-
-      }
-
-    }
+async function saveMovie(env, movie) {
+  await putKV(
+    env,
+    `movie:${movie.id}`,
+    movie
   );
 
+  await addToArray(
+    env,
+    "movies:index",
+    movie.id
+  );
+}
+
+async function getMovies(env) {
+  const ids = await getArray(
+    env,
+    "movies:index"
+  );
+
+  const movies = [];
+
+  for (const id of ids) {
+    const movie = await getMovie(env, id);
+
+    if (movie) {
+      movies.push(movie);
+    }
+  }
+
+  return movies;
 }
 
 
-// ==========================================
-// منوی اصلی پایین تلگرام
-// ==========================================
-
-async function showMainMenu(
-  env,
-  chatId,
-  userId,
-  language
-) {
-
-  const member =
-    await isMember(
-      env,
-      userId
-    );
-
-
-  if (!member) {
-
-    await sendJoinMessage(
-      env,
-      chatId,
-      language
-    );
-
-    return;
-
+function randomItem(array) {
+  if (!array.length) {
+    return null;
   }
 
-
-  const keyboard = [
-
-    [
-
-      t(
-        language,
-        "getMovie"
-      ),
-
-      t(
-        language,
-        "sendMovie"
-      )
-
-    ],
-
-    [
-
-      t(
-        language,
-        "changeLanguage"
-      )
-
-    ]
-
+  return array[
+    Math.floor(Math.random() * array.length)
   ];
-
-
-  // فقط مدیر
-  if (
-    String(userId) ===
-    String(env.ADMIN_ID)
-  ) {
-
-    keyboard.push([
-
-      t(
-        language,
-        "adminPanel"
-      )
-
-    ]);
-
-  }
-
-
-  await telegram(
-    env,
-    "sendMessage",
-    {
-
-      chat_id:
-        chatId,
-
-      text:
-        t(
-          language,
-          "welcome"
-        ) +
-        "\n\n" +
-        t(
-          language,
-          "choose"
-        ),
-
-      reply_markup: {
-
-        keyboard:
-          keyboard,
-
-        resize_keyboard:
-          true,
-
-        is_persistent:
-          true
-
-      }
-
-    }
-  );
-
-}
-// ==========================================
-// PART 5 / 8
-// 🎬 MOVIES + ⭐ RATING + ⏳ DELETE
-// ==========================================
-
-
-// ==========================================
-// گرفتن لیست فیلم‌ها
-// ==========================================
-
-async function getMovieList(
-  env
-) {
-
-  const list =
-    await kvJSON(
-      env,
-      "movies:index"
-    );
-
-
-  return Array.isArray(list)
-    ? list
-    : [];
-
 }
 
 
-// ==========================================
-// دریافت فیلم تصادفی
-// ==========================================
+// ===============================
+// Send Movie
+// ===============================
 
-async function sendRandomMovie(
+async function sendMovieToUser(
   env,
   chatId,
-  userId,
-  language,
-  ctx
+  movie
 ) {
-
-  // عضویت
-  const member =
-    await isMember(
-      env,
-      userId
-    );
-
-
-  if (!member) {
-
-    await sendJoinMessage(
-      env,
-      chatId,
-      language
-    );
-
-    return;
-
-  }
-
-
-  let movieIds =
-    await getMovieList(
-      env
-    );
-
-
-  // حذف شناسه‌های خراب از لیست
-  const validMovies = [];
-
-
-  for (
-    const movieId of movieIds
-  ) {
-
-    const movie =
-      await kvJSON(
-        env,
-        `movie:${movieId}`
-      );
-
-
-    if (
-      movie &&
-      movie.status === "approved"
-    ) {
-
-      validMovies.push(
-        movieId
-      );
-
-    }
-
-  }
-
-
-  if (
-    validMovies.length === 0
-  ) {
-
-    await telegram(
-      env,
-      "sendMessage",
-      {
-
-        chat_id:
-          chatId,
-
-        text:
-          t(
-            language,
-            "noMovies"
-          )
-
-      }
-    );
-
-    return;
-
-  }
-
-
-  // انتخاب تصادفی
-  const randomIndex =
-    Math.floor(
-      Math.random() *
-      validMovies.length
-    );
-
-
-  const movieId =
-    validMovies[randomIndex];
-
-
-  const movie =
-    await kvJSON(
-      env,
-      `movie:${movieId}`
-    );
-
-
-  if (!movie) {
-
-    return;
-
-  }
-
-
   let result;
 
-
-  // فیلم ویدیویی
-  if (
-    movie.type === "video"
-  ) {
-
-    result =
-      await telegram(
-        env,
-        "sendVideo",
-        {
-
-          chat_id:
-            chatId,
-
-          video:
-            movie.file_id,
-
-          caption:
-            t(
-              language,
-              "movieCaption"
-            ),
-
-          reply_markup: {
-
-            inline_keyboard: [
-
-              [
-
-                {
-                  text: "⭐ 1",
-                  callback_data:
-                    `rate:${movieId}:1`
-                },
-
-                {
-                  text: "⭐ 2",
-                  callback_data:
-                    `rate:${movieId}:2`
-                },
-
-                {
-                  text: "⭐ 3",
-                  callback_data:
-                    `rate:${movieId}:3`
-                },
-
-                {
-                  text: "⭐ 4",
-                  callback_data:
-                    `rate:${movieId}:4`
-                },
-
-                {
-                  text: "⭐ 5",
-                  callback_data:
-                    `rate:${movieId}:5`
-                }
-
-              ]
-
-            ]
-
-          }
-
-        }
-      );
-
+  if (movie.type === "video") {
+    result = await telegram(env, "sendVideo", {
+      chat_id: chatId,
+      video: movie.file_id,
+      caption: movie.caption || ""
+    });
+  } else {
+    result = await telegram(env, "sendDocument", {
+      chat_id: chatId,
+      document: movie.file_id,
+      caption: movie.caption || ""
+    });
   }
 
-
-  // اگر به صورت document باشد
-  else {
-
-    result =
-      await telegram(
-        env,
-        "sendDocument",
-        {
-
-          chat_id:
-            chatId,
-
-          document:
-            movie.file_id,
-
-          caption:
-            t(
-              language,
-              "movieCaption"
-            ),
-
-          reply_markup: {
-
-            inline_keyboard: [
-
-              [
-
-                {
-                  text: "⭐ 1",
-                  callback_data:
-                    `rate:${movieId}:1`
-                },
-
-                {
-                  text: "⭐ 2",
-                  callback_data:
-                    `rate:${movieId}:2`
-                },
-
-                {
-                  text: "⭐ 3",
-                  callback_data:
-                    `rate:${movieId}:3`
-                },
-
-                {
-                  text: "⭐ 4",
-                  callback_data:
-                    `rate:${movieId}:4`
-                },
-
-                {
-                  text: "⭐ 5",
-                  callback_data:
-                    `rate:${movieId}:5`
-                }
-
-              ]
-
-            ]
-
-          }
-
-        }
-      );
-
-  }
-
-
-  if (
-    !result ||
-    !result.ok
-  ) {
-
-    console.error(
-      "Send movie error:",
-      result
-    );
-
-    return;
-
-  }
-
-
-  const messageId =
-    result.result.message_id;
-
-
-  // حذف دقیقاً پس از حدود 20 ثانیه
-  ctx.waitUntil(
-
-    new Promise(
-      (resolve) => {
-
-        setTimeout(
-          async () => {
-
-            try {
-
-              await telegram(
-                env,
-                "deleteMessage",
-                {
-
-                  chat_id:
-                    chatId,
-
-                  message_id:
-                    messageId
-
-                }
-              );
-
-            } catch (error) {
-
-              console.error(
-                "Delete error:",
-                error
-              );
-
-            }
-
-            resolve();
-
-          },
-
-          20000
-
-        );
-
-      }
-    )
-
-  );
-
+  return result;
 }
 
 
-// ==========================================
-// ⭐ ثبت امتیاز
-// ==========================================
+async function handleGetMovie(
+  env,
+  message,
+  user,
+  ctx
+) {
+  const movies = await getMovies(env);
 
-async function rateMovie(
+  if (!movies.length) {
+    await telegram(env, "sendMessage", {
+      chat_id: message.chat.id,
+      text: t(
+        user.language,
+        "noMovies"
+      ),
+      reply_markup: mainKeyboard(
+        user.language,
+        String(user.id) === String(env.ADMIN_ID)
+      )
+    });
+
+    return;
+  }
+
+  const movie = randomItem(movies);
+
+  const result = await sendMovieToUser(
+    env,
+    message.chat.id,
+    movie
+  );
+
+  if (!result.ok) {
+    await telegram(env, "sendMessage", {
+      chat_id: message.chat.id,
+      text: t(user.language, "noMovies"),
+      reply_markup: mainKeyboard(
+        user.language,
+        String(user.id) === String(env.ADMIN_ID)
+      )
+    });
+
+    return;
+  }
+
+  const sentMessageId =
+    result.result.message_id;
+
+  await telegram(env, "sendMessage", {
+    chat_id: message.chat.id,
+    text: user.language === "en"
+      ? "⭐ Rate this movie:"
+      : "⭐ به این فیلم امتیاز بدهید:",
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "⭐", callback_data: `rate:${movie.id}:1` },
+          { text: "⭐⭐", callback_data: `rate:${movie.id}:2` },
+          { text: "⭐⭐⭐", callback_data: `rate:${movie.id}:3` },
+          { text: "⭐⭐⭐⭐", callback_data: `rate:${movie.id}:4` },
+          { text: "⭐⭐⭐⭐⭐", callback_data: `rate:${movie.id}:5` }
+        ]
+      ]
+    }
+  });
+
+  // Delete movie message after approximately 20 seconds.
+  ctx.waitUntil(
+    new Promise(resolve => {
+      setTimeout(async () => {
+        try {
+          await telegram(
+            env,
+            "deleteMessage",
+            {
+              chat_id: message.chat.id,
+              message_id: sentMessageId
+            }
+          );
+        } catch (error) {
+          console.error(
+            "Delete movie error:",
+            error
+          );
+        }
+
+        resolve();
+      }, 20000);
+    })
+  );
+    }
+// ===============================
+// Ratings
+// ===============================
+
+async function hasRated(
+  env,
+  userId,
+  movieId
+) {
+  return await getKV(
+    env,
+    `rating:user:${userId}:${movieId}`,
+    null
+  );
+}
+
+
+async function saveRating(
   env,
   userId,
   movieId,
   rating
 ) {
-
-  const userRatingKey =
-    `rating:user:${userId}:${movieId}`;
-
-
-  // هر کاربر فقط یک بار
-  const alreadyRated =
-    await kvGet(
-      env,
-      userRatingKey
-    );
-
-
-  if (alreadyRated) {
-
-    return false;
-
-  }
-
-
-  await kvPut(
+  await putKV(
     env,
-    userRatingKey,
-    String(rating)
+    `rating:user:${userId}:${movieId}`,
+    {
+      user_id: userId,
+      movie_id: movieId,
+      rating,
+      created_at: Date.now()
+    }
   );
 
-
-  const ratingKey =
-    `rating:${movieId}`;
-
-
-  let data =
-    await kvJSON(
+  const movieRatings =
+    await getKV(
       env,
-      ratingKey
+      `rating:${movieId}`,
+      []
     );
 
+  const ratings = Array.isArray(movieRatings)
+    ? movieRatings
+    : [];
 
-  if (!data) {
+  ratings.push({
+    user_id: userId,
+    rating,
+    created_at: Date.now()
+  });
 
-    data = {
-
-      total: 0,
-
-      count: 0
-
-    };
-
-  }
-
-
-  data.total += rating;
-
-  data.count += 1;
-
-
-  await kvPutJSON(
+  await putKV(
     env,
-    ratingKey,
-    data
+    `rating:${movieId}`,
+    ratings
   );
-
-
-  return true;
-
 }
-// ==========================================
-// PART 6 / 8
-// 📤 USER MOVIE SUBMISSION
-// ==========================================
 
 
-// ==========================================
-// دریافت فیلم از کاربر
-// ==========================================
-
-async function submitMovie(
+async function handleRating(
   env,
-  message,
-  language
+  query
 ) {
+  const userId = query.from.id;
 
-  const user =
-    message.from;
+  const parts = query.data.split(":");
 
+  const movieId = parts[1];
+  const rating = Number(parts[2]);
 
-  const userId =
-    String(user.id);
-
-
-  let fileId = null;
-
-  let type = null;
-
-
-  // ویدیو
-  if (message.video) {
-
-    fileId =
-      message.video.file_id;
-
-    type =
-      "video";
-
-  }
-
-
-  // فایل ویدیویی به شکل Document
-  else if (
-    message.document
+  if (
+    !movieId ||
+    !rating ||
+    rating < 1 ||
+    rating > 5
   ) {
-
-    fileId =
-      message.document.file_id;
-
-    type =
-      "document";
-
-  }
-
-
-  // چیز دیگری ارسال شده
-  else {
-
     await telegram(
       env,
-      "sendMessage",
+      "answerCallbackQuery",
       {
-
-        chat_id:
-          message.chat.id,
-
-        text:
-          t(
-            language,
-            "onlyVideo"
-          )
-
+        callback_query_id: query.id,
+        text: "Invalid rating."
       }
     );
 
     return;
-
   }
 
-
-  // شناسه یکتا
-  const movieId =
-    `${Date.now()}_${userId}`;
-
-
-  const movie = {
-
-    id:
-      movieId,
-
-    file_id:
-      fileId,
-
-    type:
-      type,
-
-    status:
-      "pending",
-
-    user_id:
+  const alreadyRated =
+    await hasRated(
+      env,
       userId,
-
-    username:
-      user.username || "",
-
-    first_name:
-      user.first_name || "",
-
-    language:
-      language,
-
-    created_at:
-      Date.now()
-
-  };
-
-
-  // ذخیره در انتظار بررسی
-  await kvPutJSON(
-    env,
-    `pending:${movieId}`,
-    movie
-  );
-
-
-  // وضعیت کاربر پاک شود
-  await setState(
-    env,
-    userId,
-    null
-  );
-
-
-  // اطلاع به کاربر
-  await telegram(
-    env,
-    "sendMessage",
-    {
-
-      chat_id:
-        message.chat.id,
-
-      text:
-        t(
-          language,
-          "movieReceived"
-        )
-
-    }
-  );
-
-
-  // ======================================
-  // ارسال اطلاعات به مدیر
-  // ======================================
-
-  await telegram(
-    env,
-    "sendMessage",
-    {
-
-      chat_id:
-        env.ADMIN_ID,
-
-      text:
-        t(
-          "fa",
-          "adminNewMovie"
-        ) +
-
-        `👤 ${user.first_name || "-"}\n` +
-
-        `🆔 ${userId}\n` +
-
-        (
-          user.username
-            ? `🔹 @${user.username}\n`
-            : ""
-        ) +
-
-        `\n🎞 ID: ${movieId}`,
-
-      reply_markup: {
-
-        inline_keyboard: [
-
-          [
-
-            {
-
-              text:
-                t(
-                  "fa",
-                  "approve"
-                ),
-
-              callback_data:
-                `approve:${movieId}`
-
-            },
-
-            {
-
-              text:
-                t(
-                  "fa",
-                  "reject"
-                ),
-
-              callback_data:
-                `reject:${movieId}`
-
-            }
-
-          ]
-
-        ]
-
-      }
-
-    }
-  );
-
-
-  // ======================================
-  // ارسال خود فیلم برای مدیر
-  // ======================================
-
-  if (
-    type === "video"
-  ) {
-
-    await telegram(
-      env,
-      "sendVideo",
-      {
-
-        chat_id:
-          env.ADMIN_ID,
-
-        video:
-          fileId,
-
-        caption:
-          `🎬 فیلم در انتظار تأیید\n\n` +
-          `ID: ${movieId}`
-
-      }
+      movieId
     );
 
-  } else {
-
-    await telegram(
-      env,
-      "sendDocument",
-      {
-
-        chat_id:
-          env.ADMIN_ID,
-
-        document:
-          fileId,
-
-        caption:
-          `🎬 فیلم در انتظار تأیید\n\n` +
-          `ID: ${movieId}`
-
-      }
-    );
-
-  }
-
-}
-// ==========================================
-// PART 7 / 8
-// 👑 ADMIN PANEL
-// ==========================================
-
-
-// ==========================================
-// شمارش فیلم‌های در انتظار
-// ==========================================
-
-async function countPending(
-  env
-) {
-
-  let count = 0;
-
-  let cursor;
-
-
-  do {
-
-    const result =
-      await env.BOT_DATA.list({
-
-        prefix:
-          "pending:",
-
-        cursor:
-          cursor
-
-      });
-
-
-    count +=
-      result.keys.length;
-
-
-    if (
-      result.list_complete
-    ) {
-
-      cursor =
-        undefined;
-
-    } else {
-
-      cursor =
-        result.cursor;
-
-    }
-
-  } while (cursor);
-
-
-  return count;
-
-}
-
-
-// ==========================================
-// شمارش امتیازها
-// ==========================================
-
-async function countRatings(
-  env
-) {
-
-  let count = 0;
-
-  let cursor;
-
-
-  do {
-
-    const result =
-      await env.BOT_DATA.list({
-
-        prefix:
-          "rating:",
-
-        cursor:
-          cursor
-
-      });
-
-
-    for (
-      const key of result.keys
-    ) {
-
-      // فقط rating:movie را بشمار
-      if (
-        key.name.startsWith(
-          "rating:"
-        ) &&
-        !key.name.startsWith(
-          "rating:user:"
-        )
-      ) {
-
-        const data =
-          await kvJSON(
-            env,
-            key.name
-          );
-
-
-        if (data) {
-
-          count +=
-            Number(
-              data.count || 0
-            );
-
-        }
-
-      }
-
-    }
-
-
-    if (
-      result.list_complete
-    ) {
-
-      cursor =
-        undefined;
-
-    } else {
-
-      cursor =
-        result.cursor;
-
-    }
-
-  } while (cursor);
-
-
-  return count;
-
-}
-
-
-// ==========================================
-// پنل مدیریت
-// ==========================================
-
-async function showAdminPanel(
-  env,
-  chatId
-) {
-
-  const users =
-    await kvJSON(
-      env,
-      "users:index"
-    ) || [];
-
-
-  const movies =
-    await getMovieList(
-      env
-    );
-
-
-  const pending =
-    await countPending(
-      env
-    );
-
-
-  const ratings =
-    await countRatings(
-      env
-    );
-
-
-  const message =
-
-    `📊 آمار ربات\n\n` +
-
-    `👥 کاربران: ${users.length}\n` +
-
-    `🎬 فیلم‌های تأییدشده: ${movies.length}\n` +
-
-    `⏳ در انتظار بررسی: ${pending}\n` +
-
-    `⭐ تعداد امتیازها: ${ratings}`;
-
-
-  await telegram(
-    env,
-    "sendMessage",
-    {
-
-      chat_id:
-        chatId,
-
-      text:
-        message,
-
-      reply_markup: {
-
-        inline_keyboard: [
-
-          [
-
-            {
-
-              text:
-                "🔄 بروزرسانی",
-
-              callback_data:
-                "admin:stats"
-
-            }
-
-          ]
-
-        ]
-
-      }
-
-    }
-  );
-
-}
-
-
-// ==========================================
-// تأیید فیلم
-// ==========================================
-
-async function approveMovie(
-  env,
-  movieId,
-  adminChatId,
-  adminMessageId
-) {
-
-  const movie =
-    await kvJSON(
-      env,
-      `pending:${movieId}`
-    );
-
-
-  if (!movie) {
+  if (alreadyRated) {
+    const user =
+      await getUser(env, userId);
 
     await telegram(
       env,
       "answerCallbackQuery",
       {
-
-        callback_query_id:
-          adminMessageId,
-
-        text:
-          "❌ این فیلم دیگر در انتظار بررسی نیست."
-
+        callback_query_id: query.id,
+        text: t(
+          user?.language || "fa",
+          "alreadyRated"
+        ),
+        show_alert: true
       }
     );
 
     return;
-
   }
 
-
-  movie.status =
-    "approved";
-
-
-  // ذخیره فیلم اصلی
-  await kvPutJSON(
+  await saveRating(
     env,
-    `movie:${movieId}`,
-    movie
+    userId,
+    movieId,
+    rating
   );
 
+  const user =
+    await getUser(env, userId);
 
-  // اضافه به لیست فیلم‌ها
-  let movies =
-    await getMovieList(
-      env
-    );
-
-
-  if (
-    !movies.includes(movieId)
-  ) {
-
-    movies.push(
-      movieId
-    );
-
-    await kvPutJSON(
-      env,
-      "movies:index",
-      movies
-    );
-
-  }
-
-
-  // حذف از pending
-  await kvDelete(
-    env,
-    `pending:${movieId}`
-  );
-
-
-  // تغییر دکمه مدیر
   await telegram(
     env,
-    "editMessageReplyMarkup",
+    "answerCallbackQuery",
     {
-
-      chat_id:
-        adminChatId,
-
-      message_id:
-        adminMessageId,
-
-      reply_markup: {
-
-        inline_keyboard: [
-
-          [
-
-            {
-              text:
-                "✅ تأیید شد",
-
-              callback_data:
-                "none"
-
-            }
-
-          ]
-
-        ]
-
-      }
-
+      callback_query_id: query.id,
+      text: t(
+        user?.language || "fa",
+        "ratingSaved"
+      ),
+      show_alert: true
     }
   );
-
-
-  // اطلاع کاربر
-  await telegram(
-    env,
-    "sendMessage",
-    {
-
-      chat_id:
-        movie.user_id,
-
-      text:
-        t(
-          movie.language || "fa",
-          "userApproved"
-        )
-
-    }
-  );
-
 }
 
 
-// ==========================================
-// رد فیلم
-// ==========================================
+// ===============================
+// Rating Statistics
+// ===============================
 
-async function rejectMovie(
-  env,
-  movieId,
-  adminChatId,
-  adminMessageId
-) {
-
-  const movie =
-    await kvJSON(
+async function countRatings(env) {
+  const movieIds =
+    await getArray(
       env,
-      `pending:${movieId}`
+      "movies:index"
     );
 
+  let total = 0;
 
-  if (!movie) {
+  for (const movieId of movieIds) {
+    const ratings =
+      await getKV(
+        env,
+        `rating:${movieId}`,
+        []
+      );
 
-    return;
-
+    if (Array.isArray(ratings)) {
+      total += ratings.length;
+    }
   }
 
+  return total;
+}
+// ===============================
+// Pending Movies
+// ===============================
 
-  await kvDelete(
+async function getPending(
+  env,
+  movieId
+) {
+  return await getKV(
+    env,
+    `pending:${movieId}`,
+    null
+  );
+}
+
+
+async function savePending(
+  env,
+  movie
+) {
+  await putKV(
+    env,
+    `pending:${movie.id}`,
+    movie
+  );
+}
+
+
+async function getPendingMovies(env) {
+  const keys =
+    await env.BOT_DATA.list({
+      prefix: "pending:"
+    });
+
+  const movies = [];
+
+  for (const key of keys.keys) {
+    const movie =
+      await getPending(
+        env,
+        key.name.replace("pending:", "")
+      );
+
+    if (movie) {
+      movies.push(movie);
+    }
+  }
+
+  return movies;
+}
+
+
+// ===============================
+// Receive User Movie
+// ===============================
+
+async function handleUserMovie(
+  env,
+  message,
+  user
+) {
+  let type = null;
+  let fileId = null;
+
+  if (message.video) {
+    type = "video";
+    fileId = message.video.file_id;
+  } else if (message.document) {
+    type = "document";
+    fileId = message.document.file_id;
+  }
+
+  if (!fileId) {
+    return false;
+  }
+
+  const movieId =
+    `${message.from.id}_${message.message_id}_${Date.now()}`;
+
+  const pending = {
+    id: movieId,
+    type,
+    file_id: fileId,
+    caption:
+      message.caption || "",
+    user_id: message.from.id,
+    chat_id: message.chat.id,
+    created_at: Date.now()
+  };
+
+  await savePending(
+    env,
+    pending
+  );
+
+  // Send confirmation to user.
+  await telegram(env, "sendMessage", {
+    chat_id: message.chat.id,
+    text: t(
+      user.language,
+      "movieReceived"
+    ),
+    reply_markup: mainKeyboard(
+      user.language,
+      String(user.id) === String(env.ADMIN_ID)
+    )
+  });
+
+  // Send movie to admin.
+  let adminResult;
+
+  if (type === "video") {
+    adminResult = await telegram(
+      env,
+      "sendVideo",
+      {
+        chat_id: env.ADMIN_ID,
+        video: fileId,
+        caption:
+          `📤 ${user.language === "en" ? "New movie submission" : "فیلم جدید"}\n\n` +
+          `👤 User ID: ${message.from.id}\n` +
+          (message.from.username
+            ? `🔹 @${message.from.username}`
+            : ""),
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "✅ تأیید",
+                callback_data:
+                  `approve:${movieId}`
+              },
+              {
+                text: "❌ رد",
+                callback_data:
+                  `reject:${movieId}`
+              }
+            ]
+          ]
+        }
+      }
+    );
+  } else {
+    adminResult = await telegram(
+      env,
+      "sendDocument",
+      {
+        chat_id: env.ADMIN_ID,
+        document: fileId,
+        caption:
+          `📤 ${user.language === "en" ? "New movie submission" : "فیلم جدید"}\n\n` +
+          `👤 User ID: ${message.from.id}\n` +
+          (message.from.username
+            ? `🔹 @${message.from.username}`
+            : ""),
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "✅ تأیید",
+                callback_data:
+                  `approve:${movieId}`
+              },
+              {
+                text: "❌ رد",
+                callback_data:
+                  `reject:${movieId}`
+              }
+            ]
+          ]
+        }
+      }
+    );
+  }
+
+  if (adminResult.ok) {
+    pending.admin_message_id =
+      adminResult.result.message_id;
+
+    await savePending(
+      env,
+      pending
+    );
+  }
+
+  return true;
+}
+// ===============================
+// Approve Movie
+// ===============================
+
+async function approveMovie(
+  env,
+  query,
+  movieId
+) {
+  const pending =
+    await getPending(
+      env,
+      movieId
+    );
+
+  if (!pending) {
+    await telegram(
+      env,
+      "answerCallbackQuery",
+      {
+        callback_query_id: query.id,
+        text: "این فیلم دیگر در انتظار بررسی نیست.",
+        show_alert: true
+      }
+    );
+
+    return;
+  }
+
+  const movie = {
+    id: pending.id,
+    type: pending.type,
+    file_id: pending.file_id,
+    caption: pending.caption,
+    added_by: pending.user_id,
+    created_at: Date.now()
+  };
+
+  await saveMovie(
+    env,
+    movie
+  );
+
+  await deleteKV(
     env,
     `pending:${movieId}`
   );
 
+  await telegram(
+    env,
+    "answerCallbackQuery",
+    {
+      callback_query_id: query.id,
+      text: "✅ فیلم تأیید شد."
+    }
+  );
 
   await telegram(
     env,
     "editMessageReplyMarkup",
     {
-
-      chat_id:
-        adminChatId,
-
-      message_id:
-        adminMessageId,
-
+      chat_id: env.ADMIN_ID,
+      message_id: query.message.message_id,
       reply_markup: {
-
-        inline_keyboard: [
-
-          [
-
-            {
-
-              text:
-                "❌ رد شد",
-
-              callback_data:
-                "none"
-
-            }
-
-          ]
-
-        ]
-
+        inline_keyboard: []
       }
-
     }
   );
-
 
   await telegram(
     env,
     "sendMessage",
     {
+      chat_id: pending.user_id,
+      text: t(
+        (
+          await getUser(
+            env,
+            pending.user_id
+          )
+        )?.language || "fa",
+        "movieApproved"
+      )
+    }
+  );
+}
 
-      chat_id:
-        movie.user_id,
 
-      text:
-        t(
-          movie.language || "fa",
-          "userRejected"
-        )
+// ===============================
+// Reject Movie
+// ===============================
 
+async function rejectMovie(
+  env,
+  query,
+  movieId
+) {
+  const pending =
+    await getPending(
+      env,
+      movieId
+    );
+
+  if (!pending) {
+    await telegram(
+      env,
+      "answerCallbackQuery",
+      {
+        callback_query_id: query.id,
+        text: "این فیلم دیگر در انتظار بررسی نیست.",
+        show_alert: true
+      }
+    );
+
+    return;
+  }
+
+  await deleteKV(
+    env,
+    `pending:${movieId}`
+  );
+
+  await telegram(
+    env,
+    "answerCallbackQuery",
+    {
+      callback_query_id: query.id,
+      text: "❌ فیلم رد شد."
     }
   );
 
+  await telegram(
+    env,
+    "editMessageReplyMarkup",
+    {
+      chat_id: env.ADMIN_ID,
+      message_id: query.message.message_id,
+      reply_markup: {
+        inline_keyboard: []
+      }
+    }
+  );
+
+  const user =
+    await getUser(
+      env,
+      pending.user_id
+    );
+
+  await telegram(
+    env,
+    "sendMessage",
+    {
+      chat_id: pending.user_id,
+      text: t(
+        user?.language || "fa",
+        "movieRejected"
+      )
+    }
+  );
+}
+
+
+// ===============================
+// Admin Statistics
+// ===============================
+
+async function adminStats(env) {
+  const users =
+    await getArray(
+      env,
+      "users:index"
+    );
+
+  const movies =
+    await getArray(
+      env,
+      "movies:index"
+    );
+
+  const pending =
+    await getPendingMovies(env);
+
+  const ratings =
+    await countRatings(env);
+
+  return {
+    users: users.length,
+    movies: movies.length,
+    pending: pending.length,
+    ratings
+  };
+}
+
+
+async function showAdminPanel(
+  env,
+  chatId,
+  language
+) {
+  await telegram(
+    env,
+    "sendMessage",
+    {
+      chat_id: chatId,
+      text: t(
+        language,
+        "adminPanelTitle"
+      ),
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "📊 آمار",
+              callback_data: "admin:stats"
+            }
+          ],
+          [
+            {
+              text: "📭 فیلم‌های در انتظار",
+              callback_data: "admin:pending"
+            }
+          ]
+        ]
+      }
+    }
+  );
+}
+
+
+async function showAdminStats(
+  env,
+  chatId,
+  language
+) {
+  const stats =
+    await adminStats(env);
+
+  const text =
+    t(language, "stats") +
+    `👥 Users: ${stats.users}\n` +
+    `🎬 Movies: ${stats.movies}\n` +
+    `📭 Pending: ${stats.pending}\n` +
+    `⭐ Ratings: ${stats.ratings}`;
+
+  await telegram(
+    env,
+    "sendMessage",
+    {
+      chat_id: chatId,
+      text
+    }
+  );
+}
+
+
+async function showPendingMovies(
+  env,
+  chatId,
+  language
+) {
+  const pending =
+    await getPendingMovies(env);
+
+  if (!pending.length) {
+    await telegram(
+      env,
+      "sendMessage",
+      {
+        chat_id: chatId,
+        text: t(
+          language,
+          "pendingEmpty"
+        )
+      }
+    );
+
+    return;
+  }
+
+  for (const movie of pending) {
+    const caption =
+      t(language, "pendingMovie") +
+      `\n\n👤 User ID: ${movie.user_id}`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: "✅ تأیید",
+            callback_data:
+              `approve:${movie.id}`
+          },
+          {
+            text: "❌ رد",
+            callback_data:
+              `reject:${movie.id}`
+          }
+        ]
+      ]
+    };
+
+    if (movie.type === "video") {
+      await telegram(
+        env,
+        "sendVideo",
+        {
+          chat_id: chatId,
+          video: movie.file_id,
+          caption,
+          reply_markup: keyboard
         }
-// ==========================================
-// PART 8 / 8
-// 🧠 FINAL MESSAGE + CALLBACK HANDLERS
-// ==========================================
-
-
-// ==========================================
-// پیام‌های کاربر
-// ==========================================
+      );
+    } else {
+      await telegram(
+        env,
+        "sendDocument",
+        {
+          chat_id: chatId,
+          document: movie.file_id,
+          caption,
+          reply_markup: keyboard
+        }
+      );
+    }
+  }
+}
+// ===============================
+// Handle Messages
+// ===============================
 
 async function handleMessage(
   message,
   env,
   ctx
 ) {
-
   if (!message.from) {
     return;
   }
 
-
   const user =
-    message.from;
-
-
-  const userId =
-    String(user.id);
-
-
-  const chatId =
-    message.chat.id;
-
-
-  // ذخیره کاربر
-  await saveUser(
-    env,
-    user
-  );
-
-
-  // زبان فعلی
-  let language =
-    await getLanguage(
+    await ensureUser(
       env,
-      userId
+      message
     );
 
+  const text =
+    message.text || "";
 
-  // ======================================
+  // -------------------------------
   // /start
-  // ======================================
+  // -------------------------------
 
-  if (
-    message.text === "/start"
-  ) {
-
-    await showLanguageMenu(
+  if (text === "/start") {
+    await clearState(
       env,
-      chatId
+      message.from.id
     );
 
-    return;
-
-  }
-
-
-  // ======================================
-  // انتخاب فارسی
-  // ======================================
-
-  if (
-    message.text === "🇮🇷 فارسی"
-  ) {
-
-    await setLanguage(
-      env,
-      userId,
-      "fa"
-    );
-
-
-    await telegram(
-      env,
-      "sendMessage",
-      {
-
-        chat_id:
-          chatId,
-
-        text:
-          t(
-            "fa",
-            "languageSelected"
-          )
-
-      }
-    );
-
-
-    await showMainMenu(
-      env,
-      chatId,
-      userId,
-      "fa"
-    );
-
-
-    return;
-
-  }
-
-
-  // ======================================
-  // انتخاب English
-  // ======================================
-
-  if (
-    message.text === "🇬🇧 English"
-  ) {
-
-    await setLanguage(
-      env,
-      userId,
-      "en"
-    );
-
-
-    await telegram(
-      env,
-      "sendMessage",
-      {
-
-        chat_id:
-          chatId,
-
-        text:
-          t(
-            "en",
-            "languageSelected"
-          )
-
-      }
-    );
-
-
-    await showMainMenu(
-      env,
-      chatId,
-      userId,
-      "en"
-    );
-
-
-    return;
-
-  }
-
-
-  // ======================================
-  // تغییر زبان
-  // ======================================
-
-  if (
-    message.text ===
-      "🌐 تغییر زبان" ||
-
-    message.text ===
-      "🌐 Change language"
-  ) {
-
-    await showLanguageMenu(
-      env,
-      chatId
-    );
-
-    return;
-
-  }
-
-
-  // ======================================
-  // پنل مدیریت
-  // ======================================
-
-  if (
-    message.text ===
-      "👑 پنل مدیریت" ||
-
-    message.text ===
-      "👑 Admin panel"
-  ) {
-
-    if (
-      userId !==
-      String(env.ADMIN_ID)
-    ) {
-
-      await telegram(
+    if (!user.language) {
+      await showLanguageMenu(
         env,
-        "sendMessage",
-        {
-
-          chat_id:
-            chatId,
-
-          text:
-            t(
-              language,
-              "adminOnly"
-            )
-
-        }
+        message.chat.id
       );
 
       return;
-
     }
-
-
-    await showAdminPanel(
-      env,
-      chatId
-    );
-
-    return;
-
-  }
-
-
-  // ======================================
-  // دریافت فیلم
-  // ======================================
-
-  if (
-    message.text ===
-      "🎬 دریافت فیلم" ||
-
-    message.text ===
-      "🎬 Get movie"
-  ) {
-
-    await sendRandomMovie(
-      env,
-      chatId,
-      userId,
-      language,
-      ctx
-    );
-
-    return;
-
-  }
-
-
-  // ======================================
-  // ارسال فیلم
-  // ======================================
-
-  if (
-    message.text ===
-      "📤 ارسال فیلم" ||
-
-    message.text ===
-      "📤 Send movie"
-  ) {
 
     const member =
       await isMember(
         env,
-        userId
+        message.from.id
       );
 
-
     if (!member) {
-
       await sendJoinMessage(
         env,
-        chatId,
-        language
+        message.chat.id,
+        user.language
       );
 
       return;
-
     }
 
+    await showMainMenu(
+      env,
+      message.chat.id,
+      user
+    );
+
+    return;
+  }
+
+
+  // -------------------------------
+  // Language buttons
+  // -------------------------------
+
+  if (
+    text === "🎬 دریافت فیلم" ||
+    text === "🎬 Get Movie"
+  ) {
+    const allowed =
+      await requireMembership(
+        env,
+        message,
+        user
+      );
+
+    if (!allowed) {
+      return;
+    }
+
+    await handleGetMovie(
+      env,
+      message,
+      user,
+      ctx
+    );
+
+    return;
+  }
+
+
+  if (
+    text === "📤 ارسال فیلم" ||
+    text === "📤 Send Movie"
+  ) {
+    const allowed =
+      await requireMembership(
+        env,
+        message,
+        user
+      );
+
+    if (!allowed) {
+      return;
+    }
 
     await setState(
       env,
-      userId,
-      "waiting_movie"
+      message.from.id,
+      {
+        action: "waiting_movie"
+      }
     );
-
 
     await telegram(
       env,
       "sendMessage",
       {
-
-        chat_id:
-          chatId,
-
-        text:
-          t(
-            language,
-            "sendMovieHelp"
-          )
-
+        chat_id: message.chat.id,
+        text: t(
+          user.language,
+          "sendMovieHelp"
+        ),
+        reply_markup: mainKeyboard(
+          user.language,
+          String(user.id) ===
+            String(env.ADMIN_ID)
+        )
       }
     );
 
-
     return;
-
   }
 
 
-  // ======================================
-  // دریافت فیلم ارسالی کاربر
-  // ======================================
+  if (
+    text === "🌐 تغییر زبان" ||
+    text === "🌐 Change Language"
+  ) {
+    await showLanguageMenu(
+      env,
+      message.chat.id
+    );
+
+    return;
+  }
+
+
+  if (
+    text === "👑 پنل مدیریت" ||
+    text === "👑 Admin Panel"
+  ) {
+    if (
+      String(message.from.id) !==
+      String(env.ADMIN_ID)
+    ) {
+      await telegram(
+        env,
+        "sendMessage",
+        {
+          chat_id: message.chat.id,
+          text: t(
+            user.language,
+            "adminOnly"
+          )
+        }
+      );
+
+      return;
+    }
+
+    await showAdminPanel(
+      env,
+      message.chat.id,
+      user.language
+    );
+
+    return;
+  }
+
+
+  // -------------------------------
+  // Waiting for movie
+  // -------------------------------
 
   const state =
     await getState(
       env,
-      userId
+      message.from.id
     );
-
 
   if (
-    state ===
-    "waiting_movie"
+    state &&
+    state.action === "waiting_movie"
   ) {
+    const allowed =
+      await requireMembership(
+        env,
+        message,
+        user
+      );
 
-    await submitMovie(
-      env,
-      message,
-      language
-    );
+    if (!allowed) {
+      return;
+    }
+
+    const received =
+      await handleUserMovie(
+        env,
+        message,
+        user
+      );
+
+    if (received) {
+      await clearState(
+        env,
+        message.from.id
+      );
+    }
 
     return;
-
   }
-
 }
 
 
-// ==========================================
-// منوی انتخاب زبان
-// ==========================================
-
-async function showLanguageMenu(
-  env,
-  chatId
-) {
-
-  await telegram(
-    env,
-    "sendMessage",
-    {
-
-      chat_id:
-        chatId,
-
-      text:
-        t(
-          "fa",
-          "selectLanguage"
-        ),
-
-      reply_markup: {
-
-        inline_keyboard: [
-
-          [
-
-            {
-              text:
-                "🇮🇷 فارسی",
-
-              callback_data:
-                "language:fa"
-
-            },
-
-            {
-              text:
-                "🇬🇧 English",
-
-              callback_data:
-                "language:en"
-
-            }
-
-          ]
-
-        ]
-
-      }
-
-    }
-  );
-
-}
-
-
-// ==========================================
-// Callback ها
-// ==========================================
+// ===============================
+// Handle Callback Queries
+// ===============================
 
 async function handleCallback(
   query,
   env,
   ctx
 ) {
-
-  if (!query.from) {
-    return;
-  }
-
-
-  const userId =
-    String(
-      query.from.id
-    );
-
-
-  const chatId =
-    query.message?.chat?.id;
-
-
-  const messageId =
-    query.message?.message_id;
-
-
   const data =
     query.data || "";
 
+  const userId =
+    query.from.id;
 
-  // پاسخ اولیه
-  await telegram(
-    env,
-    "answerCallbackQuery",
-    {
+  // -------------------------------
+  // Language
+  // -------------------------------
 
-      callback_query_id:
-        query.id
-
-    }
-  );
-
-
-  // ======================================
-  // زبان فارسی
-  // ======================================
-
-  if (
-    data === "language:fa"
-  ) {
-
-    await setLanguage(
-      env,
-      userId,
-      "fa"
-    );
-
-
-    await telegram(
-      env,
-      "editMessageText",
-      {
-
-        chat_id:
-          chatId,
-
-        message_id:
-          messageId,
-
-        text:
-          t(
-            "fa",
-            "languageSelected"
-          )
-
-      }
-    );
-
-
-    await showMainMenu(
-      env,
-      chatId,
-      userId,
-      "fa"
-    );
-
-
-    return;
-
-  }
-
-
-  // ======================================
-  // English
-  // ======================================
-
-  if (
-    data === "language:en"
-  ) {
-
-    await setLanguage(
-      env,
-      userId,
-      "en"
-    );
-
-
-    await telegram(
-      env,
-      "editMessageText",
-      {
-
-        chat_id:
-          chatId,
-
-        message_id:
-          messageId,
-
-        text:
-          t(
-            "en",
-            "languageSelected"
-          )
-
-      }
-    );
-
-
-    await showMainMenu(
-      env,
-      chatId,
-      userId,
-      "en"
-    );
-
-
-    return;
-
-  }
-
-
-  // ======================================
-  // بررسی عضویت
-  // ======================================
-
-  if (
-    data ===
-    "check_membership"
-  ) {
-
+  if (data.startsWith("lang:")) {
     const language =
-      await getLanguage(
+      data.split(":")[1];
+
+    if (
+      language !== "fa" &&
+      language !== "en"
+    ) {
+      await telegram(
+        env,
+        "answerCallbackQuery",
+        {
+          callback_query_id: query.id,
+          text: "Invalid language."
+        }
+      );
+
+      return;
+    }
+
+    let user =
+      await getUser(
         env,
         userId
       );
 
+    if (!user) {
+      user = {
+        id: userId,
+        first_name:
+          query.from.first_name || "",
+        username:
+          query.from.username || "",
+        language,
+        created_at: Date.now()
+      };
+    } else {
+      user.language = language;
+    }
+
+    await saveUser(
+      env,
+      user
+    );
+
+    await telegram(
+      env,
+      "answerCallbackQuery",
+      {
+        callback_query_id: query.id,
+        text: t(
+          language,
+          "languageChanged"
+        )
+      }
+    );
+
+    await telegram(
+      env,
+      "deleteMessage",
+      {
+        chat_id: query.message.chat.id,
+        message_id:
+          query.message.message_id
+      }
+    );
 
     const member =
       await isMember(
@@ -2637,315 +1679,246 @@ async function handleCallback(
         userId
       );
 
-
     if (!member) {
-
-      await telegram(
+      await sendJoinMessage(
         env,
-        "answerCallbackQuery",
-        {
-
-          callback_query_id:
-            query.id,
-
-          text:
-            t(
-              language,
-              "notMember"
-            ),
-
-          show_alert:
-            true
-
-        }
+        query.message.chat.id,
+        language
       );
 
       return;
-
     }
-
-
-    await telegram(
-      env,
-      "answerCallbackQuery",
-      {
-
-        callback_query_id:
-          query.id,
-
-        text:
-          t(
-            language,
-            "membershipOK"
-          )
-
-      }
-    );
-
-
-    await telegram(
-      env,
-      "editMessageText",
-      {
-
-        chat_id:
-          chatId,
-
-        message_id:
-          messageId,
-
-        text:
-          t(
-            language,
-            "membershipOK"
-          )
-
-      }
-    );
-
 
     await showMainMenu(
       env,
-      chatId,
-      userId,
-      language
+      query.message.chat.id,
+      user
     );
 
-
     return;
-
   }
 
 
-  // ======================================
-  // ⭐ امتیاز
-  // ======================================
+  // -------------------------------
+  // Membership check
+  // -------------------------------
 
   if (
-    data.startsWith("rate:")
+    data === "membership:check"
   ) {
-
-    const parts =
-      data.split(":");
-
-
-    const movieId =
-      parts[1];
-
-
-    const rating =
-      Number(parts[2]);
-
-
-    if (
-      !movieId ||
-      rating < 1 ||
-      rating > 5
-    ) {
-
-      return;
-
-    }
-
-
-    const saved =
-      await rateMovie(
-        env,
-        userId,
-        movieId,
-        rating
-      );
-
-
-    const language =
-      await getLanguage(
+    const user =
+      await getUser(
         env,
         userId
       );
 
+    const language =
+      user?.language || "fa";
 
-    await telegram(
-      env,
-      "answerCallbackQuery",
-      {
+    const member =
+      await isMember(
+        env,
+        userId
+      );
 
-        callback_query_id:
-          query.id,
+    if (member) {
+      await telegram(
+        env,
+        "answerCallbackQuery",
+        {
+          callback_query_id: query.id,
+          text: t(
+            language,
+            "membershipSuccess"
+          )
+        }
+      );
 
-        text:
-          saved
-            ? t(
-                language,
-                "ratingThanks"
-              )
-            : "⭐ قبلاً امتیاز داده‌اید.",
+      await telegram(
+        env,
+        "deleteMessage",
+        {
+          chat_id:
+            query.message.chat.id,
+          message_id:
+            query.message.message_id
+        }
+      );
 
-        show_alert:
-          true
-
-      }
-    );
-
+      await showMainMenu(
+        env,
+        query.message.chat.id,
+        user
+      );
+    } else {
+      await telegram(
+        env,
+        "answerCallbackQuery",
+        {
+          callback_query_id: query.id,
+          text: t(
+            language,
+            "membershipFailed"
+          ),
+          show_alert: true
+        }
+      );
+    }
 
     return;
-
   }
 
 
-  // ======================================
-  // 👑 تأیید فیلم
-  // ======================================
+  // -------------------------------
+  // Rating
+  // -------------------------------
+
+  if (data.startsWith("rate:")) {
+    await handleRating(
+      env,
+      query
+    );
+
+    return;
+  }
+
+
+  // -------------------------------
+  // Admin security
+  // -------------------------------
 
   if (
-    data.startsWith("approve:")
+    data.startsWith("approve:") ||
+    data.startsWith("reject:") ||
+    data.startsWith("admin:")
   ) {
-
     if (
-      userId !==
+      String(userId) !==
       String(env.ADMIN_ID)
     ) {
+      await telegram(
+        env,
+        "answerCallbackQuery",
+        {
+          callback_query_id: query.id,
+          text: "❌ فقط مدیر می‌تواند این کار را انجام دهد.",
+          show_alert: true
+        }
+      );
 
       return;
-
     }
+  }
 
 
+  // -------------------------------
+  // Approve
+  // -------------------------------
+
+  if (data.startsWith("approve:")) {
     const movieId =
       data.substring(
         "approve:".length
       );
 
-
     await approveMovie(
       env,
-      movieId,
-      chatId,
-      messageId
+      query,
+      movieId
     );
 
-
     return;
-
   }
 
 
-  // ======================================
-  // ❌ رد فیلم
-  // ======================================
+  // -------------------------------
+  // Reject
+  // -------------------------------
 
-  if (
-    data.startsWith("reject:")
-  ) {
-
-    if (
-      userId !==
-      String(env.ADMIN_ID)
-    ) {
-
-      return;
-
-    }
-
-
+  if (data.startsWith("reject:")) {
     const movieId =
       data.substring(
         "reject:".length
       );
 
-
     await rejectMovie(
       env,
-      movieId,
-      chatId,
-      messageId
+      query,
+      movieId
     );
 
-
     return;
-
   }
 
 
-  // ======================================
-  // 📊 آمار مدیریت
-  // ======================================
+  // -------------------------------
+  // Admin statistics
+  // -------------------------------
 
-  if (
-    data ===
-    "admin:stats"
-  ) {
-
-    if (
-      userId !==
-      String(env.ADMIN_ID)
-    ) {
-
-      return;
-
-    }
-
-
-    const users =
-      await kvJSON(
+  if (data === "admin:stats") {
+    const user =
+      await getUser(
         env,
-        "users:index"
-      ) || [];
-
-
-    const movies =
-      await getMovieList(
-        env
+        userId
       );
-
-
-    const pending =
-      await countPending(
-        env
-      );
-
-
-    const ratings =
-      await countRatings(
-        env
-      );
-
 
     await telegram(
       env,
       "answerCallbackQuery",
       {
-
-        callback_query_id:
-          query.id,
-
-        text:
-          "📊 آمار بروزرسانی شد."
-
+        callback_query_id: query.id
       }
     );
 
+    await showAdminStats(
+      env,
+      query.message.chat.id,
+      user?.language || "fa"
+    );
+
+    return;
+  }
+
+
+  // -------------------------------
+  // Admin pending movies
+  // -------------------------------
+
+  if (data === "admin:pending") {
+    const user =
+      await getUser(
+        env,
+        userId
+      );
 
     await telegram(
       env,
-      "sendMessage",
+      "answerCallbackQuery",
       {
-
-        chat_id:
-          chatId,
-
-        text:
-          `📊 آمار ربات\n\n` +
-          `👥 کاربران: ${users.length}\n` +
-          `🎬 فیلم‌های تأییدشده: ${movies.length}\n` +
-          `⏳ در انتظار بررسی: ${pending}\n` +
-          `⭐ تعداد امتیازها: ${ratings}`
-
+        callback_query_id: query.id
       }
     );
 
+    await showPendingMovies(
+      env,
+      query.message.chat.id,
+      user?.language || "fa"
+    );
 
     return;
-
   }
 
+
+  // -------------------------------
+  // Invalid callback
+  // -------------------------------
+
+  await telegram(
+    env,
+    "answerCallbackQuery",
+    {
+      callback_query_id: query.id,
+      text: "Invalid option."
     }
+  );
+  }
