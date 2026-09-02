@@ -2356,4 +2356,4 @@ async function handleCallback(
         "Invalid option."
     }
   );
-}گ
+}
