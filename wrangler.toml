@@ -1,3 +1,7 @@
 name = "superman3-bot"
 main = "worker.js"
 compatibility_date = "2026-08-31"
+
+[[migrations]]
+tag = "v2"
+deleted_classes = ["FilmBot", "FilmMessageDelete"]
