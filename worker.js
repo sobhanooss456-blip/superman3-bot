@@ -2680,6 +2680,7 @@ async function handleAdminText(
     if (
       !/^\d+$/.test(
         target
+       )
       ) {
       await telegram(
         env,
