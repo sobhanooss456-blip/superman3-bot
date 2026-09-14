@@ -2,6 +2,6 @@ name = "superman3-bot"
 main = "worker.js"
 compatibility_date = "2026-08-31"
 
-[[migrations]]
-tag = "v2"
-deleted_classes = ["FilmBot", "FilmMessageDelete"]
+[[kv_namespaces]]
+binding = "BOT_DATA"
+id = "2a6b6864309e429f9451f461bc33aef3"
