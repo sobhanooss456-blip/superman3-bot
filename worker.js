@@ -3625,7 +3625,7 @@ async function handlePendingCallback(
 
   await telegram(
     env,
-     answerCallbackQuery",
+     "answerCallbackQuery",
     {
       callback_query_id:
         callback.id
