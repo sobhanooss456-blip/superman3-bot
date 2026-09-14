@@ -4151,7 +4151,6 @@ function enhancedMovieKeyboard(user, movieId) {
     [
       { text: fav ? "💔 Remove Favorite" : "❤️ Favorite", callback_data: `fx:fav:${fav ? "remove" : "add"}:${movieId}` },
       { text: "🔄 Again", callback_data: `fx:again:${movieId}` }
-       }
     ],
     [
       { text: "🚫 Report", callback_data: `fx:report:${movieId}` },
