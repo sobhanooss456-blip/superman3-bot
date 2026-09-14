@@ -4576,8 +4576,32 @@ async function enhancedHandleMessage(env,message,ctx){
   const txt=message.text;
   const lang=getLanguage(user);
 
-  if(txt===t(lang,"getMovie") || txt==="🎬 دریافت فیلم" || txt==="📥 دریافت فیلم"){await enhancedGetMovie(env,message.chat.
-                                                                                                        واست فیلم"){await enhancedSetState(env,user.id,"request");await telegram(env,"sendMessage",{chat_id:message.chat.id,text:lang==="fa"?"🎬 نام فیلم موردنظر را ارسال کنید.":"🎬 Send the movie name you want."});return;}
+  if (
+  txt === t(lang, "getMovie") ||
+  txt === "🎬 دریافت فیلم" ||
+  txt === "📥 دریافت فیلم"
+) {
+  await enhancedGetMovie(env, message.chat.id);
+  return;
+}
+
+if (
+  txt === t(lang, "requestMovie") ||
+  txt === "🎬 درخواست فیلم" ||
+  txt === "🎬 Request Movie"
+) {
+  await enhancedSetState(env, user.id, "request");
+
+  await telegram(env, "sendMessage", {
+    chat_id: message.chat.id,
+    text:
+      lang === "fa"
+        ? "🎬 نام فیلم موردنظر را ارسال کنید."
+        : "🎬 Send the movie name you want."
+  });
+
+  return;
+}
   if(txt==="🔥 Trending" || txt==="🔥 ترندینگ"){await enhancedShowTrending(env,message.chat.id);return;}
   if(txt==="❤️ Favorites" || txt==="❤️ فیلم‌های موردعلاقه"){await enhancedShowFavorites(env,message.chat.id,user);return;}
   if(txt==="📜 History" || txt==="📜 تاریخچه فیلم های مشاهده شده"){await enhancedShowHistory(env,message.chat.id,user);return;}
