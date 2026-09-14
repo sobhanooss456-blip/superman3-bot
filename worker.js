@@ -3605,14 +3605,13 @@ async function handlePendingCallback(
       return;
     }
 
-    await telegram(
-      env,
-      "answerCallbackQuery",
-      {
-        callback_query_id:
-          callback.id
-      }
-    );
+      await telegram(
+    env,
+    "answerCallbackQuery",
+    {
+      callback_query_id: callback.id
+    }
+  );
 
     await sendMovie(
       env,
