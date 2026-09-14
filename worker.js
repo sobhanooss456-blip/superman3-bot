@@ -329,8 +329,7 @@ async function sendMembershipMessage(env, chatId) {
    Main menu
 ========================================================= */
 
-function mainKeyboard(la
-                      nguage = "fa", admin = false) {
+function mainKeyboard(language = "fa", admin = false) {
   const keyboard = [
     [
       {
