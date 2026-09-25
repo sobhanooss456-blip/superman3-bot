@@ -1089,7 +1089,7 @@ async function reviewAdminRequest(env, callback, action, targetId) {
   const list = Array.isArray(current) ? current : [];
   const item = list.find(request => String(request.user_id) === String(targetId) && request.status === "pending");
   if (!item) {
-    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "❌ درخواست پیدا نشد."
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "❌ درخواست پیدا نشد.",
    show_alert: true });
     return;
   }
