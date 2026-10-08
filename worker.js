@@ -4593,6 +4593,7 @@ async function enhancedHandleCallback(env,callback,ctx){
     if(data==="check_membership"){await handleCallback(env,callback,ctx);return;}
     const uid=String(callback.from.id);
     const user=await enhancedUserProfile(env,uid);
+
     if(data.startsWith("fx:rate:")){const p=data.split(":");await handleRating(env,callback,p[2],Number(p[3]));return;}
     if(data.startsWith("fx:fav:")){const p=data.split(":");const id=p[3];if(p[2]==="add") await addFavorite(env,user,id); else await removeFavorite(env,user,id);if(p[2]==="add"){await enhancedGrantXP(env,user,5,"favorite");await enhancedBadges(env,user);}await telegram(env,"answerCallbackQuery",{callback_query_id:callback.id,text:p[2]==="add"?"❤️ Added to favorites.":"💔 Removed from favorites."});return;}
     if(data.startsWith("fx:favview:")){const movie=await findMovie(env,data.split(":")[2]);if(movie){await telegram(env,"answerCallbackQuery",{callback_query_id:callback.id});await enhancedSendMovie(env,callback.message.chat.id,movie,user,ctx);}return;}
