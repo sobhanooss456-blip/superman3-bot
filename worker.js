@@ -1,722 +1,2258 @@
-/* Telegram Movie Bot for Cloudflare Workers
- * Required bindings: BOT_TOKEN (Secret), ADMIN_ID (Variable), BOT_DATA (KV Namespace)
- * Optional: WEBHOOK_SECRET (Secret), BOT_USERNAME (Variable), CHANNEL_ID, CHANNEL_LINK
- * No anti-spam system and no automatic movie deletion are implemented.
- */
+// ======================================================
+// Telegram Movie Bot
+// Cloudflare Workers + Telegram Bot API + KV
+//
+// Required:
+//   env.BOT_TOKEN
+//   env.ADMIN_ID
+//   env.BOT_DATA  -> Cloudflare KV binding
+//
+// Optional:
+//   env.BOT_USERNAME -> username without @
+//
+// No Mini App / no Web App
+// Languages: fa, en, ar, zh, de, ru
+// ======================================================
 
-const PAGE_SIZE = 8;
-const LANGUAGES = ['fa', 'en', 'ar', 'ru', 'zh', 'de'];
-const DEFAULT_CHANNEL_ID = '@Super_Pump2';
-const DEFAULT_CHANNEL_LINK = 'https://t.me/Super_Pump2';
+const CHANNEL_USERNAME = "@Super_Pump2";
+const CHANNEL_URL = "https://t.me/Super_Pump2";
+
+const LANGUAGES = {
+  fa: "فارسی",
+  en: "English",
+  ar: "العربية",
+  zh: "简体中文",
+  de: "Deutsch",
+  ru: "Русский"
+};
+
+// ------------------------------------------------------
+// Translations
+// ------------------------------------------------------
 
 const TEXT = {
   fa: {
-    choose:'🌐 زبان را انتخاب کنید', welcome:'🎬 به ربات فیلم خوش آمدید', menu:'یک گزینه را انتخاب کنید',
-    get:'🎬 دریافت فیلم', send:'📤 ارسال فیلم', request:'📝 درخواست فیلم', favorites:'❤️ علاقه‌مندی‌ها',
-    invite:'👥 دعوت دوستان', language:'🌐 تغییر زبان', admin:'👑 پنل مدیریت', back:'🔙 بازگشت',
-    next:'بعدی ➡️', prev:'⬅️ قبلی', empty:'📭 موردی وجود ندارد', joinRequired:'🔒 ابتدا عضو کانال شوید',
-    joinChannel:'📢 عضویت در کانال', checkJoin:'✅ بررسی عضویت', blocked:'🚫 دسترسی شما مسدود شده است',
-    sendMovie:'🎬 لطفاً ویدیو یا فایل ویدیویی فیلم را ارسال کنید', movieReceived:'✅ فیلم برای بررسی ارسال شد',
-    noMovies:'📭 آرشیو فیلم خالی است', requestAsk:'📝 نام فیلم موردنظر را بفرستید', requestSaved:'✅ درخواست شما ثبت شد',
-    pending:'📥 فیلم‌های در انتظار بررسی', requests:'📝 درخواست‌های فیلم', users:'👥 کاربران', admins:'👑 مدیریت ادمین‌ها',
-    archive:'🎞 مدیریت آرشیو', approve:'✅ تأیید', reject:'❌ رد کردن', watch:'▶️ مشاهده', delete:'🗑 حذف از آرشیو',
-    deleted:'✅ فیلم از آرشیو حذف شد', duplicate:'⚠️ این فیلم قبلاً ثبت شده یا در انتظار بررسی است',
-    missing:'❌ این مورد پیدا نشد', notAdmin:'⛔ شما دسترسی مدیریت ندارید', adminAdded:'✅ ادمین اضافه شد',
-    adminRemoved:'✅ ادمین حذف شد', adminIdAsk:'🆔 آیدی عددی کاربر را بفرستید', numericId:'❌ آیدی باید فقط شامل عدد باشد',
-    ratingSaved:'⭐ امتیاز شما ثبت شد', alreadyRated:'⚠️ شما قبلاً به این فیلم امتیاز داده‌اید',
-    favAdded:'❤️ به علاقه‌مندی‌ها اضافه شد', favRemoved:'💔 از علاقه‌مندی‌ها حذف شد', done:'✅ انجام شد',
-    requestDeleted:'🗑 درخواست حذف شد', invited:'👥 لینک دعوت شما', inviteCount:'دعوت‌های ثبت‌شده',
-    approvedUser:'✅ فیلم ارسالی شما تأیید شد', rejectedUser:'❌ فیلم ارسالی شما تأیید نشد',
-    requestReviewed:'✅ درخواست فیلم شما بررسی شد', cancelled:'عملیات لغو شد', cancelHint:'برای لغو، /cancel را بفرستید',
-    emptyFavorites:'❤️ هنوز فیلمی به علاقه‌مندی‌ها اضافه نکرده‌اید', userBlocked:'🚫 کاربر مسدود شد', userUnblocked:'✅ مسدودیت کاربر برداشته شد',
-    noPending:'📭 فیلمی در انتظار بررسی نیست', noRequests:'📭 درخواست بازی وجود ندارد', userDetails:'👤 اطلاعات کاربر',
-    statusBlocked:'مسدود', statusActive:'فعال', views:'بازدید', rating:'امتیاز', country:'کشور',
-    adminPanel:'👑 پنل مدیریت', archiveCount:'فیلم‌های آرشیو', pendingCount:'در انتظار بررسی', requestCount:'درخواست‌های باز',
-    addAdmin:'➕ افزودن ادمین', removeAdmin:'➖ حذف ادمین', mainAdminOnly:'⛔ این کار فقط توسط ادمین اصلی انجام می‌شود',
-    invalidMedia:'❌ لطفاً ویدیو یا یک فایل ویدیویی معتبر ارسال کنید', duplicateRequest:'⚠️ این درخواست قبلاً ثبت شده است',
-    chooseAction:'یک عملیات را انتخاب کنید', page:'صفحه', languageSaved:'✅ زبان ذخیره شد',
-    archiveMovie:'فیلم آرشیو', pendingMovie:'فیلم در انتظار', requestTitle:'عنوان', userId:'آیدی کاربر', username:'نام کاربری',
-    sendError:'❌ ارسال پیام به تلگرام ناموفق بود. تنظیمات ربات را بررسی کنید.', unsupported:'این گزینه پشتیبانی نمی‌شود',
-    referralSelf:'نمی‌توانید خودتان را دعوت کنید', referralSuccess:'🎁 یک دعوت جدید ثبت شد',
-    confirmDelete:'برای حذف دستی این فیلم از آرشیو تأیید کنید', yesDelete:'🗑 بله، حذف شود', noKeep:'↩️ خیر، نگه دار',
-    deletedPending:'فیلم از فهرست بررسی حذف شد', noUsers:'هنوز کاربری ثبت نشده است', noAdmins:'ادمین اضافی ثبت نشده است',
-    currentlyAdmins:'ادمین‌های فعلی', mainAdminLabel:'ادمین اصلی', userNotFound:'کاربر پیدا نشد'
-    },
+    start: "سلام! به ربات فیلم خوش آمدی.",
+    joinText: "برای استفاده از ربات ابتدا در کانال زیر عضو شو و سپس روی «بررسی عضویت» بزن.",
+    join: "عضویت در کانال",
+    checkJoin: "بررسی عضویت",
+    menu: "از منوی زیر استفاده کن.",
+    getMovie: "🎬 دریافت فیلم",
+    submitMovie: "📤 ارسال فیلم",
+    requestMovie: "🔎 درخواست فیلم",
+    favorites: "⭐ علاقه‌مندی‌ها",
+    inviteFriends: "👥 دعوت از دوستان",
+    language: "🌐 تغییر زبان",
+    adminPanel: "🛠 پنل مدیریت",
+    back: "🔙 بازگشت",
+    chooseLanguage: "زبان موردنظر را انتخاب کن:",
+    askMovie: "ویدئو یا فایل فیلم را همراه با کپشن ارسال کن. خط اول کپشن باید نام فیلم باشد.",
+    askRequest: "نام فیلم موردنظرت را در یک پیام بنویس.",
+    captionTip: "برای ثبت فیلم، ارسال ویدئو یا فایل همراه با کپشن و نام فیلم الزامی است.",
+    submitted: "فیلمت برای بررسی مدیر ارسال شد.",
+    adminSaved: "فیلم با موفقیت به آرشیو اضافه شد.",
+    noMovies: "هنوز فیلمی در آرشیو ثبت نشده است.",
+    blocked: "دسترسی حساب کاربری تو به ربات محدود شده است.",
+    panelTitle: "پنل مدیریت",
+    addMovie: "➕ افزودن فیلم",
+    pending: "📥 بررسی فیلم‌های ارسالی",
+    requests: "📨 درخواست‌های فیلم",
+    users: "👤 کاربران",
+    deleteMovies: "🗑 حذف فیلم",
+    manageAdmins: "🔐 مدیریت مدیران",
+    primaryOnly: "این عملیات فقط برای مدیر اصلی فعال است.",
+    cancelled: "عملیات لغو شد.",
+    confirmDelete: "آیا از حذف این فیلم مطمئنی؟ این کار قابل بازگشت نیست.",
+    deleted: "فیلم حذف شد.",
+    approve: "✅ تأیید",
+    reject: "❌ رد",
+    markDone: "✔ رسیدگی شد",
+    noFavorites: "هنوز فیلمی را به علاقه‌مندی‌ها اضافه نکرده‌ای.",
+    requestSaved: "درخواست فیلم ثبت شد.",
+    requestPriority: "درخواستت با اولویت ثبت شد؛ بابت دعوت از دوستان ممنونیم.",
+    inviteReward: "تبریک! با دعوت از سه کاربر جدید، یک اعتبار درخواست اولویت‌دار دریافت کردی.",
+    notFound: "مورد موردنظر پیدا نشد.",
+    addAdminPrompt: "شناسه عددی تلگرام کاربر را بفرست تا به مدیران اضافه شود.",
+    adminAdded: "مدیر جدید اضافه شد.",
+    adminRemoved: "دسترسی مدیر حذف شد.",
+    blockedDone: "کاربر مسدود شد.",
+    unblockedDone: "مسدودی کاربر برداشته شد.",
+    mediaOnly: "لطفاً یک ویدئو یا فایل ارسال کن.",
+    ratingSaved: "امتیازت ثبت شد. ممنون!",
+    alreadyRated: "قبلاً برای این فیلم امتیاز ثبت کرده‌ای.",
+    movieCaption: "🎬 {title}\n👁 بازدید: {views}\n⭐ میانگین امتیاز: {rating}",
+    newSubmission: "فیلم جدید برای بررسی ارسال شده است.",
+    newRequest: "درخواست جدید فیلم",
+    next: "⏭ فیلم دیگر",
+    toggleFavorite: "⭐ افزودن/حذف علاقه‌مندی",
+    addedFavorite: "به علاقه‌مندی‌ها اضافه شد.",
+    removedFavorite: "از علاقه‌مندی‌ها حذف شد.",
+    pendingEmpty: "فیلمی برای بررسی وجود ندارد.",
+    requestsEmpty: "درخواستی ثبت نشده است.",
+    usersEmpty: "کاربری ثبت نشده است.",
+    deletedEmpty: "فیلمی برای حذف وجود ندارد.",
+    adminUsage: "این بخش فقط برای مدیران است.",
+    languageSet: "زبان ربات تغییر کرد.",
+    joinRequired: "ابتدا باید عضو کانال شوی.",
+    approvedNotice: "فیلم ارسالی تو تأیید شد و به آرشیو اضافه شد.",
+    rejectedNotice: "متأسفانه فیلم ارسالی تو تأیید نشد.",
+    userInfo: "اطلاعات کاربر",
+    addMovieHint: "ویدئو یا فایل فیلم را با کپشن ارسال کن. خط اول کپشن نام فیلم است.",
+    requestProcessed: "درخواست فیلمت توسط مدیر بررسی شد.",
+    inviteIntro: "لینک دعوت اختصاصی تو:\n{link}\n\nپس از شروع کاربر جدید با لینک تو، دعوت ثبت می‌شود. با هر سه دعوت، یک اعتبار درخواست اولویت‌دار می‌گیری."
+  },
+
   en: {
-    choose:'🌐 Choose a language', welcome:'🎬 Welcome to the Movie Bot', menu:'Choose an option',
-    get:'🎬 Get a Movie', send:'📤 Submit a Movie', request:'📝 Request a Movie', favorites:'❤️ Favorites',
-    invite:'👥 Invite Friends', language:'🌐 Change Language', admin:'👑 Admin Panel', back:'🔙 Back',
-    next:'Next ➡️', prev:'⬅️ Previous', empty:'📭 Nothing found', joinRequired:'🔒 Please join the channel first',
-    joinChannel:'📢 Join Channel', checkJoin:'✅ Check Membership', blocked:'🚫 Your access is blocked',
-    sendMovie:'🎬 Please send a movie video or video file', movieReceived:'✅ Movie submitted for review',
-    noMovies:'📭 The movie archive is empty', requestAsk:'📝 Send the requested movie title', requestSaved:'✅ Your request was saved',
-    pending:'📥 Pending Movies', requests:'📝 Movie Requests', users:'👥 Users', admins:'👑 Admin Management',
-    archive:'🎞 Manage Archive', approve:'✅ Approve', reject:'❌ Reject', watch:'▶️ Watch', delete:'🗑 Delete from Archive',
-    deleted:'✅ Movie deleted from archive', duplicate:'⚠️ This movie already exists or is pending review',
-    missing:'❌ Item not found', notAdmin:'⛔ Admin access required', adminAdded:'✅ Admin added',
-    adminRemoved:'✅ Admin removed', adminIdAsk:'🆔 Send the user numeric ID', numericId:'❌ ID must contain digits only',
-    ratingSaved:'⭐ Your rating was saved', alreadyRated:'⚠️ You have already rated this movie',
-    favAdded:'❤️ Added to favorites', favRemoved:'💔 Removed from favorites', done:'✅ Done',
-    requestDeleted:'🗑 Request deleted', invited:'👥 Your invite link', inviteCount:'Recorded invites',
-    approvedUser:'✅ Your submitted movie was approved', rejectedUser:'❌ Your submitted movie was not approved',
-    requestReviewed:'✅ Your movie request was reviewed', cancelled:'Operation cancelled', cancelHint:'Send /cancel to cancel',
-    emptyFavorites:'❤️ You have no favorite movies yet', userBlocked:'🚫 User blocked', userUnblocked:'✅ User unblocked',
-    noPending:'📭 No movies are pending review', noRequests:'📭 No open requests', userDetails:'👤 User Details',
-    statusBlocked:'Blocked', statusActive:'Active', views:'Views', rating:'Rating', country:'Country',
-    adminPanel:'👑 Admin Panel', archiveCount:'Archived movies', pendingCount:'Pending review', requestCount:'Open requests',
-    addAdmin:'➕ Add Admin', removeAdmin:'➖ Remove Admin', mainAdminOnly:'⛔ Only the main admin can do this',
-    invalidMedia:'❌ Send a video or a valid video file', duplicateRequest:'⚠️ This request has already been submitted',
-    chooseAction:'Choose an action', page:'Page', languageSaved:'✅ Language saved',
-    archiveMovie:'Archived movie', pendingMovie:'Pending movie', requestTitle:'Title', userId:'User ID', username:'Username',
-    sendError:'❌ Telegram send failed. Check the bot settings.', unsupported:'This option is not supported',
-    referralSelf:'You cannot invite yourself', referralSuccess:'🎁 A new invite was recorded',
-    confirmDelete:'Confirm manual deletion of this movie from the archive', yesDelete:'🗑 Yes, delete', noKeep:'↩️ No, keep it',
-    deletedPending:'Movie removed from review queue', noUsers:'No users have been recorded yet', noAdmins:'No additional admins',
-    currentlyAdmins:'Current admins', mainAdminLabel:'Main admin', userNotFound:'User not found'
+    start: "Hello! Welcome to the movie bot.",
+    joinText: "Join the channel below, then press Check Membership.",
+    join: "Join Channel",
+    checkJoin: "Check Membership",
+    menu: "Choose an option below.",
+    getMovie: "🎬 Get a Movie",
+    submitMovie: "📤 Submit a Movie",
+    requestMovie: "🔎 Request a Movie",
+    favorites: "⭐ Favorites",
+    inviteFriends: "👥 Invite Friends",
+    language: "🌐 Change Language",
+    adminPanel: "🛠 Admin Panel",
+    back: "🔙 Back",
+    chooseLanguage: "Choose your language:",
+    askMovie: "Send a video or movie file with a caption. The first caption line must be the movie title.",
+    askRequest: "Send the title of the movie you want.",
+    captionTip: "A video/file and a caption containing the movie title are required.",
+    submitted: "Your movie was submitted for admin review.",
+    adminSaved: "The movie was added to the archive.",
+    noMovies: "There are no movies in the archive yet.",
+    blocked: "Your access to this bot has been restricted.",
+    panelTitle: "Admin Panel",
+    addMovie: "➕ Add Movie",
+    pending: "📥 Review Submissions",
+    requests: "📨 Movie Requests",
+    users: "👤 Users",
+    deleteMovies: "🗑 Delete Movie",
+    manageAdmins: "🔐 Manage Admins",
+    primaryOnly: "Only the primary admin can perform this action.",
+    cancelled: "Operation cancelled.",
+    confirmDelete: "Are you sure you want to delete this movie? This cannot be undone.",
+    deleted: "Movie deleted.",
+    approve: "✅ Approve",
+    reject: "❌ Reject",
+    markDone: "✔ Mark Reviewed",
+    noFavorites: "You have not added any favorites yet.",
+    requestSaved: "Your movie request was saved.",
+    requestPriority: "Your request was marked as priority. Thanks for inviting friends!",
+    inviteReward: "Congratulations! You earned one priority-request credit for inviting three new users.",
+    notFound: "The requested item was not found.",
+    addAdminPrompt: "Send the user's numeric Telegram ID to add them as an admin.",
+    adminAdded: "Admin added.",
+    adminRemoved: "Admin access removed.",
+    blockedDone: "User blocked.",
+    unblockedDone: "User unblocked.",
+    mediaOnly: "Please send a video or a document.",
+    ratingSaved: "Your rating was saved. Thank you!",
+    alreadyRated: "You have already rated this movie.",
+    movieCaption: "🎬 {title}\n👁 Views: {views}\n⭐ Average rating: {rating}",
+    newSubmission: "A new movie submission needs review.",
+    newRequest: "New movie request",
+    next: "⏭ Next Movie",
+    toggleFavorite: "⭐ Toggle Favorite",
+    addedFavorite: "Added to favorites.",
+    removedFavorite: "Removed from favorites.",
+    pendingEmpty: "There are no submissions to review.",
+    requestsEmpty: "There are no movie requests.",
+    usersEmpty: "No users have been registered.",
+    deletedEmpty: "There are no movies to delete.",
+    adminUsage: "This section is for admins only.",
+    languageSet: "Bot language updated.",
+    joinRequired: "You must join the channel first.",
+    approvedNotice: "Your submitted movie was approved and added to the archive.",
+    rejectedNotice: "Unfortunately, your submitted movie was not approved.",
+    userInfo: "User information",
+    addMovieHint: "Send the video or file with a caption. The first caption line is the title.",
+    requestProcessed: "An admin has reviewed your movie request.",
+    inviteIntro: "Your personal invitation link:\n{link}\n\nNew users are counted when they start the bot using your link. Every three invites earn one priority-request credit."
   },
   ar: {
-    choose:'🌐 اختر اللغة', welcome:'🎬 أهلاً بك في بوت الأفلام', menu:'اختر خياراً', get:'🎬 احصل على فيلم',
-    send:'📤 إرسال فيلم', request:'📝 طلب فيلم', favorites:'❤️ المفضلة', invite:'👥 دعوة الأصدقاء', language:'🌐 تغيير اللغة',
-    admin:'👑 لوحة الإدارة', back:'🔙 رجوع', next:'التالي ➡️', prev:'⬅️ السابق', empty:'📭 لا توجد نتائج',
-    joinRequired:'🔒 انضم إلى القناة أولاً', joinChannel:'📢 الانضمام للقناة', checkJoin:'✅ التحقق من العضوية',
-    blocked:'🚫 تم حظر الوصول', sendMovie:'🎬 أرسل الفيديو أو ملف الفيديو', movieReceived:'✅ أُرسل الفيلم للمراجعة',
-    noMovies:'📭 أرشيف الأفلام فارغ', requestAsk:'📝 أرسل اسم الفيلم المطلوب', requestSaved:'✅ تم حفظ طلبك',
-    pending:'📥 أفلام قيد المراجعة', requests:'📝 طلبات الأفلام', users:'👥 المستخدمون', admins:'👑 إدارة المشرفين',
-    archive:'🎞 إدارة الأرشيف', approve:'✅ موافقة', reject:'❌ رفض', watch:'▶️ مشاهدة', delete:'🗑 حذف من الأرشيف',
-    deleted:'✅ تم حذف الفيلم من الأرشيف', duplicate:'⚠️ الفيلم موجود أو قيد المراجعة', missing:'❌ العنصر غير موجود',
-    notAdmin:'⛔ صلاحية الإدارة مطلوبة', adminAdded:'✅ تمت إضافة المشرف', adminRemoved:'✅ تمت إزالة المشرف',
-    adminIdAsk:'🆔 أرسل المعرّف الرقمي للمستخدم', numericId:'❌ يجب أن يتكون المعرّف من أرقام فقط',
-    ratingSaved:'⭐ تم حفظ تقييمك', alreadyRated:'⚠️ قيّمت هذا الفيلم مسبقاً', favAdded:'❤️ أضيف إلى المفضلة',
-    favRemoved:'💔 أزيل من المفضلة', done:'✅ تم', requestDeleted:'🗑 تم حذف الطلب', invited:'👥 رابط الدعوة الخاص بك',
-    inviteCount:'الدعوات المسجلة', approvedUser:'✅ تمت الموافقة على الفيلم الذي أرسلته', rejectedUser:'❌ لم تتم الموافقة على الفيلم',
-    requestReviewed:'✅ تمت مراجعة طلب الفيلم', cancelled:'تم إلغاء العملية', cancelHint:'أرسل /cancel للإلغاء',
-    emptyFavorites:'❤️ لا توجد أفلام في المفضلة بعد', userBlocked:'🚫 تم حظر المستخدم', userUnblocked:'✅ تم إلغاء حظر المستخدم',
-    noPending:'📭 لا توجد أفلام قيد المراجعة', noRequests:'📭 لا توجد طلبات مفتوحة', userDetails:'👤 معلومات المستخدم',
-    statusBlocked:'محظور', statusActive:'نشط', views:'المشاهدات', rating:'التقييم', country:'البلد',
-    adminPanel:'👑 لوحة الإدارة', archiveCount:'الأفلام المؤرشفة', pendingCount:'قيد المراجعة', requestCount:'الطلبات المفتوحة',
-    addAdmin:'➕ إضافة مشرف', removeAdmin:'➖ حذف مشرف', mainAdminOnly:'⛔ هذه العملية للمدير الرئيسي فقط',
-    invalidMedia:'❌ أرسل فيديو أو ملف فيديو صالحاً', duplicateRequest:'⚠️ تم إرسال هذا الطلب مسبقاً', chooseAction:'اختر عملية',
-    page:'صفحة', languageSaved:'✅ تم حفظ اللغة', archiveMovie:'فيلم مؤرشف', pendingMovie:'فيلم قيد الانتظار', requestTitle:'العنوان',
-    userId:'معرّف المستخدم', username:'اسم المستخدم', sendError:'❌ فشل الإرسال إلى تيليجرام. تحقق من الإعدادات.',
-    unsupported:'هذا الخيار غير مدعوم', referralSelf:'لا يمكنك دعوة نفسك', referralSuccess:'🎁 تم تسجيل دعوة جديدة',
-    confirmDelete:'أكد الحذف اليدوي للفيلم من الأرشيف', yesDelete:'🗑 نعم، احذف', noKeep:'↩️ لا، احتفظ به',
-    deletedPending:'تم حذف الفيلم من قائمة المراجعة', noUsers:'لم يتم تسجيل مستخدمين بعد', noAdmins:'لا يوجد مشرفون إضافيون',
-    currentlyAdmins:'المشرفون الحاليون', mainAdminLabel:'المدير الرئيسي', userNotFound:'المستخدم غير موجود'
+    start: "مرحبًا! أهلاً بك في بوت الأفلام.",
+    joinText: "اشترك في القناة أدناه، ثم اضغط على «التحقق من الاشتراك».",
+    join: "الاشتراك في القناة",
+    checkJoin: "التحقق من الاشتراك",
+    menu: "اختر أحد الخيارات أدناه.",
+    getMovie: "🎬 الحصول على فيلم",
+    submitMovie: "📤 إرسال فيلم",
+    requestMovie: "🔎 طلب فيلم",
+    favorites: "⭐ المفضلة",
+    inviteFriends: "👥 دعوة الأصدقاء",
+    language: "🌐 تغيير اللغة",
+    adminPanel: "🛠 لوحة الإدارة",
+    back: "🔙 رجوع",
+    chooseLanguage: "اختر لغتك:",
+    askMovie: "أرسل فيديو أو ملف الفيلم مع وصف. يجب أن يكون اسم الفيلم في السطر الأول.",
+    askRequest: "أرسل اسم الفيلم الذي تريده.",
+    captionTip: "يجب إرسال الفيديو أو الملف مع وصف يحتوي على اسم الفيلم.",
+    submitted: "تم إرسال الفيلم للمراجعة من قبل الإدارة.",
+    adminSaved: "تمت إضافة الفيلم إلى الأرشيف.",
+    noMovies: "لا توجد أفلام في الأرشيف حتى الآن.",
+    blocked: "تم تقييد وصولك إلى هذا البوت.",
+    panelTitle: "لوحة الإدارة",
+    addMovie: "➕ إضافة فيلم",
+    pending: "📥 مراجعة الأفلام المرسلة",
+    requests: "📨 طلبات الأفلام",
+    users: "👤 المستخدمون",
+    deleteMovies: "🗑 حذف فيلم",
+    manageAdmins: "🔐 إدارة المشرفين",
+    primaryOnly: "هذا الإجراء متاح للمشرف الرئيسي فقط.",
+    cancelled: "تم إلغاء العملية.",
+    confirmDelete: "هل تريد بالتأكيد حذف هذا الفيلم؟ لا يمكن التراجع عن ذلك.",
+    deleted: "تم حذف الفيلم.",
+    approve: "✅ موافقة",
+    reject: "❌ رفض",
+    markDone: "✔ تمت المراجعة",
+    noFavorites: "لم تضف أي فيلم إلى المفضلة بعد.",
+    requestSaved: "تم تسجيل طلب الفيلم.",
+    requestPriority: "تم تسجيل طلبك كطلب ذي أولوية. شكرًا لدعوة أصدقائك!",
+    inviteReward: "تهانينا! حصلت على رصيد لطلب ذي أولوية بعد دعوة ثلاثة مستخدمين جدد.",
+    notFound: "العنصر المطلوب غير موجود.",
+    addAdminPrompt: "أرسل معرّف تيليجرام الرقمي للمستخدم لإضافته مشرفًا.",
+    adminAdded: "تمت إضافة المشرف.",
+    adminRemoved: "تم حذف صلاحية المشرف.",
+    blockedDone: "تم حظر المستخدم.",
+    unblockedDone: "تم إلغاء حظر المستخدم.",
+    mediaOnly: "يرجى إرسال فيديو أو ملف.",
+    ratingSaved: "تم حفظ تقييمك، شكرًا لك!",
+    alreadyRated: "لقد قيّمت هذا الفيلم من قبل.",
+    movieCaption: "🎬 {title}\n👁 المشاهدات: {views}\n⭐ متوسط التقييم: {rating}",
+    newSubmission: "يوجد فيلم جديد بانتظار المراجعة.",
+    newRequest: "طلب فيلم جديد",
+    next: "⏭ الفيلم التالي",
+    toggleFavorite: "⭐ إضافة/إزالة من المفضلة",
+    addedFavorite: "تمت الإضافة إلى المفضلة.",
+    removedFavorite: "تمت الإزالة من المفضلة.",
+    pendingEmpty: "لا توجد أفلام بانتظار المراجعة.",
+    requestsEmpty: "لا توجد طلبات أفلام.",
+    usersEmpty: "لا يوجد مستخدمون مسجلون.",
+    deletedEmpty: "لا توجد أفلام لحذفها.",
+    adminUsage: "هذا القسم للمشرفين فقط.",
+    languageSet: "تم تغيير لغة البوت.",
+    joinRequired: "يجب الاشتراك في القناة أولاً.",
+    approvedNotice: "تمت الموافقة على الفيلم الذي أرسلته وإضافته إلى الأرشيف.",
+    rejectedNotice: "للأسف، لم تتم الموافقة على الفيلم الذي أرسلته.",
+    userInfo: "معلومات المستخدم",
+    addMovieHint: "أرسل الفيديو أو الملف مع وصف. السطر الأول هو اسم الفيلم.",
+    requestProcessed: "راجع المشرف طلب الفيلم الخاص بك.",
+    inviteIntro: "رابط دعوتك الخاص:\n{link}\n\nيُحتسب المستخدم الجديد عند بدء البوت عبر رابطك. كل ثلاث دعوات تمنحك رصيدًا لطلب ذي أولوية."
   },
-  ru: {
-    choose:'🌐 Выберите язык', welcome:'🎬 Добро пожаловать в кино-бот', menu:'Выберите действие', get:'🎬 Получить фильм',
-    send:'📤 Отправить фильм', request:'📝 Запросить фильм', favorites:'❤️ Избранное', invite:'👥 Пригласить друзей',
-    language:'🌐 Сменить язык', admin:'👑 Панель администратора', back:'🔙 Назад', next:'Далее ➡️', prev:'⬅️ Назад',
-    empty:'📭 Ничего не найдено', joinRequired:'🔒 Сначала подпишитесь на канал', joinChannel:'📢 Подписаться на канал',
-    checkJoin:'✅ Проверить подписку', blocked:'🚫 Доступ заблокирован', sendMovie:'🎬 Отправьте видео или видеофайл',
-    movieReceived:'✅ Фильм отправлен на проверку', noMovies:'📭 Архив фильмов пуст', requestAsk:'📝 Отправьте название фильма',
-    requestSaved:'✅ Запрос сохранён', pending:'📥 Фильмы на проверке', requests:'📝 Запросы фильмов', users:'👥 Пользователи',
-    admins:'👑 Управление администраторами', archive:'🎞 Управление архивом', approve:'✅ Одобрить', reject:'❌ Отклонить',
-    watch:'▶️ Смотреть', delete:'🗑 Удалить из архива', deleted:'✅ Фильм удалён из архива',
-    duplicate:'⚠️ Фильм уже есть или ожидает проверки', missing:'❌ Элемент не найден', notAdmin:'⛔ Нужны права администратора',
-    adminAdded:'✅ Администратор добавлен', adminRemoved:'✅ Администратор удалён', adminIdAsk:'🆔 Отправьте числовой ID',
-    numericId:'❌ ID должен содержать только цифры', ratingSaved:'⭐ Оценка сохранена', alreadyRated:'⚠️ Вы уже оценили этот фильм',
-    favAdded:'❤️ Добавлено в избранное', favRemoved:'💔 Удалено из избранного', done:'✅ Готово', requestDeleted:'🗑 Запрос удалён',
-    invited:'👥 Ваша ссылка приглашения', inviteCount:'Учтённые приглашения', approvedUser:'✅ Ваш фильм одобрен',
-    rejectedUser:'❌ Ваш фильм не был одобрен', requestReviewed:'✅ Ваш запрос рассмотрен', cancelled:'Операция отменена',
-    cancelHint:'Отправьте /cancel для отмены', emptyFavorites:'❤️ В избранном пока нет фильмов', userBlocked:'🚫 Пользователь заблокирован',
-    userUnblocked:'✅ Блокировка снята', noPending:'📭 Нет фильмов на проверке', noRequests:'📭 Нет открытых запросов',
-    userDetails:'👤 Данные пользователя', statusBlocked:'Заблокирован', statusActive:'Активен', views:'Просмотры', rating:'Оценка', country:'Страна',
-    adminPanel:'👑 Панель администратора', archiveCount:'Фильмы в архиве', pendingCount:'На проверке', requestCount:'Открытые запросы',
-    addAdmin:'➕ Добавить администратора', removeAdmin:'➖ Удалить администратора', mainAdminOnly:'⛔ Только главный администратор может это сделать',
-    invalidMedia:'❌ Отправьте видео или корректный видеофайл', duplicateRequest:'⚠️ Запрос уже отправлен', chooseAction:'Выберите действие',
-    page:'Страница', languageSaved:'✅ Язык сохранён', archiveMovie:'Фильм в архиве', pendingMovie:'Фильм на проверке', requestTitle:'Название',
-    userId:'ID пользователя', username:'Имя пользователя', sendError:'❌ Ошибка отправки в Telegram. Проверьте настройки.',
-    unsupported:'Этот вариант не поддерживается', referralSelf:'Нельзя пригласить себя', referralSuccess:'🎁 Новое приглашение учтено',
-    confirmDelete:'Подтвердите ручное удаление фильма из архива', yesDelete:'🗑 Да, удалить', noKeep:'↩️ Нет, оставить',
-    deletedPending:'Фильм удалён из очереди проверки', noUsers:'Пользователи ещё не зарегистрированы', noAdmins:'Нет дополнительных администраторов',
-    currentlyAdmins:'Текущие администраторы', mainAdminLabel:'Главный администратор', userNotFound:'Пользователь не найден'
-  },
+
   zh: {
-    choose:'🌐 请选择语言', welcome:'🎬 欢迎使用电影机器人', menu:'请选择一个选项', get:'🎬 获取电影', send:'📤 提交电影',
-    request:'📝 请求电影', favorites:'❤️ 收藏', invite:'👥 邀请朋友', language:'🌐 更改语言', admin:'👑 管理面板',
-    back:'🔙 返回', next:'下一页 ➡️', prev:'⬅️ 上一页', empty:'📭 没有内容', joinRequired:'🔒 请先加入频道',
-    joinChannel:'📢 加入频道', checkJoin:'✅ 检查加入状态', blocked:'🚫 访问受限', sendMovie:'🎬 请发送电影视频或视频文件',
-    movieReceived:'✅ 电影已提交审核', noMovies:'📭 片库为空', requestAsk:'📝 发送电影名称', requestSaved:'✅ 请求已保存',
-    pending:'📥 待审核电影', requests:'📝 电影请求', users:'👥 用户', admins:'👑 管理员管理', archive:'🎞 管理片库',
-    approve:'✅ 通过', reject:'❌ 拒绝', watch:'▶️ 观看', delete:'🗑 从片库删除', deleted:'✅ 电影已从片库删除',
-    duplicate:'⚠️ 电影已存在或正在审核', missing:'❌ 未找到项目', notAdmin:'⛔ 需要管理员权限', adminAdded:'✅ 管理员已添加',
-    adminRemoved:'✅ 管理员已移除', adminIdAsk:'🆔 发送用户数字 ID', numericId:'❌ ID 只能包含数字', ratingSaved:'⭐ 评分已保存',
-    alreadyRated:'⚠️ 你已经评价过这部电影', favAdded:'❤️ 已加入收藏', favRemoved:'💔 已从收藏移除', done:'✅ 完成',
-    requestDeleted:'🗑 请求已删除', invited:'👥 你的邀请链接', inviteCount:'已记录邀请', approvedUser:'✅ 你提交的电影已通过审核',
-    rejectedUser:'❌ 你提交的电影未获通过', requestReviewed:'✅ 你的电影请求已审核', cancelled:'操作已取消', cancelHint:'发送 /cancel 取消操作',
-    emptyFavorites:'❤️ 还没有收藏电影', userBlocked:'🚫 用户已封禁', userUnblocked:'✅ 用户已解除封禁', noPending:'📭 没有待审核电影',
-    noRequests:'📭 没有未处理请求', userDetails:'👤 用户信息', statusBlocked:'已封禁', statusActive:'正常', views:'观看量', rating:'评分', country:'国家',
-    adminPanel:'👑 管理面板', archiveCount:'片库电影', pendingCount:'待审核', requestCount:'未处理请求', addAdmin:'➕ 添加管理员',
-    removeAdmin:'➖ 删除管理员', mainAdminOnly:'⛔ 只有主管理员可以执行此操作', invalidMedia:'❌ 请发送视频或有效视频文件',
-    duplicateRequest:'⚠️ 此请求已提交', chooseAction:'选择操作', page:'页', languageSaved:'✅ 语言已保存', archiveMovie:'片库电影',
-    pendingMovie:'待审核电影', requestTitle:'标题', userId:'用户 ID', username:'用户名', sendError:'❌ Telegram 发送失败，请检查机器人设置。',
-    unsupported:'不支持此选项', referralSelf:'不能邀请自己', referralSuccess:'🎁 已记录新的邀请', confirmDelete:'确认从片库手动删除此电影',
-    yesDelete:'🗑 是，删除', noKeep:'↩️ 否，保留', deletedPending:'电影已从审核队列移除', noUsers:'尚无注册用户', noAdmins:'没有其他管理员',
-    currentlyAdmins:'当前管理员', mainAdminLabel:'主管理员', userNotFound:'未找到用户'
+    start: "你好！欢迎使用电影机器人。",
+    joinText: "请先加入下面的频道，然后点击“检查订阅”。",
+    join: "加入频道",
+    checkJoin: "检查订阅",
+    menu: "请选择一个选项。",
+    getMovie: "🎬 获取电影",
+    submitMovie: "📤 提交电影",
+    requestMovie: "🔎 请求电影",
+    favorites: "⭐ 收藏",
+    inviteFriends: "👥 邀请朋友",
+    language: "🌐 更改语言",
+    adminPanel: "🛠 管理面板",
+    back: "🔙 返回",
+    chooseLanguage: "请选择语言：",
+    askMovie: "发送电影视频或文件，并添加说明。说明第一行必须是电影名称。",
+    askRequest: "请发送你想要的电影名称。",
+    captionTip: "必须发送带有电影名称说明的视频或文件。",
+    submitted: "电影已提交，等待管理员审核。",
+    adminSaved: "电影已添加到存档。",
+    noMovies: "存档中还没有电影。",
+    blocked: "你的机器人使用权限已被限制。",
+    panelTitle: "管理面板",
+    addMovie: "➕ 添加电影",
+    pending: "📥 审核提交",
+    requests: "📨 电影请求",
+    users: "👤 用户",
+    deleteMovies: "🗑 删除电影",
+    manageAdmins: "🔐 管理管理员",
+    primaryOnly: "此操作仅限主管理员使用。",
+    cancelled: "操作已取消。",
+    confirmDelete: "确定删除这部电影吗？此操作无法撤销。",
+    deleted: "电影已删除。",
+    approve: "✅ 批准",
+    reject: "❌ 拒绝",
+    markDone: "✔ 标记为已处理",
+    noFavorites: "你还没有收藏电影。",
+    requestSaved: "电影请求已保存。",
+    requestPriority: "你的请求已标记为优先请求。感谢邀请朋友！",
+    inviteReward: "恭喜！邀请三位新用户后，你获得了一次优先请求额度。",
+    notFound: "找不到该项目。",
+    addAdminPrompt: "请发送用户的 Telegram 数字 ID，以添加为管理员。",
+    adminAdded: "管理员已添加。",
+    adminRemoved: "管理员权限已移除。",
+    blockedDone: "用户已封禁。",
+    unblockedDone: "已解除用户封禁。",
+    mediaOnly: "请发送视频或文件。",
+    ratingSaved: "评分已保存，谢谢！",
+    alreadyRated: "你已经评价过这部电影。",
+    movieCaption: "🎬 {title}\n👁 播放量：{views}\n⭐ 平均评分：{rating}",
+    newSubmission: "有一部新电影等待审核。",
+    newRequest: "新的电影请求",
+    next: "⏭ 下一部电影",
+    toggleFavorite: "⭐ 添加/移除收藏",
+    addedFavorite: "已添加到收藏。",
+    removedFavorite: "已从收藏中移除。",
+    pendingEmpty: "没有待审核的电影。",
+    requestsEmpty: "没有电影请求。",
+    usersEmpty: "没有注册用户。",
+    deletedEmpty: "没有可删除的电影。",
+    adminUsage: "此区域仅供管理员使用。",
+    languageSet: "机器人语言已更新。",
+    joinRequired: "请先加入频道。",
+    approvedNotice: "你提交的电影已获批准并添加到存档。",
+    rejectedNotice: "很遗憾，你提交的电影未获批准。",
+    userInfo: "用户信息",
+    addMovieHint: "发送带说明的视频或文件，第一行写电影名称。",
+    requestProcessed: "管理员已处理你的电影请求。",
+    inviteIntro: "你的专属邀请链接：\n{link}\n\n新用户通过该链接启动机器人后会计入邀请。每邀请三人即可获得一次优先请求额度。"
   },
+
   de: {
-    choose:'🌐 Sprache auswählen', welcome:'🎬 Willkommen beim Film-Bot', menu:'Wähle eine Option', get:'🎬 Film erhalten',
-    send:'📤 Film einreichen', request:'📝 Film anfragen', favorites:'❤️ Favoriten', invite:'👥 Freunde einladen', language:'🌐 Sprache ändern',
-    admin:'👑 Admin-Panel', back:'🔙 Zurück', next:'Weiter ➡️', prev:'⬅️ Zurück', empty:'📭 Keine Einträge',
-    joinRequired:'🔒 Bitte tritt zuerst dem Kanal bei', joinChannel:'📢 Kanal beitreten', checkJoin:'✅ Mitgliedschaft prüfen',
-    blocked:'🚫 Zugriff gesperrt', sendMovie:'🎬 Sende ein Video oder eine Videodatei', movieReceived:'✅ Film zur Prüfung eingereicht',
-    noMovies:'📭 Das Filmarchiv ist leer', requestAsk:'📝 Sende den gewünschten Filmtitel', requestSaved:'✅ Anfrage gespeichert',
-    pending:'📥 Filme zur Prüfung', requests:'📝 Filmanfragen', users:'👥 Nutzer', admins:'👑 Admins verwalten', archive:'🎞 Archiv verwalten',
-    approve:'✅ Genehmigen', reject:'❌ Ablehnen', watch:'▶️ Ansehen', delete:'🗑 Aus Archiv löschen', deleted:'✅ Film aus Archiv gelöscht',
-    duplicate:'⚠️ Film ist bereits vorhanden oder wird geprüft', missing:'❌ Eintrag nicht gefunden', notAdmin:'⛔ Admin-Berechtigung erforderlich',
-    adminAdded:'✅ Admin hinzugefügt', adminRemoved:'✅ Admin entfernt', adminIdAsk:'🆔 Numerische Nutzer-ID senden', numericId:'❌ ID darf nur Ziffern enthalten',
-    ratingSaved:'⭐ Bewertung gespeichert', alreadyRated:'⚠️ Du hast diesen Film bereits bewertet', favAdded:'❤️ Zu Favoriten hinzugefügt',
-    favRemoved:'💔 Aus Favoriten entfernt', done:'✅ Erledigt', requestDeleted:'🗑 Anfrage gelöscht', invited:'👥 Dein Einladungslink',
-    inviteCount:'Erfasste Einladungen', approvedUser:'✅ Dein eingereichter Film wurde genehmigt', rejectedUser:'❌ Dein Film wurde nicht genehmigt',
-    requestReviewed:'✅ Deine Filmanfrage wurde geprüft', cancelled:'Vorgang abgebrochen', cancelHint:'Zum Abbrechen /cancel senden',
-    emptyFavorites:'❤️ Noch keine Favoriten vorhanden', userBlocked:'🚫 Nutzer gesperrt', userUnblocked:'✅ Sperre aufgehoben',
-    noPending:'📭 Keine Filme zur Prüfung', noRequests:'📭 Keine offenen Anfragen', userDetails:'👤 Nutzerdetails', statusBlocked:'Gesperrt',
-    statusActive:'Aktiv', views:'Aufrufe', rating:'Bewertung', country:'Land', adminPanel:'👑 Admin-Panel', archiveCount:'Archivierte Filme',
-    pendingCount:'Zur Prüfung', requestCount:'Offene Anfragen', addAdmin:'➕ Admin hinzufügen', removeAdmin:'➖ Admin entfernen',
-    mainAdminOnly:'⛔ Nur der Hauptadmin darf dies tun', invalidMedia:'❌ Sende ein Video oder eine gültige Videodatei',
-    duplicateRequest:'⚠️ Diese Anfrage wurde bereits eingereicht', chooseAction:'Wähle eine Aktion', page:'Seite', languageSaved:'✅ Sprache gespeichert',
-    archiveMovie:'Archivfilm', pendingMovie:'Film in Prüfung', requestTitle:'Titel', userId:'Nutzer-ID', username:'Benutzername',
-    sendError:'❌ Telegram-Versand fehlgeschlagen. Bitte Bot-Einstellungen prüfen.', unsupported:'Diese Option wird nicht unterstützt',
-    referralSelf:'Du kannst dich nicht selbst einladen', referralSuccess:'🎁 Neue Einladung erfasst', confirmDelete:'Bestätige das manuelle Löschen aus dem Archiv',
-    yesDelete:'🗑 Ja, löschen', noKeep:'↩️ Nein, behalten', deletedPending:'Film aus der Prüfliste entfernt', noUsers:'Noch keine Nutzer erfasst',
-    noAdmins:'Keine zusätzlichen Admins', currentlyAdmins:'Aktuelle Admins', mainAdminLabel:'Hauptadmin', userNotFound:'Nutzer nicht gefunden'
+    start: "Hallo! Willkommen beim Film-Bot.",
+    joinText: "Tritt zuerst dem Kanal bei und tippe danach auf „Mitgliedschaft prüfen“.",
+    join: "Kanal beitreten",
+    checkJoin: "Mitgliedschaft prüfen",
+    menu: "Wähle eine Option aus.",
+    getMovie: "🎬 Film erhalten",
+    submitMovie: "📤 Film senden",
+    requestMovie: "🔎 Film anfragen",
+    favorites: "⭐ Favoriten",
+    inviteFriends: "👥 Freunde einladen",
+    language: "🌐 Sprache ändern",
+    adminPanel: "🛠 Adminbereich",
+    back: "🔙 Zurück",
+    chooseLanguage: "Wähle deine Sprache:",
+    askMovie: "Sende ein Video oder eine Filmdatei mit einer Beschreibung. Die erste Zeile muss den Filmtitel enthalten.",
+    askRequest: "Sende den Titel des gewünschten Films.",
+    captionTip: "Ein Video oder eine Datei mit Filmtitel in der Beschreibung ist erforderlich.",
+    submitted: "Der Film wurde zur Prüfung eingereicht.",
+    adminSaved: "Der Film wurde zum Archiv hinzugefügt.",
+    noMovies: "Das Archiv enthält noch keine Filme.",
+    blocked: "Dein Zugriff auf diesen Bot wurde eingeschränkt.",
+    panelTitle: "Adminbereich",
+    addMovie: "➕ Film hinzufügen",
+    pending: "📥 Einsendungen prüfen",
+    requests: "📨 Filmanfragen",
+    users: "👤 Benutzer",
+    deleteMovies: "🗑 Film löschen",
+    manageAdmins: "🔐 Administratoren verwalten",
+    primaryOnly: "Diese Aktion ist nur dem Hauptadministrator erlaubt.",
+    cancelled: "Vorgang abgebrochen.",
+    confirmDelete: "Möchtest du diesen Film wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+    deleted: "Film gelöscht.",
+    approve: "✅ Genehmigen",
+    reject: "❌ Ablehnen",
+    markDone: "✔ Als erledigt markieren",
+    noFavorites: "Du hast noch keine Favoriten gespeichert.",
+    requestSaved: "Deine Filmanfrage wurde gespeichert.",
+    requestPriority: "Deine Anfrage wurde priorisiert. Danke fürs Einladen von Freunden!",
+    inviteReward: "Glückwunsch! Für drei neue Einladungen hast du ein Guthaben für eine priorisierte Anfrage erhalten.",
+    notFound: "Der gewünschte Eintrag wurde nicht gefunden.",
+    addAdminPrompt: "Sende die numerische Telegram-ID des Benutzers, um ihn als Admin hinzuzufügen.",
+    adminAdded: "Admin hinzugefügt.",
+    adminRemoved: "Adminrechte entfernt.",
+    blockedDone: "Benutzer gesperrt.",
+    unblockedDone: "Benutzersperre aufgehoben.",
+    mediaOnly: "Bitte sende ein Video oder eine Datei.",
+    ratingSaved: "Deine Bewertung wurde gespeichert. Danke!",
+    alreadyRated: "Du hast diesen Film bereits bewertet.",
+    movieCaption: "🎬 {title}\n👁 Aufrufe: {views}\n⭐ Durchschnittsbewertung: {rating}",
+    newSubmission: "Eine neue Filmeinsendung wartet auf Prüfung.",
+    newRequest: "Neue Filmanfrage",
+    next: "⏭ Nächster Film",
+    toggleFavorite: "⭐ Favorit hinzufügen/entfernen",
+    addedFavorite: "Zu Favoriten hinzugefügt.",
+    removedFavorite: "Aus Favoriten entfernt.",
+    pendingEmpty: "Keine Einsendungen zur Prüfung vorhanden.",
+    requestsEmpty: "Keine Filmanfragen vorhanden.",
+    usersEmpty: "Keine Benutzer registriert.",
+    deletedEmpty: "Keine Filme zum Löschen vorhanden.",
+    adminUsage: "Dieser Bereich ist nur für Admins.",
+    languageSet: "Botsprache aktualisiert.",
+    joinRequired: "Du musst zuerst dem Kanal beitreten.",
+    approvedNotice: "Dein eingereichter Film wurde genehmigt und zum Archiv hinzugefügt.",
+    rejectedNotice: "Dein eingereichter Film wurde leider nicht genehmigt.",
+    userInfo: "Benutzerinformationen",
+    addMovieHint: "Sende das Video oder die Datei mit Beschreibung. Die erste Zeile ist der Filmtitel.",
+    requestProcessed: "Ein Admin hat deine Filmanfrage bearbeitet.",
+    inviteIntro: "Dein persönlicher Einladungslink:\n{link}\n\nNeue Benutzer zählen, sobald sie den Bot über deinen Link starten. Je drei Einladungen bringen ein Guthaben für eine priorisierte Anfrage."
+  },
+
+  ru: {
+    start: "Привет! Добро пожаловать в бот фильмов.",
+    joinText: "Сначала вступи в канал, затем нажми «Проверить подписку».",
+    join: "Вступить в канал",
+    checkJoin: "Проверить подписку",
+    menu: "Выбери нужный пункт.",
+    getMovie: "🎬 Получить фильм",
+    submitMovie: "📤 Отправить фильм",
+    requestMovie: "🔎 Запросить фильм",
+    favorites: "⭐ Избранное",
+    inviteFriends: "👥 Пригласить друзей",
+    language: "🌐 Изменить язык",
+    adminPanel: "🛠 Панель администратора",
+    back: "🔙 Назад",
+    chooseLanguage: "Выбери язык:",
+    askMovie: "Отправь видео или файл фильма с подписью. В первой строке должно быть название фильма.",
+    askRequest: "Отправь название нужного фильма.",
+    captionTip: "Необходимо отправить видео или файл с подписью, содержащей название фильма.",
+    submitted: "Фильм отправлен на проверку администратору.",
+    adminSaved: "Фильм добавлен в архив.",
+    noMovies: "В архиве пока нет фильмов.",
+    blocked: "Доступ к боту для твоего аккаунта ограничен.",
+    panelTitle: "Панель администратора",
+    addMovie: "➕ Добавить фильм",
+    pending: "📥 Проверить отправленные фильмы",
+    requests: "📨 Запросы фильмов",
+    users: "👤 Пользователи",
+    deleteMovies: "🗑 Удалить фильм",
+    manageAdmins: "🔐 Управление администраторами",
+    primaryOnly: "Это действие доступно только главному администратору.",
+    cancelled: "Действие отменено.",
+    confirmDelete: "Точно удалить этот фильм? Это действие нельзя отменить.",
+    deleted: "Фильм удалён.",
+    approve: "✅ Одобрить",
+    reject: "❌ Отклонить",
+    markDone: "✔ Отметить обработанным",
+    noFavorites: "В избранном пока нет фильмов.",
+    requestSaved: "Запрос фильма сохранён.",
+    requestPriority: "Твой запрос отмечен как приоритетный. Спасибо за приглашение друзей!",
+    inviteReward: "Поздравляем! За приглашение трёх новых пользователей ты получил кредит на приоритетный запрос.",
+    notFound: "Элемент не найден.",
+    addAdminPrompt: "Отправь числовой Telegram ID пользователя, чтобы добавить его в администраторы.",
+    adminAdded: "Администратор добавлен.",
+    adminRemoved: "Права администратора удалены.",
+    blockedDone: "Пользователь заблокирован.",
+    unblockedDone: "Блокировка пользователя снята.",
+    mediaOnly: "Отправь видео или файл.",
+    ratingSaved: "Твоя оценка сохранена. Спасибо!",
+    alreadyRated: "Ты уже оценивал этот фильм.",
+    movieCaption: "🎬 {title}\n👁 Просмотры: {views}\n⭐ Средний рейтинг: {rating}",
+    newSubmission: "Новый фильм ожидает проверки.",
+    newRequest: "Новый запрос фильма",
+    next: "⏭ Следующий фильм",
+    toggleFavorite: "⭐ Добавить/убрать из избранного",
+    addedFavorite: "Добавлено в избранное.",
+    removedFavorite: "Удалено из избранного.",
+    pendingEmpty: "Нет фильмов для проверки.",
+    requestsEmpty: "Запросов фильмов нет.",
+    usersEmpty: "Зарегистрированных пользователей нет.",
+    deletedEmpty: "Нет фильмов для удаления.",
+    adminUsage: "Этот раздел доступен только администраторам.",
+    languageSet: "Язык бота изменён.",
+    joinRequired: "Сначала вступи в канал.",
+    approvedNotice: "Твой фильм одобрен и добавлен в архив.",
+    rejectedNotice: "К сожалению, твой фильм не был одобрен.",
+    userInfo: "Информация о пользователе",
+    addMovieHint: "Отправь видео или файл с подписью. Первая строка — название фильма.",
+    requestProcessed: "Администратор рассмотрел твой запрос фильма.",
+    inviteIntro: "Твоя персональная ссылка для приглашений:\n{link}\n\nНовые пользователи учитываются после запуска бота по твоей ссылке. Каждые три приглашения дают кредит на приоритетный запрос."
   }
 };
 
-const t = (lang, key) => (TEXT[LANGUAGES.includes(lang) ? lang : 'fa'][key]  TEXT.en[key]  key);
-const uid = () => crypto.randomUUID().replace(/-/g, '').slice(0, 16);
-const now = () => Date.now();
-const channelId = env => env.CHANNEL_ID || DEFAULT_CHANNEL_ID;
-const channelLink = env => env.CHANNEL_LINK || DEFAULT_CHANNEL_LINK;
+// ------------------------------------------------------
+// General helpers
+// ------------------------------------------------------
 
-async function kvGet(env, key, fallback) {
-  const raw = await env.BOT_DATA.get(key);
-  if (raw == null) return fallback;
-  try { return JSON.parse(raw); } catch { return fallback; }
+function t(user, key, replacements = {}) {
+  const lang = user && TEXT[user.lang] ? user.lang : "fa";
+  let value = TEXT[lang][key] ?? TEXT.en[key] ?? key;
+
+  for (const [name, replacement] of Object.entries(replacements)) {
+    value = value.replaceAll({${name}}, String(replacement));
+  }
+
+  return value;
 }
-async function kvPut(env, key, value) {
+
+function newId() {
+  return (
+    Date.now().toString(36) +
+    Math.random().toString(36).slice(2, 6)
+  );
+}
+
+async function readJSON(env, key, fallback) {
+  const raw = await env.BOT_DATA.get(key);
+
+  if (!raw) {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+async function writeJSON(env, key, value) {
   await env.BOT_DATA.put(key, JSON.stringify(value));
 }
-async function tg(env, method, payload = {}) {
-  if (!env.BOT_TOKEN) throw new Error('BOT_TOKEN is not configured');
-  const response = await fetch(https://api.telegram.org/bot${env.BOT_TOKEN}/${method}, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.ok) throw new Error(Telegram ${method} failed: ${data.description || response.status});
-  return data.result;
-}
-async function safeTg(env, method, payload = {}) {
-  try { return await tg(env, method, payload); }
-  catch (err) { console.error(Telegram ${method}:, err.message); return null; }
-}
-async function reply(env, chatId, text, extra = {}) {
-  return safeTg(env, 'sendMessage', { chat_id: chatId, text: String(text).slice(0, 4000), ...extra });
-}
-async function callbackAnswer(env, callbackId, text = '') {
-  if (!callbackId) return;
-  await safeTg(env, 'answerCallbackQuery', { callback_query_id: callbackId, text: String(text).slice(0, 180) });
-}
-async function getUser(env, id) {
-  return kvGet(env, user:${id}, {
-    id: String(id), first_name: '', username: '', language: 'fa', language_selected: false,
-    blocked: false, favorites: [], valid_invites: 0, created_at: now()
-  });
-}
-async function saveUser(env, user) { await kvPut(env, user:${user.id}, user); }
-async function ensureUser(env, from) {
-  const u = await getUser(env, from.id);
-  u.id = String(from.id); u.first_name = from.first_name  u.first_name  '';
-  u.username = from.username  u.username  '';
-  await saveUser(env, u);
-  const ids = await kvGet(env, 'users:index', []);
-  if (!ids.map(String).includes(u.id)) { ids.push(u.id); await kvPut(env, 'users:index', ids); }
-  return u;
-}
-const isMainAdmin = (env, id) => String(env.ADMIN_ID || '') === String(id);
-async function getAdmins(env) { return (await kvGet(env, 'admin:approved', [])).map(String); }
-async function isAdmin(env, id) { return isMainAdmin(env, id) || (await getAdmins(env)).includes(String(id)); }
-async function hasJoined(env, id) {
-  try {
-    const r = await tg(env, 'getChatMember', { chat_id: channelId(env), user_id: Number(id) });
-    return ['creator', 'administrator', 'member'].includes(r.status);
-  } catch (err) { console.error('Membership check:', err.message); return false; }
-}
-async function requireAccess(env, user) { if (await isAdmin(env, user.id)) return true; return hasJoined(env, user.id); }
 
-function mainKeyboard(lang, admin = false) {
-  const rows = [
-    [{ text: t(lang, 'get') }, { text: t(lang, 'send') }],
-    [{ text: t(lang, 'request') }, { text: t(lang, 'favorites') }],
-    [{ text: t(lang, 'invite') }, { text: t(lang, 'language') }]
-  ];
-  if (admin) rows.push([{ text: t(lang, 'admin') }]);
-  return { keyboard: rows, resize_keyboard: true, is_persistent: true };
-}
-async function showMenu(env, chatId, user) {
-  await reply(env, chatId, ${t(user.language, 'welcome')}\n\n${t(user.language, 'menu')}, {
-    reply_markup: mainKeyboard(user.language, await isAdmin(env, user.id))
-  });
-}
-async function showLanguagePicker(env, chatId) {
-  const labels = [['🇮🇷 فارسی', 'fa'], ['🇬🇧 English', 'en'], ['🇸🇦 العربية', 'ar'], ['🇷🇺 Русский', 'ru'], ['🇨🇳 中文', 'zh'], ['🇩🇪 Deutsch', 'de']];
-  const rows = [[{ text: labels[0][0], callback_data: 'lang:fa' }, { text: labels[1][0], callback_data: 'lang:en' }],
-    [{ text: labels[2][0], callback_data: 'lang:ar' }, { text: labels[3][0], callback_data: 'lang:ru' }],
-    [{ text: labels[4][0], callback_data: 'lang:zh' }, { text: labels[5][0], callback_data: 'lang:de' }]];
-  await reply(env, chatId, ${t('fa', 'choose')} / ${t('en', 'choose')}, { reply_markup: { inline_keyboard: rows } });
-}
-async function showJoinPrompt(env, chatId, lang) {
-  await reply(env, chatId, t(lang, 'joinRequired'), { reply_markup: { inline_keyboard: [
-    [{ text: t(lang, 'joinChannel'), url: channelLink(env) }],
-    [{ text: t(lang, 'checkJoin'), callback_data: 'membership:check' }]
-  ] } });
-}
+async function telegram(env, method, payload = {}) {
+  const response = await fetch(
+    https://api.telegram.org/bot${env.BOT_TOKEN}/${method},
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
 
-async function listMovies(env) { return kvGet(env, 'movies:index', []); }
-async function getMovie(env, id) { return kvGet(env, movie:${id}, null); }
-async function saveMovie(env, movie) {
-  await kvPut(env, movie:${movie.id}, movie);
-  const index = await listMovies(env);
-  if (!index.includes(String(movie.id))) { index.unshift(String(movie.id)); await kvPut(env, 'movies:index', index); }
-}
-async function allMovies(env) {
-  const ids = await listMovies(env), result = [];
-  for (const id of ids) { const m = await getMovie(env, id); if (m) result.push(m); }
+  const result = await response.json().catch(() => ({
+    ok: false,
+    description: "Invalid Telegram API response"
+  }));
+
+  if (!response.ok || !result.ok) {
+    console.error("Telegram API error:", method, result.description);
+  }
+
   return result;
 }
-function sameMedia(a, b) {
-  if (a.file_unique_id && b.file_unique_id && a.file_unique_id === b.file_unique_id) return true;
-  return !!(a.file_id && b.file_id && a.file_id === b.file_id);
-}
-async function hasDuplicate(env, movie, skipPendingId = null) {
-  for (const m of await allMovies(env)) if (sameMedia(m, movie)) return true;
-  const pending = await kvGet(env, 'movies:pending', []);
-  return pending.some(p => String(p.id) !== String(skipPendingId || '') && sameMedia(p, movie));
-}
-async function removeMovie(env, id) {
-  const movie = await getMovie(env, id);
-  if (!movie) return false;
-  await env.BOT_DATA.delete(movie:${id});
-  await kvPut(env, 'movies:index', (await listMovies(env)).filter(x => String(x) !== String(id)));
-  await env.BOT_DATA.delete(ratings:${id});
-  return true;
-}
-async function getRatingInfo(env, movieId) {
-  const stored = await kvGet(env, ratings:${movieId}, []);
-  const ratings = Array.isArray(stored) ? stored.map(x => Number(typeof x === 'object' && x !== null ? x.value : x)).filter(x => Number.isFinite(x) && x >= 1 && x <= 5) : [];
-  return { count: ratings.length, average: ratings.length ? ratings.reduce((sum, value) => sum + value, 0) / ratings.length : 0 };
-}
-function movieButtons(lang, movie, isFavorite, env) {
-  return { inline_keyboard: [
-    [{ text: isFavorite ? t(lang, 'favRemoved') : t(lang, 'favAdded'), callback_data: fav:${isFavorite ? 'remove' : 'add'}:${movie.id} }],
-    [1, 2, 3, 4, 5].map(n => ({ text: ⭐ ${n}, callback_data: rate:${movie.id}:${n} }))
-  ] };
-}
-async function sendMovie(env, chatId, movie, user) {
-  if (!movie) return reply(env, chatId, t(user.language, 'missing'));
-  const info = await getRatingInfo(env, movie.id);
-  const caption = ${movie.caption || '🎬'}\n\n👁 ${t(user.language, 'views')}: ${movie.views || 0}\n⭐ ${t(user.language, 'rating')}: ${info.average.toFixed(1)}/5 (${info.count})\n🌍 ${t(user.language, 'country')}: ${movie.country || '—'}\n\n📢 ${channelLink(env)}.slice(0, 1000);
-  const isFav = (user.favorites || []).map(String).includes(String(movie.id));
-  const payload = { chat_id: chatId, caption, reply_markup: movieButtons(user.language, movie, isFav, env) };
-  payload[movie.type === 'document' ? 'document' : 'video'] = movie.file_id;
-  const result = await safeTg(env, movie.type === 'document' ? 'sendDocument' : 'sendVideo', payload);
-  if (result) {
-    movie.views = (movie.views || 0) + 1;
-    await saveMovie(env, movie);
-  }
-}
-async function getRandomMovie(env, chatId, user) {
-  const movies = await allMovies(env);
-  if (!movies.length) return reply(env, chatId, t(user.language, 'noMovies'));
-  return sendMovie(env, chatId, movies[Math.floor(Math.random() * movies.length)], user);
-}
 
-async function changeFavorite(env, user, id, action) {
-  const movie = await getMovie(env, id); if (!movie) return { ok: false, reason: 'missing' };
-  const favs = (user.favorites || []).map(String);
-  if (action === 'add' && !favs.includes(String(id))) favs.push(String(id));
-  if (action === 'remove') user.favorites = favs.filter(x => x !== String(id));
-  else user.favorites = favs;
-  await saveUser(env, user); return { ok: true };
-}
-async function showFavorites(env, chatId, user, page = 0, editMessageId = null) {
-  const favIds = (user.favorites || []).map(String), movies = (await allMovies(env)).filter(m => favIds.includes(String(m.id)));
-  if (!movies.length) return reply(env, chatId, t(user.language, 'emptyFavorites'));
-  const pages = Math.max(1, Math.ceil(movies.length / PAGE_SIZE)); page = Math.max(0, Math.min(page, pages - 1));
-  const slice = movies.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const rows = slice.map((m, i) => [{ text: ${page * PAGE_SIZE + i + 1}. ${(m.caption || 'Movie').replace(/\n/g, ' ').slice(0, 45)}, callback_data: fav:open:${m.id} }]);
-  const nav = [];
-  if (page > 0) nav.push({ text: t(user.language, 'prev'), callback_data: fav:page:${page - 1} });
-  if (page < pages - 1) nav.push({ text: t(user.language, 'next'), callback_data: fav:page:${page + 1} });
-  if (nav.length) rows.push(nav);
-rows.push([{ text: t(user.language, 'back'), callback_data: 'menu:back' }]);
-  const payload = { chat_id: chatId, text: ${t(user.language, 'favorites')} — ${t(user.language, 'page')} ${page + 1}/${pages}, reply_markup: { inline_keyboard: rows } };
-  if (editMessageId) return safeTg(env, 'editMessageText', { ...payload, message_id: editMessageId });
-  return reply(env, chatId, payload.text, { reply_markup: payload.reply_markup });
-}
-async function notifyAdmins(env, text, replyMarkup = undefined) {
-  const ids = [...new Set([String(env.ADMIN_ID || ''), ...(await getAdmins(env))])].filter(Boolean);
-  await Promise.all(ids.map(id => reply(env, id, text, replyMarkup ? { reply_markup: replyMarkup } : {})));
-}
-async function receiveMovie(env, message, user) {
-  const media = message.video || message.document;
-  if (!media  (message.document && !/^video\//i.test(media.mime_type  '') && !/\.(mp4|mkv|mov|avi|webm|m4v)$/i.test(media.file_name || ''))) {
-    return reply(env, message.chat.id, t(user.language, 'invalidMedia'));
-  }
-  const candidate = { type: message.video ? 'video' : 'document', file_id: media.file_id, file_unique_id: media.file_unique_id  '', caption: message.caption  '🎬 Movie' };
-  if (await hasDuplicate(env, candidate)) return reply(env, message.chat.id, t(user.language, 'duplicate'));
-  const pending = await kvGet(env, 'movies:pending', []);
-  const movie = { ...candidate, id: uid(), user_id: String(user.id), first_name: user.first_name, username: user.username, created_at: now() };
-  pending.unshift(movie); await kvPut(env, 'movies:pending', pending);
-  await reply(env, message.chat.id, t(user.language, 'movieReceived'));
-  await notifyAdmins(env, 📥 ${t('en', 'pendingMovie')}\n${movie.caption}\n👤 ${movie.first_name || '-'}\n🆔 ${movie.user_id}, {
-    inline_keyboard: [[{ text: t('en', 'watch'), callback_data: pending:watch:${movie.id} }], [{ text: t('en', 'approve'), callback_data: pending:approve:${movie.id} }, { text: t('en', 'reject'), callback_data: pending:reject:${movie.id} }]]
+async function sendText(env, chatId, text, extra = {}) {
+  return telegram(env, "sendMessage", {
+    chat_id: chatId,
+    text,
+    ...extra
   });
 }
-async function approvePending(env, chatId, id) {
-  const pending = await kvGet(env, 'movies:pending', []), i = pending.findIndex(x => String(x.id) === String(id));
-  if (i < 0) return reply(env, chatId, t('fa', 'missing'));
-  const p = pending[i];
-  if (await hasDuplicate(env, p, p.id)) {
-    pending.splice(i, 1); await kvPut(env, 'movies:pending', pending);
-    await reply(env, chatId, t('fa', 'duplicate'));
-    if (p.user_id) await reply(env, p.user_id, t('fa', 'duplicate'));
+
+async function answerCallback(env, callbackId, text = "") {
+  return telegram(env, "answerCallbackQuery", {
+    callback_query_id: callbackId,
+    text
+  });
+}
+
+async function getUser(env, userId) {
+  return readJSON(env, user:${userId}, null);
+}
+
+async function saveUser(env, user) {
+  await writeJSON(env, user:${user.id}, user);
+}
+
+async function ensureUser(env, from) {
+  const id = String(from.id);
+  let user = await getUser(env, id);
+  const isNew = !user;
+
+  if (!user) {
+    user = {
+      id,
+      name: from.first_name || "User",
+      username: from.username || "",
+      lang: "fa",
+      blocked: false,
+      state: null,
+      favorites: [],
+      views: 0,
+      invites: 0,
+      priorityCredits: 0,
+      referralRewards: 0,
+      referredBy: null,
+      createdAt: Date.now()
+    };
+
+    const index = await readJSON(env, "users:index", []);
+    if (!index.includes(id)) {
+      index.push(id);
+      await writeJSON(env, "users:index", index);
+    }
+  } else {
+    user.name = from.first_name  user.name  "User";
+    user.username = from.username  user.username  "";
+  }
+
+  user.id = id;
+  user.lang = TEXT[user.lang] ? user.lang : "fa";
+  user.favorites = Array.isArray(user.favorites) ? user.favorites : [];
+
+  await saveUser(env, user);
+
+  return {
+    user,
+    isNew
+  };
+}
+
+async function getMovies(env) {
+  const movies = await readJSON(env, "movies", []);
+  return Array.isArray(movies) ? movies : [];
+}
+
+async function saveMovies(env, movies) {
+  await writeJSON(env, "movies", movies);
+}
+
+async function getPending(env) {
+  const list = await readJSON(env, "movie:pending", []);
+  return Array.isArray(list) ? list : [];
+}
+
+async function savePending(env, list) {
+  await writeJSON(env, "movie:pending", list);
+}
+
+async function getRequests(env) {
+  const list = await readJSON(env, "movie:requests", []);
+  return Array.isArray(list) ? list : [];
+}
+
+async function saveRequests(env, list) {
+  await writeJSON(env, "movie:requests", list);
+}
+
+async function isPrimaryAdmin(env, userId) {
+  return String(env.ADMIN_ID || "") === String(userId);
+}
+
+async function isAdmin(env, userId) {
+  if (await isPrimaryAdmin(env, userId)) {
+    return true;
+  }
+
+  const admins = await readJSON(env, "admin:approved", []);
+  return Array.isArray(admins) &&
+    admins.map(String).includes(String(userId));
+}
+
+async function getAllUsers(env) {
+  const ids = await readJSON(env, "users:index", []);
+  const users = [];
+
+  for (const id of ids) {
+    const user = await getUser(env, id);
+
+    if (user) {
+      users.push(user);
+    }
+  }
+
+  return users;
+}
+
+// ------------------------------------------------------
+// Channel membership
+// ------------------------------------------------------
+
+async function isChannelMember(env, userId) {
+  const result = await telegram(env, "getChatMember", {
+    chat_id: CHANNEL_USERNAME,
+    user_id: Number(userId)
+  });
+
+  if (!result.ok || !result.result) {
+    return false;
+  }
+
+  const status = result.result.status;
+
+  return [
+    "creator",
+    "administrator",
+    "member"
+  ].includes(status) ||
+    (
+      status === "restricted" &&
+      result.result.is_member === true
+    );
+}
+
+async function showJoinPrompt(env, chatId, user) {
+  await sendText(env, chatId, t(user, "joinText"), {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: t(user, "join"),
+            url: CHANNEL_URL
+          }
+        ],
+        [
+          {
+            text: t(user, "checkJoin"),
+            callback_data: "join:check"
+          }
+        ]
+      ]
+    }
+  });
+}
+
+// ------------------------------------------------------
+// Reply keyboard: no Mini App buttons
+// ------------------------------------------------------
+
+function mainKeyboard(user, admin) {
+  const rows = [
+    [
+      { text: t(user, "getMovie") },
+      { text: t(user, "favorites") }
+    ],
+    [
+      { text: t(user, "submitMovie") },
+      { text: t(user, "requestMovie") }
+    ],
+    [
+      { text: t(user, "inviteFriends") },
+      { text: t(user, "language") }
+    ]
+  ];
+
+  if (admin) {
+    rows.push([
+      { text: t(user, "adminPanel") }
+    ]);
+  }
+
+  return {
+    keyboard: rows,
+    resize_keyboard: true,
+    one_time_keyboard: false,
+    is_persistent: true
+  };
+}
+
+async function showMain(env, chatId, user) {
+  const admin = await isAdmin(env, user.id);
+
+  await sendText(env, chatId, t(user, "menu"), {
+    reply_markup: mainKeyboard(user, admin)
+  });
+}
+
+async function showLanguagePicker(env, chatId, user) {
+  const rows = [];
+
+  for (const [code, name] of Object.entries(LANGUAGES)) {
+    rows.push([
+      {
+        text: name,
+        callback_data: lang:${code}
+      }
+    ]);
+  }
+
+  await sendText(env, chatId, t(user, "chooseLanguage"), {
+    reply_markup: {
+      inline_keyboard: rows
+    }
+  });
+       }
+// ------------------------------------------------------
+// Referrals
+// Every three new referrals grant one priority request.
+// ------------------------------------------------------
+
+async function processReferral(env, user, startParameter) {
+  const match = /^ref_(\d+)$/.exec(startParameter || "");
+
+  if (!match) {
     return;
   }
-  const movie = { id: uid(), type: p.type, file_id: p.file_id, file_unique_id: p.file_unique_id, caption: p.caption, country: p.country || '—', views: 0, added_at: now() };
-  await saveMovie(env, movie);
-  pending.splice(i, 1); await kvPut(env, 'movies:pending', pending);
-  await reply(env, chatId, '✅ Approved and archived');
-  if (p.user_id) await reply(env, p.user_id, t('fa', 'approvedUser'));
-}
-async function rejectPending(env, chatId, id) {
-  const pending = await kvGet(env, 'movies:pending', []), p = pending.find(x => String(x.id) === String(id));
-  if (!p) return reply(env, chatId, t('fa', 'missing'));
-  await kvPut(env, 'movies:pending', pending.filter(x => String(x.id) !== String(id)));
-  await reply(env, chatId, '❌ Rejected');
-  if (p.user_id) await reply(env, p.user_id, t('fa', 'rejectedUser'));
-}
-async function showPendingList(env, chatId, page = 0) {
-  const arr = await kvGet(env, 'movies:pending', []); if (!arr.length) return reply(env, chatId, t('fa', 'noPending'));
-  const pages = Math.ceil(arr.length / PAGE_SIZE); page = Math.max(0, Math.min(page, pages - 1));
-  const start = page * PAGE_SIZE, rows = arr.slice(start, start + PAGE_SIZE).map((m, i) => [{ text: ${start + i + 1}. ${(m.caption || 'Movie').replace(/\n/g, ' ').slice(0, 42)}, callback_data: pending:view:${m.id}:${page} }]);
-  const nav = []; if (page) nav.push({ text: '⬅️', callback_data: pending:list:${page - 1} }); if (page < pages - 1) nav.push({ text: '➡️', callback_data: pending:list:${page + 1} }); if (nav.length) rows.push(nav);
-  rows.push([{ text: t('fa', 'back'), callback_data: 'admin:home' }]);
-  return reply(env, chatId, 📥 Pending ${page + 1}/${pages}, { reply_markup: { inline_keyboard: rows } });
-}
-async function showPendingDetail(env, chatId, id, page = 0) {
-  const p = (await kvGet(env, 'movies:pending', [])).find(x => String(x.id) === String(id));
-  if (!p) return reply(env, chatId, t('fa', 'missing'));
-  return reply(env, chatId, ${p.caption || '🎬'}\n👤 ${p.first_name || '-'} · ${p.user_id}, { reply_markup: { inline_keyboard: [
-    [{ text: t('en', 'watch'), callback_data: pending:watch:${p.id} }],
-    [{ text: t('en', 'approve'), callback_data: pending:approve:${p.id} }, { text: t('en', 'reject'), callback_data: pending:reject:${p.id} }],
-    [{ text: t('en', 'back'), callback_data: pending:list:${page} }]
-  ] } });
-}
-async function watchPending(env, chatId, id) {
-  const p = (await kvGet(env, 'movies:pending', [])).find(x => String(x.id) === String(id)); if (!p) return reply(env, chatId, t('fa', 'missing'));
-  const payload = { chat_id: chatId, caption: (p.caption || '🎬').slice(0, 1000), reply_markup: { inline_keyboard: [[{ text: '✅ Approve', callback_data: pending:approve:${p.id} }, { text: '❌ Reject', callback_data: pending:reject:${p.id} }]] } };
-  payload[p.type === 'document' ? 'document' : 'video'] = p.file_id;
-  return safeTg(env, p.type === 'document' ? 'sendDocument' : 'sendVideo', payload);
-                                                                                 }
-async function showArchiveList(env, chatId, page = 0) {
-  const arr = await allMovies(env); if (!arr.length) return reply(env, chatId, t('fa', 'empty'));
-  const pages = Math.ceil(arr.length / PAGE_SIZE); page = Math.max(0, Math.min(page, pages - 1));
-  const start = page * PAGE_SIZE, rows = arr.slice(start, start + PAGE_SIZE).map((m, i) => [{ text: ${start + i + 1}. ${(m.caption || 'Movie').replace(/\n/g, ' ').slice(0, 42)}, callback_data: archive:view:${m.id}:${page} }]);
-  const nav = []; if (page) nav.push({ text: '⬅️', callback_data: archive:list:${page - 1} }); if (page < pages - 1) nav.push({ text: '➡️', callback_data: archive:list:${page + 1} }); if (nav.length) rows.push(nav);
-  rows.push([{ text: t('fa', 'back'), callback_data: 'admin:home' }]);
-  return reply(env, chatId, 🎞 Archive ${page + 1}/${pages}, { reply_markup: { inline_keyboard: rows } });
-}
-async function showArchiveDetail(env, chatId, id, page = 0) {
-  const m = await getMovie(env, id); if (!m) return reply(env, chatId, t('fa', 'missing'));
-  const ri = await getRatingInfo(env, id);
-  return reply(env, chatId, 🎬 ${m.caption || ''}\nID: ${m.id}\n👁 ${m.views || 0}\n⭐ ${ri.average.toFixed(1)}/5 (${ri.count}), { reply_markup: { inline_keyboard: [
-    [{ text: '▶️ Watch', callback_data: archive:watch:${m.id} }],
-    [{ text: t('en', 'delete'), callback_data: archive:confirm-delete:${m.id}:${page} }],
-    [{ text: '🔙 Back', callback_data: archive:list:${page} }]
-  ] } });
-}
-async function showAdminPanel(env, chatId) {
-  const movies = await listMovies(env), pending = await kvGet(env, 'movies:pending', []), requests = (await kvGet(env, 'movie:requests', [])).filter(r => r.status === 'pending');
-  const rows = [
-    [{ text: ${t('fa', 'archive')} (${movies.length}), callback_data: 'archive:list:0' }],
-    [{ text: ${t('fa', 'pending')} (${pending.length}), callback_data: 'pending:list:0' }],
-    [{ text: ${t('fa', 'requests')} (${requests.length}), callback_data: 'requests:list:0' }],
-    [{ text: t('fa', 'users'), callback_data: 'users:list:0' }]
-  ];
-  if (isMainAdmin(env, chatId)) rows.push([{ text: t('fa', 'admins'), callback_data: 'admins:home' }]);
-  rows.push([{ text: t('fa', 'back'), callback_data: 'menu:back' }]);
-  return reply(env, chatId, ${t('fa', 'adminPanel')}\n🎞 ${movies.length} · 📥 ${pending.length} · 📝 ${requests.length}, { reply_markup: { inline_keyboard: rows } });
+
+  const referrerId = String(match[1]);
+
+  if (
+    referrerId === String(user.id) ||
+    user.referredBy
+  ) {
+    return;
+  }
+
+  const referrer = await getUser(env, referrerId);
+
+  if (!referrer) {
+    return;
+  }
+
+  let referrals = await readJSON(
+    env,
+    referrals:${referrerId},
+    []
+  );
+
+  if (!Array.isArray(referrals)) {
+    referrals = [];
+  }
+
+  if (referrals.includes(String(user.id))) {
+    return;
+  }
+
+  referrals.push(String(user.id));
+
+  user.referredBy = referrerId;
+  await saveUser(env, user);
+
+  await writeJSON(
+    env,
+    referrals:${referrerId},
+    referrals
+  );
+
+  referrer.invites = referrals.length;
+
+  if (referrals.length % 3 === 0) {
+    referrer.priorityCredits =
+      Number(referrer.priorityCredits || 0) + 1;
+
+    referrer.referralRewards =
+      Number(referrer.referralRewards || 0) + 1;
+
+    await sendText(
+      env,
+      referrerId,
+      t(referrer, "inviteReward")
+    );
+  }
+
+  await saveUser(env, referrer);
 }
 
-async function showRequests(env, chatId, page = 0) {
-  const arr = (await kvGet(env, 'movie:requests', [])).filter(x => x.status === 'pending'); if (!arr.length) return reply(env, chatId, t('fa', 'noRequests'));
-  const pages = Math.ceil(arr.length / PAGE_SIZE); page = Math.max(0, Math.min(page, pages - 1));
-  const start = page * PAGE_SIZE, rows = arr.slice(start, start + PAGE_SIZE).map((r, i) => [{ text: ${start + i + 1}. ${r.name.slice(0, 42)}, callback_data: requests:view:${r.id}:${page} }]);
-  const nav = []; if (page) nav.push({ text: '⬅️', callback_data: requests:list:${page - 1} }); if (page < pages - 1) nav.push({ text: '➡️', callback_data: requests:list:${page + 1} }); if (nav.length) rows.push(nav);
-  rows.push([{ text: '🔙 Back', callback_data: 'admin:home' }]);
-  return reply(env, chatId, 📝 Requests ${page + 1}/${pages}, { reply_markup: { inline_keyboard: rows } });
-}
-async function showRequestDetail(env, chatId, id, page = 0) {
-  const r = (await kvGet(env, 'movie:requests', [])).find(x => String(x.id) === String(id)); if (!r) return reply(env, chatId, t('fa', 'missing'));
-  return reply(env, chatId, 📝 ${r.name}\n👤 ${r.first_name || '-'}\n🆔 ${r.user_id}, { reply_markup: { inline_keyboard: [
-    [{ text: '✅ Done', callback_data: requests:done:${id} }, { text: '🗑 Delete', callback_data: requests:delete:${id}:${page} }],
-                                                                                    [{ text: '🔙 Back', callback_data: requests:list:${page} }]
-  ] } });
-}
-async function showUsers(env, chatId, page = 0) {
-  const ids = await kvGet(env, 'users:index', []); if (!ids.length) return reply(env, chatId, t('fa', 'noUsers'));
-  const pages = Math.ceil(ids.length / PAGE_SIZE); page = Math.max(0, Math.min(page, pages - 1));
-  const start = page * PAGE_SIZE, rows = [];
-  for (const [i, id] of ids.slice(start, start + PAGE_SIZE).entries()) {
-    const u = await getUser(env, id); rows.push([{ text: ${start + i + 1}. ${(u.first_name || u.username || u.id).slice(0, 42)}, callback_data: users:view:${u.id}:${page} }]);
+async function getBotUsername(env) {
+  const configured = String(env.BOT_USERNAME || "")
+    .replace(/^@/, "")
+    .trim();
+
+  if (configured) {
+    return configured;
   }
-  const nav = []; if (page) nav.push({ text: '⬅️', callback_data: users:list:${page - 1} }); if (page < pages - 1) nav.push({ text: '➡️', callback_data: users:list:${page + 1} }); if (nav.length) rows.push(nav);
-  rows.push([{ text: '🔙 Back', callback_data: 'admin:home' }]);
-  return reply(env, chatId, 👥 Users ${page + 1}/${pages}, { reply_markup: { inline_keyboard: rows } });
-}
-async function showUserDetail(env, chatId, id, page = 0) {
-  const u = await getUser(env, id); if (!u) return reply(env, chatId, t('fa', 'userNotFound'));
-  return reply(env, chatId, 👤 ${u.first_name || '-'}\n🆔 ${u.id}\n@${u.username || '-'}\nLanguage: ${u.language}\nFavorites: ${(u.favorites || []).length}\nStatus: ${u.blocked ? 'Blocked' : 'Active'}, { reply_markup: { inline_keyboard: [
-    [{ text: u.blocked ? '✅ Unblock' : '🚫 Block', callback_data: users:toggle:${id}:${page} }],
-    [{ text: '🔙 Back', callback_data: users:list:${page} }]
-  ] } });
-}
-async function showAdmins(env, chatId) {
-  const a = await getAdmins(env);
-  return reply(env, chatId, ${t('fa', 'mainAdminLabel')}: ${env.ADMIN_ID}\n${t('fa', 'currentlyAdmins')}:\n${a.join('\n') || t('fa', 'noAdmins')}, { reply_markup: { inline_keyboard: [
-    [{ text: t('fa', 'addAdmin'), callback_data: 'admins:add' }],
-    [{ text: t('fa', 'removeAdmin'), callback_data: 'admins:remove' }],
-    [{ text: t('fa', 'back'), callback_data: 'admin:home' }]
-  ] } });
-}
-async function createRequest(env, user, name) {
-  const requests = await kvGet(env, 'movie:requests', []);
-  if (requests.some(r => r.status === 'pending' && r.user_id === String(user.id) && r.name.toLowerCase() === name.toLowerCase())) return null;
-  const request = { id: uid(), name: name.slice(0, 150), user_id: String(user.id), first_name: user.first_name, username: user.username, status: 'pending', created_at: now() };
-  requests.unshift(request); await kvPut(env, 'movie:requests', requests); return request;
-}
-async function inviteInfo(env, chatId, user) {
-  let name = env.BOT_USERNAME;
-  if (!name) { try { name = (await tg(env, 'getMe')).username; } catch { name = ''; } }
-  if (!name) return reply(env, chatId, t(user.language, 'sendError'));
-  return reply(env, chatId, ${t(user.language, 'invited')}:\nhttps://t.me/${name}?start=ref_${user.id}\n${t(user.language, 'inviteCount')}: ${user.valid_invites || 0});
-    }
-async function startCommand(env, message) {
-  const user = await ensureUser(env, message.from), chat = message.chat.id;
-  const ref = (message.text || '').match(/^\/start(?:@\w+)?\s+ref_(\d+)/)?.[1];
-  if (ref && ref !== user.id && !user.referral_parent) {
-    user.referral_parent = ref; await saveUser(env, user);
-    const inviter = await getUser(env, ref); inviter.valid_invites = (inviter.valid_invites || 0) + 1; await saveUser(env, inviter);
-    await reply(env, ref, t(inviter.language, 'referralSuccess'));
+
+  const cached = await env.BOT_DATA.get("bot:username");
+
+  if (cached) {
+    return cached;
   }
-  if (user.blocked) return reply(env, chat, t(user.language, 'blocked'));
-  if (!user.language_selected) return showLanguagePicker(env, chat);
-  if (!(await requireAccess(env, user))) return showJoinPrompt(env, chat, user.language);
-  return showMenu(env, chat, user);
-}
-function buttonAction(text) {
-  const keys = ['get', 'send', 'request', 'favorites', 'invite', 'language', 'admin'];
-  for (const key of keys) for (const lang of LANGUAGES) if (text === TEXT[lang][key]) return key;
+
+  const result = await telegram(env, "getMe", {});
+
+  if (result.ok && result.result && result.result.username) {
+    const username = result.result.username;
+
+    await env.BOT_DATA.put("bot:username", username);
+
+    return username;
+  }
+
   return null;
 }
-async function handleText(env, message, user) {
-  const text = (message.text || '').trim(), chatId = message.chat.id, stateKey = state:${user.id};
-  const state = await kvGet(env, stateKey, null);
-  if (text === '/cancel' || text === 'لغو') {
-    await env.BOT_DATA.delete(stateKey); return reply(env, chatId, t(user.language, 'cancelled'));
-  }
-  if (state?.type === 'add_admin' || state?.type === 'remove_admin') {
-    if (!isMainAdmin(env, user.id)) { await env.BOT_DATA.delete(stateKey); return reply(env, chatId, t(user.language, 'mainAdminOnly')); }
-    if (!/^\d{3,25}$/.test(text)) return reply(env, chatId, t(user.language, 'numericId'));
-    if (state.type === 'add_admin') {
-      const admins = await getAdmins(env); if (!admins.includes(text) && !isMainAdmin(env, text)) { admins.push(text); await kvPut(env, 'admin:approved', admins); }
-      await reply(env, chatId, t(user.language, 'adminAdded')); await reply(env, text, 👑 ${t('en', 'admin')});
-    } else {
-      await kvPut(env, 'admin:approved', (await getAdmins(env)).filter(x => x !== text));
-      await reply(env, chatId, t(user.language, 'adminRemoved'));
-    }
-    await env.BOT_DATA.delete(stateKey); return;
-  }
-  if (state?.type === 'request') {
-    if (!text) return reply(env, chatId, t(user.language, 'requestAsk'));
-    const req = await createRequest(env, user, text);
-    await env.BOT_DATA.delete(stateKey);
-    if (!req) return reply(env, chatId, t(user.language, 'duplicateRequest'));
-    await reply(env, chatId, t(user.language, 'requestSaved'));
-    await notifyAdmins(env, 📝 New movie request: ${req.name}\nUser: ${user.id}, { inline_keyboard: [[{ text: 'View requests', callback_data: 'requests:list:0' }]] }); return;
-  }
-  const action = buttonAction(text);
-  if (action === 'get') return getRandomMovie(env, chatId, user);
-  if (action === 'send') return reply(env, chatId, ${t(user.language, 'sendMovie')}\n${t(user.language, 'cancelHint')});
-  if (action === 'request') { await kvPut(env, stateKey, { type: 'request' }); return reply(env, chatId, ${t(user.language, 'requestAsk')}\n${t(user.language, 'cancelHint')}); }
-  if (action === 'favorites') return showFavorites(env, chatId, user);
-  if (action === 'invite') return inviteInfo(env, chatId, user);
-  if (action === 'language') return showLanguagePicker(env, chatId);
-  if (action === 'admin') return isAdmin(env, user.id) ? showAdminPanel(env, chatId) : reply(env, chatId, t(user.language, 'notAdmin'));
-}
-async function handleCallback(env, query) {
-  const data = query.data  '', user = await ensureUser(env, query.from), chatId = query.message?.chat?.id  query.from.id;
-  await callbackAnswer(env, query.id);
-  if (data.startsWith('lang:')) {
-    const lang = data.slice(5); user.language = LANGUAGES.includes(lang) ? lang : 'fa'; user.language_selected = true; await saveUser(env, user);
-    await reply(env, chatId, t(user.language, 'languageSaved'));
-    if (user.blocked) return reply(env, chatId, t(user.language, 'blocked'));
-    if (!(await requireAccess(env, user))) return showJoinPrompt(env, chatId, user.language);
-    return showMenu(env, chatId, user);
-  }
-  if (data === 'membership:check') {
-    if (await requireAccess(env, user)) return showMenu(env, chatId, user);
-    return showJoinPrompt(env, chatId, user.language);
-  }
-  if (user.blocked && !isAdmin(env, user.id)) return reply(env, chatId, t(user.language, 'blocked'));
-  if (!(await requireAccess(env, user))) return showJoinPrompt(env, chatId, user.language);
 
-  if (data.startsWith('fav:')) {
-    const p = data.split(':');
-    if (p[1] === 'page') return showFavorites(env, chatId, user, Number(p[2]) || 0, query.message?.message_id);
-    if (p[1] === 'open') return sendMovie(env, chatId, await getMovie(env, p[2]), user);
-    if (p[1] === 'add' || p[1] === 'remove') {
-      const r = await changeFavorite(env, user, p[2], p[1]);
-      return reply(env, chatId, r.ok ? t(user.language, p[1] === 'add' ? 'favAdded' : 'favRemoved') : t(user.language, 'missing'));
+async function sendInviteLink(env, chatId, user) {
+  const username = await getBotUsername(env);
+
+  if (!username) {
+    await sendText(
+      env,
+      chatId,
+      "BOT_USERNAME را در تنظیمات Worker تنظیم کن."
+    );
+    return;
+  }
+
+  const link =
+    https://t.me/${username}?start=ref_${user.id};
+
+  await sendText(env, chatId, t(user, "inviteIntro", { link }));
+}
+
+// ------------------------------------------------------
+// Movie delivery and ratings
+// ------------------------------------------------------
+
+function findMovie(movies, movieId) {
+  return movies.find(
+    movie => String(movie.id) === String(movieId)
+  );
+}
+
+async function sendMovie(env, chatId, user, movie) {
+  if (!movie) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
+  }
+
+  const movies = await getMovies(env);
+  const storedMovie = findMovie(movies, movie.id);
+
+  if (!storedMovie) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
+  }
+
+  storedMovie.views = Number(storedMovie.views || 0) + 1;
+  user.views = Number(user.views || 0) + 1;
+
+  await saveMovies(env, movies);
+  await saveUser(env, user);
+
+  const ratingCount = Number(storedMovie.ratingCount || 0);
+  const ratingSum = Number(storedMovie.ratingSum || 0);
+
+  const average = ratingCount > 0
+    ? (ratingSum / ratingCount).toFixed(1)
+    : "—";
+
+  const caption = t(user, "movieCaption", {
+    title: storedMovie.title,
+    views: storedMovie.views,
+    rating: average
+  });
+
+  const alreadyRated = await env.BOT_DATA.get(
+    rating:${storedMovie.id}:${user.id}
+  );
+
+  const rows = [];
+
+  if (!alreadyRated) {
+    rows.push([
+      { text: "⭐ 1", callback_data: rate:${storedMovie.id}:1 },
+      { text: "⭐ 2", callback_data: rate:${storedMovie.id}:2 },
+      { text: "⭐ 3", callback_data: rate:${storedMovie.id}:3 },
+      { text: "⭐ 4", callback_data: rate:${storedMovie.id}:4 },
+      { text: "⭐ 5", callback_data: rate:${storedMovie.id}:5 }
+    ]);
+  }
+
+  rows.push([
+    {
+      text: t(user, "toggleFavorite"),
+      callback_data: fav:toggle:${storedMovie.id}
     }
+  ]);
+
+  rows.push([
+    {
+      text: t(user, "next"),
+      callback_data: "movie:random"
+    }
+  ]);
+
+  const replyMarkup = {
+    inline_keyboard: rows
+  };
+if (storedMovie.type === "document") {
+    await telegram(env, "sendDocument", {
+      chat_id: chatId,
+      document: storedMovie.fileId,
+      caption,
+      reply_markup: replyMarkup
+    });
+  } else {
+    await telegram(env, "sendVideo", {
+      chat_id: chatId,
+      video: storedMovie.fileId,
+      caption,
+      reply_markup: replyMarkup
+    });
   }
-  if (data.startsWith('rate:')) {
-    const [, movieId, val] = data.split(':'), score = Number(val);
-    if (!Number.isInteger(score)  score < 1  score > 5) return reply(env, chatId, t(user.language, 'unsupported'));
-    if (!(await getMovie(env, movieId))) return reply(env, chatId, t(user.language, 'missing'));
-    const key = rating:${movieId}:${user.id};
-    if (await env.BOT_DATA.get(key)) return reply(env, chatId, t(user.language, 'alreadyRated'));
-    await env.BOT_DATA.put(key, String(score));
-    const ratings = await kvGet(env, ratings:${movieId}, []); ratings.push({ user_id: user.id, value: score }); await kvPut(env, ratings:${movieId}, ratings);
-    return reply(env, chatId, t(user.language, 'ratingSaved'));
+}
+
+async function sendRandomMovie(env, chatId, user) {
+  const movies = await getMovies(env);
+
+  if (movies.length === 0) {
+    await sendText(env, chatId, t(user, "noMovies"));
+    return;
   }
-  const adminCallback = /^(admin:|archive:|pending:|requests:|users:|admins:)/.test(data);
-  if (adminCallback && !(await isAdmin(env, user.id))) return reply(env, chatId, t(user.language, 'notAdmin'));
-  if (data.startsWith('admins:') && !isMainAdmin(env, user.id)) return reply(env, chatId, t(user.language, 'mainAdminOnly'));
-  if (data === 'menu:back') return showMenu(env, chatId, user);
-  if (data === 'admin:home') return showAdminPanel(env, chatId);
-  if (data.startsWith('pending:list:')) return showPendingList(env, chatId, Number(data.split(':')[2]) || 0);
-  if (data.startsWith('pending:view:')) { const p = data.split(':'); return showPendingDetail(env, chatId, p[2], Number(p[3]) || 0); }
-  if (data.startsWith('pending:watch:')) return watchPending(env, chatId, data.split(':')[2]);
-  if (data.startsWith('pending:approve:')) return approvePending(env, chatId, data.split(':')[2]);
-  if (data.startsWith('pending:reject:')) return rejectPending(env, chatId, data.split(':')[2]);
-  if (data.startsWith('archive:list:')) return showArchiveList(env, chatId, Number(data.split(':')[2]) || 0);
-  if (data.startsWith('archive:view:')) { const p = data.split(':'); return showArchiveDetail(env, chatId, p[2], Number(p[3]) || 0); }
-  if (data.startsWith('archive:watch:')) return sendMovie(env, chatId, await getMovie(env, data.split(':')[2]), user);
-  if (data.startsWith('archive:confirm-delete:')) {
-    const p = data.split(':'); return reply(env, chatId, t(user.language, 'confirmDelete'), { reply_markup: { inline_keyboard: [
-      [{ text: t(user.language, 'yesDelete'), callback_data: archive:delete:${p[2]}:${p[3]} }, { text: t(user.language, 'noKeep'), callback_data: archive:view:${p[2]}:${p[3]} }]
-    ] } });
+
+  const movie = movies[Math.floor(Math.random() * movies.length)];
+
+  await sendMovie(env, chatId, user, movie);
+}
+
+async function showFavorites(env, chatId, user) {
+  const movies = await getMovies(env);
+
+  const favoriteIds = new Set(
+    (user.favorites || []).map(String)
+  );
+
+  const favorites = movies.filter(
+    movie => favoriteIds.has(String(movie.id))
+  );
+
+  if (favorites.length === 0) {
+    await sendText(env, chatId, t(user, "noFavorites"));
+    return;
   }
-  if (data.startsWith('archive:delete:')) {
-    const p = data.split(':'), ok = await removeMovie(env, p[2]);
-    return ok ? (await reply(env, chatId, t(user.language, 'deleted')), showArchiveList(env, chatId, Number(p[3]) || 0)) : reply(env, chatId, t(user.language, 'missing'));
+
+  const buttons = favorites.map(movie => [
+    {
+      text: ⭐ ${String(movie.title).slice(0, 50)},
+      callback_data: fav:open:${movie.id}
+    }
+  ]);
+
+  buttons.push([
+    {
+      text: t(user, "back"),
+      callback_data: "ui:menu"
+    }
+  ]);
+
+  await sendText(env, chatId, t(user, "favorites"), {
+    reply_markup: {
+      inline_keyboard: buttons
+    }
+  });
+}
+
+async function toggleFavorite(env, chatId, user, movieId) {
+  const movies = await getMovies(env);
+  const movie = findMovie(movies, movieId);
+
+  if (!movie) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
   }
-  if (data.startsWith('requests:list:')) return showRequests(env, chatId, Number(data.split(':')[2]) || 0);
-  if (data.startsWith('requests:view:')) { const p = data.split(':'); return showRequestDetail(env, chatId, p[2], Number(p[3]) || 0); }
-  if (data.startsWith('requests:done:')) {
-    const id = data.split(':')[2], arr = await kvGet(env, 'movie:requests', []), r = arr.find(x => String(x.id) === String(id));
-    if (!r) return reply(env, chatId, t(user.language, 'missing'));
-    r.status = 'done'; r.reviewed_at = now(); await kvPut(env, 'movie:requests', arr);
-    await reply(env, chatId, t(user.language, 'done')); await reply(env, r.user_id, t((await getUser(env, r.user_id)).language, 'requestReviewed')); return;
+
+  const favorites = new Set(
+    (user.favorites || []).map(String)
+  );
+
+  if (favorites.has(String(movieId))) {
+    favorites.delete(String(movieId));
+    await sendText(env, chatId, t(user, "removedFavorite"));
+  } else {
+    favorites.add(String(movieId));
+    await sendText(env, chatId, t(user, "addedFavorite"));
+  }
+
+  user.favorites = Array.from(favorites);
+
+  await saveUser(env, user);
+}
+
+async function saveRating(env, chatId, user, movieId, score) {
+  const value = Number(score);
+
+  if (!Number.isInteger(value)  value < 1  value > 5) {
+    return;
+  }
+
+  const movieKey = rating:${movieId}:${user.id};
+  const existing = await env.BOT_DATA.get(movieKey);
+
+  if (existing) {
+    await sendText(env, chatId, t(user, "alreadyRated"));
+    return;
+  }
+
+  const movies = await getMovies(env);
+  const movie = findMovie(movies, movieId);
+
+  if (!movie) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
+  }
+
+  await env.BOT_DATA.put(movieKey, String(value));
+
+  movie.ratingSum = Number(movie.ratingSum || 0) + value;
+  movie.ratingCount = Number(movie.ratingCount || 0) + 1;
+
+  await saveMovies(env, movies);
+
+  await sendText(env, chatId, t(user, "ratingSaved"));
+}
+
+// ------------------------------------------------------
+// Media processing
+// ------------------------------------------------------
+
+function getMedia(message) {
+  if (message.video && message.video.file_id) {
+    return {
+      fileId: message.video.file_id,
+      type: "video"
+    };
+  }
+
+  if (message.document && message.document.file_id) {
+    return {
+      fileId: message.document.file_id,
+      type: "document"
+    };
+  }
+
+  return null;
+}
+
+function getTitleFromCaption(caption) {
+  if (!caption) {
+    return null;
+  }
+
+  const lines = caption.trim().split(/\r?\n/);
+  const title = (lines.shift() || "").trim();
+
+  return title ? title.slice(0, 100) : null;
+}
+
+async function processIncomingMedia(env, chatId, message, user) {
+  const media = getMedia(message);
+
+  if (!media) {
+    await sendText(env, chatId, t(user, "mediaOnly"));
+    return;
+  }
+
+  const title = getTitleFromCaption(message.caption);
+
+  if (!title) {
+    await sendText(env, chatId, t(user, "captionTip"));
+    return;
+  }
+
+  const description = String(message.caption || "")
+    .trim()
+    .split(/\r?\n/)
+    .slice(1)
+    .join("\n")
+    .slice(0, 900);
+  if (user.state === "await_admin_movie") {
+    if (!(await isAdmin(env, user.id))) {
+      user.state = null;
+      await saveUser(env, user);
+      await sendText(env, chatId, t(user, "adminUsage"));
+      return;
+    }
+
+    const movies = await getMovies(env);
+
+    movies.push({
+      id: newId(),
+      title,
+      description,
+      fileId: media.fileId,
+      type: media.type,
+      addedBy: String(user.id),
+      addedAt: Date.now(),
+      views: 0,
+      ratingSum: 0,
+      ratingCount: 0
+    });
+
+    await saveMovies(env, movies);
+
+    user.state = null;
+    await saveUser(env, user);
+
+    await sendText(env, chatId, t(user, "adminSaved"));
+    return;
+  }
+
+  if (user.state === "await_user_movie") {
+    const pending = await getPending(env);
+
+    const item = {
+      id: newId(),
+      title,
+      description,
+      fileId: media.fileId,
+      type: media.type,
+      userId: String(user.id),
+      createdAt: Date.now()
+    };
+
+    pending.push(item);
+    await savePending(env, pending);
+
+    user.state = null;
+    await saveUser(env, user);
+
+    await sendText(env, chatId, t(user, "submitted"));
+
+    const adminIds = new Set(
+      (await readJSON(env, "admin:approved", [])).map(String)
+    );
+
+    if (env.ADMIN_ID) {
+      adminIds.add(String(env.ADMIN_ID));
+    }
+
+    for (const adminId of adminIds) {
+      await sendText(
+        env,
+        adminId,
+        ${t({ lang: user.lang }, "newSubmission")}\n\n🎬 ${title},
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: t(user, "approve"),
+                  callback_data: adm:approve:${item.id}
+                },
+                {
+                  text: t(user, "reject"),
+                  callback_data: adm:reject:${item.id}
+                }
+              ]
+            ]
+          }
+        }
+      );
+    }
+
+    return;
+  }
+
+  await sendText(env, chatId, t(user, "useButtons"));
+}
+
+// ------------------------------------------------------
+// Admin panel
+// ------------------------------------------------------
+
+async function showAdminPanel(env, chatId, user) {
+  if (!(await isAdmin(env, user.id))) {
+    await sendText(env, chatId, t(user, "adminUsage"));
+    return;
+  }
+
+  const rows = [
+    [
+      { text: t(user, "addMovie"), callback_data: "adm:add" }
+    ],
+    [
+      { text: t(user, "pending"), callback_data: "adm:pending" },
+      { text: t(user, "requests"), callback_data: "adm:requests" }
+    ],
+    [
+      { text: t(user, "users"), callback_data: "adm:users" }
+    ],
+    [
+      { text: t(user, "deleteMovies"), callback_data: "adm:delete" }
+    ]
+  ];
+
+  if (await isPrimaryAdmin(env, user.id)) {
+    rows.push([
+      {
+        text: t(user, "manageAdmins"),
+        callback_data: "adm:admins"
       }
-if (data.startsWith('requests:delete:')) {
-    const p = data.split(':'), arr = await kvGet(env, 'movie:requests', []); await kvPut(env, 'movie:requests', arr.filter(x => String(x.id) !== String(p[2])));
-    await reply(env, chatId, t(user.language, 'requestDeleted')); return showRequests(env, chatId, Number(p[3]) || 0);
+    ]);
   }
-  if (data.startsWith('users:list:')) return showUsers(env, chatId, Number(data.split(':')[2]) || 0);
-  if (data.startsWith('users:view:')) { const p = data.split(':'); return showUserDetail(env, chatId, p[2], Number(p[3]) || 0); }
-  if (data.startsWith('users:toggle:')) {
-    const p = data.split(':'), target = await getUser(env, p[2]); target.blocked = !target.blocked; await saveUser(env, target);
-    await reply(env, chatId, t(user.language, target.blocked ? 'userBlocked' : 'userUnblocked')); return showUserDetail(env, chatId, p[2], Number(p[3]) || 0);
+
+  rows.push([
+    {
+      text: t(user, "back"),
+      callback_data: "ui:menu"
+    }
+  ]);
+
+  await sendText(env, chatId, t(user, "panelTitle"), {
+    reply_markup: {
+      inline_keyboard: rows
+    }
+  });
+}
+
+async function showPending(env, chatId, user) {
+  const pending = await getPending(env);
+
+  if (pending.length === 0) {
+    await sendText(env, chatId, t(user, "pendingEmpty"));
+    return;
   }
-  if (data === 'admins:home') return showAdmins(env, chatId);
-  if (data === 'admins:add' || data === 'admins:remove') {
-    await kvPut(env, state:${user.id}, { type: data === 'admins:add' ? 'add_admin' : 'remove_admin' });
-    return reply(env, chatId, ${t(user.language, 'adminIdAsk')}\n${t(user.language, 'cancelHint')});
+
+  for (const item of pending.slice(0, 30)) {
+    await sendText(
+      env,
+      chatId,
+      🎬 ${item.title}\n👤 User ID: ${item.userId},
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: t(user, "approve"),
+                callback_data: adm:approve:${item.id}
+              },
+              {
+                text: t(user, "reject"),
+                callback_data: adm:reject:${item.id}
+              }
+            ]
+          ]
+        }
+      }
+    );
   }
 }
 
-async function handleUpdate(env, update) {
-  if (update.callback_query) return handleCallback(env, update.callback_query);
-  const message = update.message || update.edited_message;
-  if (!message?.from || !message.chat) return;
-  const user = await ensureUser(env, message.from), chatId = message.chat.id;
-  if (message.text?.startsWith('/start')) return startCommand(env, message);
-  if (message.text?.startsWith('/cancel')) { await env.BOT_DATA.delete(state:${user.id}); return reply(env, chatId, t(user.language, 'cancelled')); }
-  if (user.blocked && !(await isAdmin(env, user.id))) return reply(env, chatId, t(user.language, 'blocked'));
-  const state = await kvGet(env, state:${user.id}, null);
-  // Membership is checked on every ordinary update; an old pending state must not bypass it.
-  if (!(await requireAccess(env, user))) return showJoinPrompt(env, chatId, user.language);
-  if (message.video || message.document) return receiveMovie(env, message, user);
-  if (message.text) return handleText(env, message, user);
+async function approveSubmission(env, chatId, user, submissionId) {
+  const pending = await getPending(env);
+  const index = pending.findIndex(
+    item => String(item.id) === String(submissionId)
+  );
+
+  if (index === -1) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
+  }
+  const item = pending[index];
+  const movies = await getMovies(env);
+
+  movies.push({
+    id: newId(),
+    title: item.title,
+    description: item.description || "",
+    fileId: item.fileId,
+    type: item.type,
+    addedBy: String(item.userId),
+    addedAt: Date.now(),
+    views: 0,
+    ratingSum: 0,
+    ratingCount: 0
+  });
+
+  await saveMovies(env, movies);
+
+  pending.splice(index, 1);
+  await savePending(env, pending);
+
+  await sendText(env, chatId, t(user, "adminSaved"));
+
+  const submittedUser = await getUser(env, item.userId);
+
+  if (submittedUser) {
+    await sendText(
+      env,
+      item.userId,
+      t(submittedUser, "approvedNotice")
+    );
+  }
 }
+
+async function rejectSubmission(env, chatId, user, submissionId) {
+  const pending = await getPending(env);
+  const index = pending.findIndex(
+    item => String(item.id) === String(submissionId)
+  );
+
+  if (index === -1) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
+  }
+
+  const item = pending[index];
+
+  pending.splice(index, 1);
+  await savePending(env, pending);
+
+  await sendText(env, chatId, t(user, "cancelled"));
+
+  const submittedUser = await getUser(env, item.userId);
+
+  if (submittedUser) {
+    await sendText(
+      env,
+      item.userId,
+      t(submittedUser, "rejectedNotice")
+    );
+  }
+}
+
+async function showRequests(env, chatId, user) {
+  const requests = await getRequests(env);
+
+  if (requests.length === 0) {
+    await sendText(env, chatId, t(user, "requestsEmpty"));
+    return;
+  }
+
+  for (const request of requests.slice(0, 30)) {
+    const priority = request.priority ? "⚡ " : "";
+    const text =
+      ${t(user, "newRequest")}\n +
+      ${priority}${request.title}\n +
+      User ID: ${request.userId};
+
+    await sendText(env, chatId, text, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: t(user, "markDone"),
+              callback_data: adm:reqdone:${request.id}
+            }
+          ]
+        ]
+      }
+    });
+  }
+}
+
+async function markRequestDone(env, chatId, user, requestId) {
+  const requests = await getRequests(env);
+  const index = requests.findIndex(
+    item => String(item.id) === String(requestId)
+  );
+
+  if (index === -1) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
+  }
+
+  const request = requests[index];
+
+  requests.splice(index, 1);
+  await saveRequests(env, requests);
+
+  const requester = await getUser(env, request.userId);
+
+  if (requester) {
+    await sendText(
+      env,
+      request.userId,
+      t(requester, "requestProcessed")
+    );
+  }
+
+  await sendText(env, chatId, t(user, "cancelled"));
+}
+
+async function showUsers(env, chatId, user) {
+  const users = await getAllUsers(env);
+
+  if (users.length === 0) {
+    await sendText(env, chatId, t(user, "usersEmpty"));
+    return;
+  }
+
+  // The user-management screen displays the 20 most recent users.
+  const recent = users.slice(-20).reverse();
+
+  const rows = recent.map(item => [{
+    text:
+      ${item.blocked ? "🚫" : "👤"}  +
+      ${String(item.name || item.id).slice(0, 25)} (${item.id}),
+    callback_data: adm:user:${item.id}
+  }]);
+
+  rows.push([
+    {
+      text: t(user, "back"),
+      callback_data: "adm:panel"
+    }
+  ]);
+
+  await sendText(
+    env,
+    chatId,
+    ${t(user, "users")}\n${users.length} registered users.,
+    {
+      reply_markup: {
+        inline_keyboard: rows
+      }
+    }
+  );
+}
+
+async function showUserDetails(env, chatId, user, targetId) {
+  const target = await getUser(env, targetId);
+
+  if (!target) {
+    await sendText(env, chatId, t(user, "notFound"));
+    return;
+  }
+
+  const rows = [];
+
+  if (target.blocked) {
+    rows.push([
+      {
+        text: "✅ Unblock",
+        callback_data: adm:unblock:${target.id}
+      }
+    ]);
+  } else {
+    rows.push([
+      {
+        text: "🚫 Block",
+        callback_data: adm:block:${target.id}
+      }
+    ]);
+  }
+
+  rows.push([
+    {
+      text: t(user, "back"),
+      callback_data: "adm:users"
+    }
+  ]);
+await sendText(
+    env,
+    chatId,
+    ${t(user, "userInfo")}\n\n +
+    ID: ${target.id}\n +
+    Name: ${target.name || "—"}\n +
+    Username: ${target.username ? "@" + target.username : "—"}\n +
+    Blocked: ${target.blocked ? "Yes" : "No"}\n +
+    Views: ${Number(target.views || 0)}\n +
+    Invites: ${Number(target.invites || 0)},
+    {
+      reply_markup: {
+        inline_keyboard: rows
+      }
+    }
+  );
+}
+
+async function showDeletableMovies(env, chatId, user) {
+  const movies = await getMovies(env);
+
+  if (movies.length === 0) {
+    await sendText(env, chatId, t(user, "deletedEmpty"));
+    return;
+  }
+
+  const rows = movies.slice(0, 50).map(movie => [
+    {
+      text: 🗑 ${String(movie.title).slice(0, 45)},
+      callback_data: adm:del:${movie.id}
+    }
+  ]);
+
+  rows.push([
+    {
+      text: t(user, "back"),
+      callback_data: "adm:panel"
+    }
+  ]);
+
+  await sendText(env, chatId, t(user, "deleteMovies"), {
+    reply_markup: {
+      inline_keyboard: rows
+    }
+  });
+}
+
+async function deleteKVPrefix(env, prefix) {
+  let cursor = undefined;
+
+  do {
+    const page = await env.BOT_DATA.list({
+      prefix,
+      limit: 1000,
+      ...(cursor ? { cursor } : {})
+    });
+
+    await Promise.all(
+      page.keys.map(key => env.BOT_DATA.delete(key.name))
+    );
+
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+}
+
+async function deleteMovieSafely(env, movieId) {
+  const movies = await getMovies(env);
+  const exists = findMovie(movies, movieId);
+
+  if (!exists) {
+    return false;
+  }
+
+  const updatedMovies = movies.filter(
+    movie => String(movie.id) !== String(movieId)
+  );
+
+  await saveMovies(env, updatedMovies);
+
+  // Remove individual user-rating records for this movie.
+  await deleteKVPrefix(env, rating:${movieId}:);
+
+  // Remove the deleted movie from users' favorites.
+  const users = await getAllUsers(env);
+
+  for (const user of users) {
+    const before = user.favorites || [];
+
+    user.favorites = before.filter(
+      id => String(id) !== String(movieId)
+    );
+
+    if (user.favorites.length !== before.length) {
+      await saveUser(env, user);
+    }
+  }
+
+  return true;
+}
+
+async function showAdminList(env, chatId, user) {
+  if (!(await isPrimaryAdmin(env, user.id))) {
+    await sendText(env, chatId, t(user, "primaryOnly"));
+    return;
+  }
+
+  const admins = await readJSON(env, "admin:approved", []);
+  const rows = [];
+
+  for (const id of admins) {
+    rows.push([
+      {
+        text: ❌ Remove admin ${id},
+        callback_data: adm:adminrm:${id}
+      }
+    ]);
+  }
+
+  rows.push([
+    {
+      text: "➕ Add admin",
+      callback_data: "adm:adminadd"
+    }
+  ]);
+
+  rows.push([
+    {
+      text: t(user, "back"),
+      callback_data: "adm:panel"
+    }
+  ]);
+
+  await sendText(env, chatId, t(user, "manageAdmins"), {
+    reply_markup: {
+      inline_keyboard: rows
+    }
+  });
+}
+
+// ------------------------------------------------------
+// Message handler
+// ------------------------------------------------------
+
+async function handleMessage(env, message) {
+  if (!message  !message.from  !message.chat) {
+    return;
+  }
+
+  const chatId = message.chat.id;
+  const { user, isNew } = await ensureUser(env, message.from);
+
+  const text = String(message.text || "").trim();
+
+  // Commands
+  if (text.startsWith("/start")) {
+    const match = text.match(/^\/start(?:@\w+)?(?:\s+(.+))?$/);
+    const parameter = match ? String(match[1] || "").trim() : "";
+
+    user.state = null;
+    await saveUser(env, user);
+
+    if (isNew && parameter) {
+      await processReferral(env, user, parameter);
+    }
+
+    await sendText(env, chatId, t(user, "start"));
+
+    if (
+      !(await isAdmin(env, user.id)) &&
+      !(await isChannelMember(env, user.id))
+    ) {
+      await showJoinPrompt(env, chatId, user);
+    }
+
+    await showMain(env, chatId, user);
+    return;
+  }
+
+  if (text === "/menu") {
+    user.state = null;
+    await saveUser(env, user);
+    await showMain(env, chatId, user);
+    return;
+        }
+  if (text === "/admin") {
+    if (!(await isAdmin(env, user.id))) {
+      await sendText(env, chatId, t(user, "adminUsage"));
+      return;
+    }
+
+    await showAdminPanel(env, chatId, user);
+    return;
+  }
+
+  if (user.blocked && !(await isAdmin(env, user.id))) {
+    await sendText(env, chatId, t(user, "blocked"));
+    return;
+  }
+
+  // Language selection is available even before channel membership.
+  if (text === t(user, "language")) {
+    await showLanguagePicker(env, chatId, user);
+    return;
+  }
+
+  const admin = await isAdmin(env, user.id);
+
+  if (!admin && !(await isChannelMember(env, user.id))) {
+    await showJoinPrompt(env, chatId, user);
+    return;
+  }
+
+  // Process admin states before normal menu options.
+  if (user.state === "await_admin_add") {
+    if (!(await isPrimaryAdmin(env, user.id))) {
+      user.state = null;
+      await saveUser(env, user);
+      await sendText(env, chatId, t(user, "primaryOnly"));
+      return;
+    }
+
+    if (!/^\d+$/.test(text)) {
+      await sendText(env, chatId, t(user, "adminUsage"));
+      return;
+    }
+
+    const newAdminId = String(text);
+
+    if (newAdminId === String(env.ADMIN_ID)) {
+      user.state = null;
+      await saveUser(env, user);
+      await sendText(env, chatId, t(user, "adminAdded"));
+      return;
+    }
+
+    const admins = await readJSON(env, "admin:approved", []);
+
+    if (!admins.map(String).includes(newAdminId)) {
+      admins.push(newAdminId);
+    }
+
+    await writeJSON(env, "admin:approved", admins);
+
+    user.state = null;
+    await saveUser(env, user);
+
+    await sendText(env, chatId, t(user, "adminAdded"));
+    return;
+  }
+
+  if (user.state === "await_request_title") {
+    if (!text) {
+      await sendText(env, chatId, t(user, "askRequest"));
+      return;
+    }
+
+    const priority = Number(user.priorityCredits || 0) > 0;
+
+    if (priority) {
+      user.priorityCredits = Number(user.priorityCredits) - 1;
+    }
+
+    const requests = await getRequests(env);
+
+    const request = {
+      id: newId(),
+      userId: String(user.id),
+      title: text.slice(0, 200),
+      priority,
+      createdAt: Date.now()
+    };
+
+    requests.push(request);
+    await saveRequests(env, requests);
+
+    user.state = null;
+    await saveUser(env, user);
+
+    await sendText(
+      env,
+      chatId,
+      priority
+        ? t(user, "requestPriority")
+        : t(user, "requestSaved")
+    );
+
+    const adminIds = new Set(
+      (await readJSON(env, "admin:approved", [])).map(String)
+    );
+
+    if (env.ADMIN_ID) {
+      adminIds.add(String(env.ADMIN_ID));
+    }
+
+    for (const adminId of adminIds) {
+      await sendText(
+        env,
+        adminId,
+        ${t(user, "newRequest")}\n +
+        ${priority ? "⚡ " : ""}${request.title}\n +
+        User ID: ${user.id},
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: t(user, "markDone"),
+                  callback_data: adm:reqdone:${request.id}
+                }
+              ]
+            ]
+          }
+        }
+      );
+    }
+
+    return;
+  }
+
+  if (user.state === "await_user_movie" || user.state === "await_admin_movie") {
+    if (getMedia(message)) {
+      await processIncomingMedia(env, chatId, message, user);
+    } else {
+      await sendText(
+        env,
+        chatId,
+        user.state === "await_admin_movie"
+          ? t(user, "addMovieHint")
+          : t(user, "askMovie")
+      );
+    }
+
+    return;
+  }
+
+  // Main menu
+  if (text === t(user, "getMovie")) {
+    await sendRandomMovie(env, chatId, user);
+    return;
+  }
+
+  if (text === t(user, "favorites")) {
+    await showFavorites(env, chatId, user);
+    return;
+  }
+
+  if (text === t(user, "submitMovie")) {
+    user.state = "await_user_movie";
+    await saveUser(env, user);
+    await sendText(env, chatId, t(user, "askMovie"));
+    return;
+  }
+
+  if (text === t(user, "requestMovie")) {
+    user.state = "await_request_title";
+    await saveUser(env, user);
+    await sendText(env, chatId, t(user, "askRequest"));
+    return;
+  }
+if (text === t(user, "inviteFriends")) {
+    await sendInviteLink(env, chatId, user);
+    return;
+  }
+
+  if (text === t(user, "adminPanel")) {
+    if (!(await isAdmin(env, user.id))) {
+      await sendText(env, chatId, t(user, "adminUsage"));
+      return;
+    }
+
+    await showAdminPanel(env, chatId, user);
+    return;
+  }
+
+  if (text === t(user, "back")) {
+    user.state = null;
+    await saveUser(env, user);
+    await showMain(env, chatId, user);
+    return;
+  }
+
+  // A received video/document without selecting a menu option.
+  if (getMedia(message)) {
+    await sendText(env, chatId, t(user, "useButtons"));
+    return;
+  }
+
+  await sendText(env, chatId, t(user, "menu"), {
+    reply_markup: mainKeyboard(user, admin)
+  });
+}
+
+// ------------------------------------------------------
+// Callback handler
+// ------------------------------------------------------
+
+async function handleCallback(env, query) {
+  const from = query.from;
+  const chatId = query.message?.chat?.id || from.id;
+  const data = String(query.data || "");
+
+  const { user } = await ensureUser(env, from);
+  const admin = await isAdmin(env, user.id);
+
+  await answerCallback(env, query.id);
+
+  if (user.blocked && !admin) {
+    await sendText(env, chatId, t(user, "blocked"));
+    return;
+  }
+
+  // Language buttons work independently of channel membership.
+  if (data.startsWith("lang:")) {
+    const lang = data.slice(5);
+
+    if (!TEXT[lang]) {
+      return;
+    }
+
+    user.lang = lang;
+    user.state = null;
+
+    await saveUser(env, user);
+    await sendText(env, chatId, t(user, "languageSet"));
+    await showMain(env, chatId, user);
+    return;
+  }
+
+  // Membership check
+  if (data === "join:check") {
+    if (admin || await isChannelMember(env, user.id)) {
+      await sendText(env, chatId, t(user, "menu"));
+      await showMain(env, chatId, user);
+    } else {
+      await showJoinPrompt(env, chatId, user);
+    }
+
+    return;
+  }
+
+  if (!admin && !(await isChannelMember(env, user.id))) {
+    await sendText(env, chatId, t(user, "joinRequired"));
+    await showJoinPrompt(env, chatId, user);
+    return;
+  }
+
+  // User interface
+  if (data === "ui:menu") {
+    user.state = null;
+    await saveUser(env, user);
+    await showMain(env, chatId, user);
+    return;
+  }
+
+  if (data === "movie:random") {
+    await sendRandomMovie(env, chatId, user);
+    return;
+  }
+
+  if (data.startsWith("fav:toggle:")) {
+    const movieId = data.slice("fav:toggle:".length);
+    await toggleFavorite(env, chatId, user, movieId);
+    return;
+  }
+
+  if (data.startsWith("fav:open:")) {
+    const movieId = data.slice("fav:open:".length);
+    const movies = await getMovies(env);
+    const movie = findMovie(movies, movieId);
+
+    if (!movie) {
+      await sendText(env, chatId, t(user, "notFound"));
+      return;
+    }
+
+    await sendMovie(env, chatId, user, movie);
+    return;
+  }
+
+  if (data.startsWith("rate:")) {
+    const parts = data.split(":");
+
+    if (parts.length === 3) {
+      await saveRating(
+        env,
+        chatId,
+        user,
+        parts[1],
+        Number(parts[2])
+      );
+    }
+
+    return;
+  }
+
+  // All admin callbacks are protected here.
+  if (data.startsWith("adm:")) {
+    if (!admin) {
+      await sendText(env, chatId, t(user, "adminUsage"));
+      return;
+    }
+
+    if (data === "adm:panel") {
+      await showAdminPanel(env, chatId, user);
+      return;
+    }
+
+    if (data === "adm:add") {
+      user.state = "await_admin_movie";
+      await saveUser(env, user);
+
+      await sendText(env, chatId, t(user, "addMovieHint"));
+      return;
+    }
+
+    if (data === "adm:pending") {
+      await showPending(env, chatId, user);
+      return;
+    }
+
+    if (data === "adm:requests") {
+      await showRequests(env, chatId, user);
+      return;
+    }
+
+    if (data === "adm:users") {
+      await showUsers(env, chatId, user);
+      return;
+    }
+
+    if (data === "adm:delete") {
+      await showDeletableMovies(env, chatId, user);
+      return;
+    }
+
+    if (data === "adm:admins") {
+      await showAdminList(env, chatId, user);
+      return;
+    }
+    if (data === "adm:adminadd") {
+      if (!(await isPrimaryAdmin(env, user.id))) {
+        await sendText(env, chatId, t(user, "primaryOnly"));
+        return;
+      }
+
+      user.state = "await_admin_add";
+      await saveUser(env, user);
+
+      await sendText(env, chatId, t(user, "addAdminPrompt"));
+      return;
+    }
+
+    if (data.startsWith("adm:adminrm:")) {
+      if (!(await isPrimaryAdmin(env, user.id))) {
+        await sendText(env, chatId, t(user, "primaryOnly"));
+        return;
+      }
+
+      const targetId = data.slice("adm:adminrm:".length);
+
+      if (targetId === String(env.ADMIN_ID)) {
+        await sendText(env, chatId, t(user, "primaryOnly"));
+        return;
+      }
+
+      const admins = await readJSON(env, "admin:approved", []);
+
+      await writeJSON(
+        env,
+        "admin:approved",
+        admins.filter(id => String(id) !== String(targetId))
+      );
+
+      await sendText(env, chatId, t(user, "adminRemoved"));
+      await showAdminList(env, chatId, user);
+      return;
+    }
+
+    if (data.startsWith("adm:approve:")) {
+      await approveSubmission(
+        env,
+        chatId,
+        user,
+        data.slice("adm:approve:".length)
+      );
+      return;
+    }
+
+    if (data.startsWith("adm:reject:")) {
+      await rejectSubmission(
+        env,
+        chatId,
+        user,
+        data.slice("adm:reject:".length)
+      );
+      return;
+    }
+
+    if (data.startsWith("adm:reqdone:")) {
+      await markRequestDone(
+        env,
+        chatId,
+        user,
+        data.slice("adm:reqdone:".length)
+      );
+      return;
+    }
+
+    if (data.startsWith("adm:user:")) {
+      await showUserDetails(
+        env,
+        chatId,
+        user,
+        data.slice("adm:user:".length)
+      );
+      return;
+    }
+
+    if (data.startsWith("adm:block:")) {
+      const targetId = data.slice("adm:block:".length);
+      const target = await getUser(env, targetId);
+
+      if (!target) {
+        await sendText(env, chatId, t(user, "notFound"));
+        return;
+      }
+
+      target.blocked = true;
+      await saveUser(env, target);
+
+      await sendText(env, chatId, t(user, "blockedDone"));
+      await showUserDetails(env, chatId, user, targetId);
+      return;
+    }
+
+    if (data.startsWith("adm:unblock:")) {
+      const targetId = data.slice("adm:unblock:".length);
+      const target = await getUser(env, targetId);
+
+      if (!target) {
+        await sendText(env, chatId, t(user, "notFound"));
+        return;
+      }
+
+      target.blocked = false;
+      await saveUser(env, target);
+
+      await sendText(env, chatId, t(user, "unblockedDone"));
+      await showUserDetails(env, chatId, user, targetId);
+      return;
+    }
+
+    if (data.startsWith("adm:delok:")) {
+      const movieId = data.slice("adm:delok:".length);
+      const success = await deleteMovieSafely(env, movieId);
+
+      if (success) {
+        await sendText(env, chatId, t(user, "deleted"));
+      } else {
+        await sendText(env, chatId, t(user, "notFound"));
+      }
+
+      await showAdminPanel(env, chatId, user);
+      return;
+    }
+
+    if (data.startsWith("adm:del:")) {
+      const movieId = data.slice("adm:del:".length);
+      const movies = await getMovies(env);
+      const movie = findMovie(movies, movieId);
+
+      if (!movie) {
+        await sendText(env, chatId, t(user, "notFound"));
+        return;
+      }
+
+      await sendText(
+        env,
+        chatId,
+        ${t(user, "confirmDelete")}\n\n🎬 ${movie.title},
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: t(user, "deleted"),
+                  callback_data: adm:delok:${movie.id}
+                }
+              ],
+              [
+                {
+                  text: t(user, "back"),
+                  callback_data: "adm:delcancel"
+                }
+              ]
+            ]
+          }
+        }
+      );
+
+      return;
+    }
+  if (data === "adm:delcancel") {
+      await sendText(env, chatId, t(user, "cancelled"));
+      await showAdminPanel(env, chatId, user);
+      return;
+    }
+  }
+}
+
+// ------------------------------------------------------
+// Cloudflare Worker entry point
+// ------------------------------------------------------
 
 export default {
   async fetch(request, env) {
-    if (request.method === 'GET') return new Response('Movie Bot Worker is running.', { status: 200 });
-    if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-    if (!env.BOT_DATA) return new Response('Missing BOT_DATA KV binding', { status: 500 });
-    if (!env.BOT_TOKEN || !env.ADMIN_ID) return new Response('Missing BOT_TOKEN or ADMIN_ID configuration', { status: 500 });
-    if (env.WEBHOOK_SECRET) {
-      const supplied = request.headers.get('X-Telegram-Bot-Api-Secret-Token');
-      if (supplied !== env.WEBHOOK_SECRET) return new Response('Unauthorized', { status: 401 });
+    if (request.method === "GET") {
+      return new Response(
+        "Telegram Movie Bot is running.",
+        { status: 200 }
+      );
     }
-    try { await handleUpdate(env, await request.json()); }
-    catch (err) { console.error('Update handler failed:', err?.stack || err); }
-    // Always acknowledge Telegram updates after processing so Telegram does not retry indefinitely.
-    return new Response('OK', { status: 200 });
-  }
-};
-if (data.startsWith('requests:delete:')) {
-    const p = data.split(':'), arr = await kvGet(env, 'movie:requests', []); await kvPut(env, 'movie:requests', arr.filter(x => String(x.id) !== String(p[2])));
-    await reply(env, chatId, t(user.language, 'requestDeleted')); return showRequests(env, chatId, Number(p[3]) || 0);
-  }
-  if (data.startsWith('users:list:')) return showUsers(env, chatId, Number(data.split(':')[2]) || 0);
-  if (data.startsWith('users:view:')) { const p = data.split(':'); return showUserDetail(env, chatId, p[2], Number(p[3]) || 0); }
-  if (data.startsWith('users:toggle:')) {
-    const p = data.split(':'), target = await getUser(env, p[2]); target.blocked = !target.blocked; await saveUser(env, target);
-    await reply(env, chatId, t(user.language, target.blocked ? 'userBlocked' : 'userUnblocked')); return showUserDetail(env, chatId, p[2], Number(p[3]) || 0);
-  }
-  if (data === 'admins:home') return showAdmins(env, chatId);
-  if (data === 'admins:add' || data === 'admins:remove') {
-    await kvPut(env, state:${user.id}, { type: data === 'admins:add' ? 'add_admin' : 'remove_admin' });
-    return reply(env, chatId, ${t(user.language, 'adminIdAsk')}\n${t(user.language, 'cancelHint')});
-  }
-}
 
-async function handleUpdate(env, update) {
-  if (update.callback_query) return handleCallback(env, update.callback_query);
-  const message = update.message || update.edited_message;
-  if (!message?.from || !message.chat) return;
-  const user = await ensureUser(env, message.from), chatId = message.chat.id;
-  if (message.text?.startsWith('/start')) return startCommand(env, message);
-  if (message.text?.startsWith('/cancel')) { await env.BOT_DATA.delete(state:${user.id}); return reply(env, chatId, t(user.language, 'cancelled')); }
-  if (user.blocked && !(await isAdmin(env, user.id))) return reply(env, chatId, t(user.language, 'blocked'));
-  const state = await kvGet(env, state:${user.id}, null);
-  // Membership is checked on every ordinary update; an old pending state must not bypass it.
-  if (!(await requireAccess(env, user))) return showJoinPrompt(env, chatId, user.language);
-  if (message.video || message.document) return receiveMovie(env, message, user);
-  if (message.text) return handleText(env, message, user);
-}
-
-export default {
-  async fetch(request, env) {
-    if (request.method === 'GET') return new Response('Movie Bot Worker is running.', { status: 200 });
-    if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-    if (!env.BOT_DATA) return new Response('Missing BOT_DATA KV binding', { status: 500 });
-    if (!env.BOT_TOKEN || !env.ADMIN_ID) return new Response('Missing BOT_TOKEN or ADMIN_ID configuration', { status: 500 });
-    if (env.WEBHOOK_SECRET) {
-      const supplied = request.headers.get('X-Telegram-Bot-Api-Secret-Token');
-      if (supplied !== env.WEBHOOK_SECRET) return new Response('Unauthorized', { status: 401 });
+    if (request.method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 });
     }
-    try { await handleUpdate(env, await request.json()); }
-    catch (err) { console.error('Update handler failed:', err?.stack || err); }
-    // Always acknowledge Telegram updates after processing so Telegram does not retry indefinitely.
-    return new Response('OK', { status: 200 });
+
+    if (!env.BOT_TOKEN) {
+      return new Response("BOT_TOKEN is missing.", { status: 500 });
+    }
+
+    if (!env.BOT_DATA) {
+      return new Response("BOT_DATA KV binding is missing.", { status: 500 });
+    }
+
+    if (!env.ADMIN_ID) {
+      return new Response("ADMIN_ID is missing.", { status: 500 });
+    }
+
+    try {
+      const update = await request.json();
+
+      if (update.message) {
+        await handleMessage(env, update.message);
+      } else if (update.callback_query) {
+        await handleCallback(env, update.callback_query);
+      }
+
+      return new Response("OK", { status: 200 });
+    } catch (error) {
+      console.error("Worker error:", error);
+
+      // Return 200 to avoid repeated delivery of a malformed update.
+      return new Response("OK", { status: 200 });
+    }
   }
 };
