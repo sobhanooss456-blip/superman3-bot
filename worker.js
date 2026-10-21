@@ -73,28 +73,12 @@ async function deleteKey(env, key) {
 ========================================================= */
 
 const LANGUAGE_OPTIONS = [
-  { code: "en", label: "🇬🇧 English" },
-  { code: "fr", label: "🇫🇷 Français" },
-  { code: "de", label: "🇩🇪 Deutsch" },
-  { code: "es", label: "🇪🇸 Español" },
-  { code: "nl", label: "🇳🇱 Nederlands" },
-  { code: "it", label: "🇮🇹 Italiano" },
-  { code: "pt", label: "🇵🇹 Português" },
-  { code: "ru", label: "🇷🇺 Русский" },
-  { code: "uk", label: "🇺🇦 Українська" },
-  { code: "tr", label: "🇹🇷 Türkçe" },
   { code: "fa", label: "🇮🇷 فارسی" },
+  { code: "en", label: "🇬🇧 English" },
   { code: "ar", label: "🇸🇦 العربية" },
-  { code: "hi", label: "🇮🇳 हिन्दी" },
-  { code: "ur", label: "🇵🇰 اردو" },
-  { code: "zh", label: "🇨🇳 中文" },
-  { code: "ja", label: "🇯🇵 日本語" },
-  { code: "ko", label: "🇰🇷 한국어" },
-  { code: "id", label: "🇮🇩 Bahasa Indonesia" },
-  { code: "he", label: "🇮🇱 עברית" },
-  { code: "sw", label: "🇹🇿 Swahili" },
-  { code: "am", label: "🇪🇹 Amharic" },
-  { code: "af", label: "🇿🇦 Afrikaans" }
+  { code: "tr", label: "🇹🇷 Türkçe" },
+  { code: "ru", label: "🇷🇺 Русский" },
+  { code: "es", label: "🇪🇸 Español" }
 ];
 const LANGUAGE_CODES = new Set(LANGUAGE_OPTIONS.map(item => item.code));
 
@@ -104,14 +88,14 @@ const TEXT = {
     menuHint: "برای دیدن گزینه‌ها روی «☰ منو» بزنید.",
     menuTitle: "📋 منوی اصلی",
     menuButton: "☰ منو",
-    closeMenu: "🔽 بستن منو",
-    getMovie: "🎬 دریافت فیلم",
-    submitMovie: "📤 ارسال فیلم",
-    requestMovie: "📝 درخواست فیلم",
-    favorites: "❤️ موردعلاقه‌ها",
-    invite: "👥 دعوت از دوستان",
-    changeLanguage: "🌐 تغییر زبان",
-    admin: "👑 پنل مدیریت",
+    closeMenu: "✖ بستن",
+    getMovie: "🎬 فیلم",
+    submitMovie: "📤 ارسال",
+    requestMovie: "📝 درخواست",
+    favorites: "❤️ علاقه‌مندی",
+    invite: "👥 دعوت",
+    changeLanguage: "🌐 زبان",
+    admin: "👑 مدیریت",
     chooseLanguage: "🌐 زبان خود را انتخاب کنید / Choose your language:",
     languageSaved: "✅ زبان با موفقیت انتخاب شد.",
     joinText: "🔒 برای استفاده از ربات ابتدا باید در کانال ما عضو شوید.",
@@ -187,14 +171,14 @@ const TEXT = {
     menuHint: "Tap «☰ Menu» to see the options.",
     menuTitle: "📋 Main Menu",
     menuButton: "☰ Menu",
-    closeMenu: "🔽 Hide menu",
-    getMovie: "🎬 Get Movie",
-    submitMovie: "📤 Submit Movie",
-    requestMovie: "📝 Request Movie",
-    favorites: "❤️ Favorites",
-    invite: "👥 Invite Friends",
-    changeLanguage: "🌐 Change Language",
-    admin: "👑 Admin Panel",
+    closeMenu: "✖ Hide",
+    getMovie: "🎬 Movie",
+    submitMovie: "📤 Send",
+    requestMovie: "📝 Request",
+    favorites: "❤️ Saved",
+    invite: "👥 Invite",
+    changeLanguage: "🌐 Language",
+    admin: "👑 Admin",
     chooseLanguage: "🌐 Choose your language / زبان خود را انتخاب کنید:",
     languageSaved: "✅ Language saved.",
     joinText: "🔒 Please join our channel first to use the bot.",
@@ -209,7 +193,7 @@ const TEXT = {
     requestSaved: "✅ Movie request saved.",
     requestInvalid: "❌ Invalid request.",
     favoritesEmpty: "❤️ Your favorites list is empty.",
-         favoritesTitle: "❤️ Favorite Movies",
+    favoritesTitle: "❤️ Favorite Movies",
     movieNumber: "Movie #",
     addedFavorite: "❤️ Added to favorites.",
     removedFavorite: "💔 Removed from favorites.",
@@ -223,7 +207,7 @@ const TEXT = {
     reportDuplicate: "Duplicate",
     reportOther: "Other",
     reportSaved: "✅ Report saved.",
-    rateSaved: "⭐ Your rating was saved.",
+         rateSaved: "⭐ Your rating was saved.",
     alreadyRated: "⚠️ You already rated this movie.",
     deleteNotice: "⏱ This movie will be deleted after 20 seconds.",
     deleted: "🗑 Movie deleted. Tap below to receive it again.",
@@ -265,7 +249,122 @@ const TEXT = {
     announcementWorking: "⏳ Sending the announcement to users of the selected language…",
     announcementResult: "✅ Announcement delivery finished.\n\n🌐 Language: {language}\n📨 Sent: {success}\n❌ Failed: {failed}\n⏭ Skipped (blocked/disabled or another language): {skipped}"
   }
-};
+ };
+
+// Static, manually maintained dictionaries. No translation API or external translator is used.
+// The common user flow and menu are localized; rare admin-only labels fall back to English.
+Object.assign(TEXT, {
+  ar: {
+    ...TEXT.en,
+    welcome: "🎬 أهلاً بك في بوت الأفلام.", menuHint: "اضغط «☰ القائمة» لعرض الخيارات.", menuTitle: "📋 القائمة الرئيسية",
+    menuButton: "☰ القائمة", closeMenu: "✖ إخفاء", getMovie: "🎬 فيلم", submitMovie: "📤 إرسال", requestMovie: "📝 طلب",
+    favorites: "❤️ المفضلة", invite: "👥 دعوة", changeLanguage: "🌐 اللغة", admin: "👑 الإدارة",
+    chooseLanguage: "🌐 اختر لغتك / Choose your language:", languageSaved: "✅ تم حفظ اللغة.",
+    joinText: "🔒 يرجى الانضمام إلى قناتنا أولاً لاستخدام البوت.", join: "📢 انضم إلى القناة", check: "✅ تحقق من العضوية",
+    notMember: "❌ لم تنضم إلى القناة بعد.", movieEmpty: "📭 لا توجد أفلام حالياً.", wait: "⏳ يرجى الانتظار {n} ثانية.",
+    sendPrompt: "📤 أرسل الفيلم هنا.\n\n🛡️ ستتم مراجعته قبل النشر.", movieReceived: "✅ تم استلام الفيلم وإرساله للمراجعة.",
+    requestPrompt: "📝 أرسل اسم الفيلم الذي تريده.", requestSaved: "✅ تم حفظ طلب الفيلم.", requestInvalid: "❌ الطلب غير صالح.",
+    favoritesEmpty: "❤️ قائمة المفضلة فارغة.", favoritesTitle: "❤️ الأفلام المفضلة", movieNumber: "الفيلم رقم",
+    addedFavorite: "❤️ تمت الإضافة إلى المفضلة.", removedFavorite: "💔 تمت الإزالة من المفضلة.",
+    addFavorite: "❤️ أضف إلى المفضلة", removeFavorite: "💔 احذف من المفضلة", again: "🔄 إرسال مرة أخرى",
+    report: "🚫 إبلاغ", reportTitle: "🚫 اختر سبب الإبلاغ:", reportBroken: "معطّل", reportWrong: "معلومات خاطئة",
+    reportDuplicate: "مكرر", reportOther: "أخرى", reportSaved: "✅ تم حفظ البلاغ.", rateSaved: "⭐ تم حفظ تقييمك.",
+    alreadyRated: "⚠️ لقد قيّمت هذا الفيلم من قبل.", deleteNotice: "⏱ سيتم حذف هذا الفيلم بعد 20 ثانية.",
+    deleted: "🗑 تم حذف الفيلم. اضغط أدناه لاستلامه مجدداً.", resend: "🔄 إعادة إرسال الفيلم", inviteTitle: "👥 دعوة الأصدقاء",
+    inviteCount: "✅ الدعوات الناجحة: {n}", inviteReward: "🎁 بعد 3 دعوات ناجحة، يُزال حد انتظار الأفلام.",
+    inviteUnavailable: "❌ رابط الدعوة الشخصي غير متاح حالياً.", denied: "⛔ ليس لديك صلاحية.",
+    useMenu: "☰ اضغط زر القائمة لعرض الخيارات.", blocked: "🚫 تم حظر وصولك إلى البوت.", menuClosed: "✅ تم إخفاء القائمة.",
+    alreadyVoted: "⚠️ لقد صوّت من قبل.", pendingApproved: "✅ تمت الموافقة على فيلمك وإضافته إلى الأرشيف.",
+    pendingRejected: "❌ رفض المشرف فيلمك.", noMovieRequests: "📭 لا توجد طلبات أفلام.", movieRequestsTitle: "📝 طلبات الأفلام",
+    adminPanelStats: "👑 لوحة الإدارة\n\n👥 المستخدمون: {users}\n🎬 الأفلام: {movies}\n👁 المشاهدات الفريدة: {views}\n⭐ التقييمات: {ratings}\n❤️ المفضلة: {favorites}\n🔥 النشطون خلال 24 ساعة: {active}\n📥 بانتظار المراجعة: {pending}\n👥 الدعوات الناجحة: {invites}",
+    announcementButton: "📢 إرسال إعلان", announcementPrompt: "📢 أرسل نص الإعلان باللغة المحددة. سيُرسل فقط للمستخدمين الذين اختاروا اللغة نفسها.\nللإلغاء أرسل /cancel.",
+    announcementLanguagePrompt: "🌐 اختر لغة الإعلان:", announcementTooLong: "❌ النص طويل جداً. اجعله 3500 حرف أو أقل.",
+    announcementTextRequired: "أرسل الإعلان كنص. للإلغاء أرسل /cancel.", announcementCancelled: "✅ تم إلغاء الإعلان.",
+    announcementWorking: "⏳ جارٍ إرسال الإعلان لمستخدمي اللغة المحددة…",
+    announcementResult: "✅ انتهى إرسال الإعلان.\n\n🌐 اللغة: {language}\n📨 تم الإرسال: {success}\n❌ فشل: {failed}\n⏭ تم التخطي: {skipped}"
+  },
+  tr: {
+    ...TEXT.en,
+    welcome: "🎬 Film botuna hoş geldin.", menuHint: "Seçenekleri görmek için «☰ Menü» düğmesine bas.", menuTitle: "📋 Ana Menü",
+    menuButton: "☰ Menü", closeMenu: "✖ Gizle", getMovie: "🎬 Film", submitMovie: "📤 Gönder", requestMovie: "📝 İstek",
+    favorites: "❤️ Favori", invite: "👥 Davet", changeLanguage: "🌐 Dil", admin: "👑 Yönetim",
+    chooseLanguage: "🌐 Dilini seç / Choose your language:", languageSaved: "✅ Dil kaydedildi.",
+    joinText: "🔒 Botu kullanmak için önce kanalımıza katılmalısın.", join: "📢 Kanala katıl", check: "✅ Üyeliği kontrol et",
+    notMember: "❌ Henüz kanala katılmadın.", movieEmpty: "📭 Şu anda film yok.", wait: "⏳ Lütfen {n} saniye bekle.",
+    sendPrompt: "📤 Filmini buraya gönder.\n\n🛡️ Yayınlanmadan önce incelenecek.", movieReceived: "✅ Filmin alındı ve incelemeye gönderildi.",
+    requestPrompt: "📝 İstediğin filmin adını gönder.", requestSaved: "✅ Film isteği kaydedildi.", requestInvalid: "❌ Geçersiz istek.",
+    favoritesEmpty: "❤️ Favori listen boş.", favoritesTitle: "❤️ Favori Filmler", movieNumber: "Film #",
+    addedFavorite: "❤️ Favorilere eklendi.", removedFavorite: "💔 Favorilerden kaldırıldı.", addFavorite: "❤️ Favorilere ekle", removeFavorite: "💔 Favorilerden kaldır",
+    again: "🔄 Tekrar gönder", report: "🚫 Bildir", reportTitle: "🚫 Bildirim nedenini seç:", reportBroken: "Çalışmıyor", reportWrong: "Yanlış bilgi",
+    reportDuplicate: "Tekrar", reportOther: "Diğer", reportSaved: "✅ Bildirim kaydedildi.", rateSaved: "⭐ Puanın kaydedildi.",
+    alreadyRated: "⚠️ Bu filme zaten puan verdin.", deleteNotice: "⏱ Bu film 20 saniye sonra silinecek.", deleted: "🗑 Film silindi. Yeniden almak için aşağıya bas.",
+    resend: "🔄 Filmi tekrar gönder", inviteTitle: "👥 Arkadaşlarını Davet Et", inviteCount: "✅ Başarılı davetler: {n}",
+    inviteReward: "🎁 3 başarılı davetten sonra film bekleme sınırı kaldırılır.", inviteUnavailable: "❌ Kişisel davet bağlantın şu anda kullanılamıyor.",
+    denied: "⛔ Erişim iznin yok.", useMenu: "☰ Seçenekleri görmek için menü düğmesine bas.", blocked: "🚫 Bot erişimin engellendi.",
+    menuClosed: "✅ Menü gizlendi.", alreadyVoted: "⚠️ Zaten oy kullandın.", pendingApproved: "✅ Filmin onaylandı ve arşive eklendi.",
+    pendingRejected: "❌ Filmin moderatör tarafından reddedildi.", noMovieRequests: "📭 Film isteği yok.", movieRequestsTitle: "📝 Film İstekleri",
+         adminPanelStats: "👑 Yönetim Paneli\n\n👥 Kullanıcılar: {users}\n🎬 Filmler: {movies}\n👁 Tekil görüntüleme: {views}\n⭐ Puanlar: {ratings}\n❤️ Favoriler: {favorites}\n🔥 Son 24 saatte aktif: {active}\n📥 Bekleyen: {pending}\n👥 Başarılı davetler: {invites}",
+    announcementButton: "📢 Duyuru Gönder", announcementPrompt: "📢 Duyuru metnini seçilen dilde gönder. Yalnızca aynı dili seçen kullanıcılara gönderilir.\nİptal için /cancel gönder.",
+    announcementLanguagePrompt: "🌐 Duyuru dilini seç:", announcementTooLong: "❌ Metin çok uzun. Lütfen 3500 karakter veya daha kısa tut.",
+    announcementTextRequired: "Duyuruyu metin olarak gönder. İptal için /cancel gönder.", announcementCancelled: "✅ Duyuru iptal edildi.",
+    announcementWorking: "⏳ Duyuru seçilen dildeki kullanıcılara gönderiliyor…",
+    announcementResult: "✅ Duyuru gönderimi tamamlandı.\n\n🌐 Dil: {language}\n📨 Gönderildi: {success}\n❌ Başarısız: {failed}\n⏭ Atlandı: {skipped}"
+  },
+  ru: {
+    ...TEXT.en,
+    welcome: "🎬 Добро пожаловать в кинобот.", menuHint: "Нажмите «☰ Меню», чтобы увидеть варианты.", menuTitle: "📋 Главное меню",
+    menuButton: "☰ Меню", closeMenu: "✖ Скрыть", getMovie: "🎬 Фильм", submitMovie: "📤 Отправить", requestMovie: "📝 Запрос",
+    favorites: "❤️ Избранное", invite: "👥 Пригласить", changeLanguage: "🌐 Язык", admin: "👑 Админ",
+    chooseLanguage: "🌐 Выберите язык / Choose your language:", languageSaved: "✅ Язык сохранён.",
+    joinText: "🔒 Сначала подпишитесь на наш канал, чтобы пользоваться ботом.", join: "📢 Подписаться", check: "✅ Проверить подписку",
+    notMember: "❌ Вы ещё не подписаны на канал.", movieEmpty: "📭 Сейчас фильмов нет.", wait: "⏳ Подождите {n} секунд.",
+    sendPrompt: "📤 Отправьте сюда фильм.\n\n🛡️ Перед публикацией он будет проверен.", movieReceived: "✅ Фильм получен и отправлен на проверку.",
+    requestPrompt: "📝 Отправьте название нужного фильма.", requestSaved: "✅ Запрос фильма сохранён.", requestInvalid: "❌ Неверный запрос.",
+    favoritesEmpty: "❤️ Список избранного пуст.", favoritesTitle: "❤️ Избранные фильмы", movieNumber: "Фильм №",
+    addedFavorite: "❤️ Добавлено в избранное.", removedFavorite: "💔 Удалено из избранного.", addFavorite: "❤️ В избранное", removeFavorite: "💔 Удалить из избранного",
+    again: "🔄 Отправить снова", report: "🚫 Пожаловаться", reportTitle: "🚫 Выберите причину жалобы:", reportBroken: "Не работает", reportWrong: "Неверная информация",
+    reportDuplicate: "Дубликат", reportOther: "Другое", reportSaved: "✅ Жалоба сохранена.", rateSaved: "⭐ Ваша оценка сохранена.",
+    alreadyRated: "⚠️ Вы уже оценивали этот фильм.", deleteNotice: "⏱ Фильм будет удалён через 20 секунд.", deleted: "🗑 Фильм удалён. Нажмите ниже, чтобы получить его снова.",
+    resend: "🔄 Отправить фильм снова", inviteTitle: "👥 Пригласить друзей", inviteCount: "✅ Успешные приглашения: {n}",
+    inviteReward: "🎁 После 3 успешных приглашений ограничение ожидания снимается.", inviteUnavailable: "❌ Личная ссылка приглашения сейчас недоступна.",
+    denied: "⛔ Нет доступа.", useMenu: "☰ Нажмите кнопку меню, чтобы увидеть варианты.", blocked: "🚫 Ваш доступ к боту заблокирован.",
+    menuClosed: "✅ Меню скрыто.", alreadyVoted: "⚠️ Вы уже голосовали.", pendingApproved: "✅ Ваш фильм одобрен и добавлен в архив.",
+    pendingRejected: "❌ Модератор отклонил ваш фильм.", noMovieRequests: "📭 Запросов фильмов пока нет.", movieRequestsTitle: "📝 Запросы фильмов",
+    adminPanelStats: "👑 Панель администратора\n\n👥 Пользователи: {users}\n🎬 Фильмы: {movies}\n👁 Уникальные просмотры: {views}\n⭐ Оценки: {ratings}\n❤️ Избранное: {favorites}\n🔥 Активны за 24 ч: {active}\n📥 Ожидают: {pending}\n👥 Успешные приглашения: {invites}",
+    announcementButton: "📢 Отправить объявление", announcementPrompt: "📢 Отправьте текст объявления на выбранном языке. Оно будет отправлено только пользователям, выбравшим тот же язык.\nДля отмены отправьте /cancel.",
+    announcementLanguagePrompt: "🌐 Выберите язык объявления:", announcementTooLong: "❌ Текст слишком длинный. Максимум 3500 символов.",
+    announcementTextRequired: "Отправьте объявление текстом. Для отмены отправьте /cancel.", announcementCancelled: "✅ Отправка отменена.",
+    announcementWorking: "⏳ Отправка объявления пользователям выбранного языка…",
+    announcementResult: "✅ Рассылка завершена.\n\n🌐 Язык: {language}\n📨 Отправлено: {success}\n❌ Ошибки: {failed}\n⏭ Пропущено: {skipped}"
+  },
+  es: {
+    ...TEXT.en,
+    welcome: "🎬 Bienvenido al bot de películas.", menuHint: "Pulsa «☰ Menú» para ver las opciones.", menuTitle: "📋 Menú principal",
+    menuButton: "☰ Menú", closeMenu: "✖ Ocultar", getMovie: "🎬 Película", submitMovie: "📤 Enviar", requestMovie: "📝 Pedir",
+    favorites: "❤️ Favoritos", invite: "👥 Invitar", changeLanguage: "🌐 Idioma", admin: "👑 Admin",
+    chooseLanguage: "🌐 Elige tu idioma / Choose your language:", languageSaved: "✅ Idioma guardado.",
+    joinText: "🔒 Únete primero a nuestro canal para usar el bot.", join: "📢 Unirse al canal", check: "✅ Comprobar membresía",
+    notMember: "❌ Aún no te has unido al canal.", movieEmpty: "📭 No hay películas disponibles ahora.", wait: "⏳ Espera {n} segundos.",
+    sendPrompt: "📤 Envía tu película aquí.\n\n🛡️ Se revisará antes de publicarla.", movieReceived: "✅ Película recibida y enviada para revisión.",
+    requestPrompt: "📝 Envía el nombre de la película que buscas.", requestSaved: "✅ Solicitud guardada.", requestInvalid: "❌ Solicitud no válida.",
+    favoritesEmpty: "❤️ Tu lista de favoritos está vacía.", favoritesTitle: "❤️ Películas favoritas", movieNumber: "Película n.º",
+    addedFavorite: "❤️ Añadida a favoritos.", removedFavorite: "💔 Eliminada de favoritos.", addFavorite: "❤️ Añadir a favoritos", removeFavorite: "💔 Quitar de favoritos",
+    again: "🔄 Enviar de nuevo", report: "🚫 Reportar", reportTitle: "🚫 Elige el motivo del reporte:", reportBroken: "No funciona", reportWrong: "Información incorrecta",
+    reportDuplicate: "Duplicada", reportOther: "Otro", reportSaved: "✅ Reporte guardado.", rateSaved: "⭐ Tu valoración se guardó.",
+    alreadyRated: "⚠️ Ya has valorado esta película.", deleteNotice: "⏱ Esta película se eliminará en 20 segundos.", deleted: "🗑 Película eliminada. Pulsa abajo para recibirla otra vez.",
+    resend: "🔄 Enviar película otra vez", inviteTitle: "👥 Invitar amigos", inviteCount: "✅ Invitaciones válidas: {n}",
+    inviteReward: "🎁 Con 3 invitaciones válidas se elimina la espera para recibir películas.", inviteUnavailable: "❌ Tu enlace personal de invitación no está disponible.",
+    denied: "⛔ No tienes permiso.", useMenu: "☰ Pulsa el botón de menú para ver las opciones.", blocked: "🚫 Tu acceso al bot está bloqueado.",
+    menuClosed: "✅ Menú oculto.", alreadyVoted: "⚠️ Ya has votado.", pendingApproved: "✅ Tu película fue aprobada y añadida al archivo.",
+    pendingRejected: "❌ El moderador rechazó tu película.", noMovieRequests: "📭 No hay solicitudes de películas.", movieRequestsTitle: "📝 Solicitudes de películas",
+    adminPanelStats: "👑 Panel de administración\n\n👥 Usuarios: {users}\n🎬 Películas: {movies}\n👁 Vistas únicas: {views}\n⭐ Valoraciones: {ratings}\n❤️ Favoritos: {favorites}\n🔥 Activos en 24 h: {active}\n📥 Pendientes: {pending}\n👥 Invitaciones válidas: {invites}",
+    announcementButton: "📢 Enviar anuncio", announcementPrompt: "📢 Envía el texto del anuncio en el idioma seleccionado. Solo se enviará a usuarios que hayan elegido ese mismo idioma.\nEnvía /cancel para cancelar.",
+    announcementLanguagePrompt: "🌐 Elige el idioma del anuncio:", announcementTooLong: "❌ El texto es demasiado largo. Máximo 3500 caracteres.",
+    announcementTextRequired: "Envía el anuncio como texto. Envía /cancel para cancelar.", announcementCancelled: "✅ Anuncio cancelado.",
+    announcementWorking: "⏳ Enviando el anuncio a los usuarios del idioma seleccionado…",
+    announcementResult: "✅ Envío del anuncio finalizado.\n\n🌐 Idioma: {language}\n📨 Enviados: {success}\n❌ Fallidos: {failed}\n⏭ Omitidos: {skipped}"
+  }
+});
 
 function normalizeLanguage(language) {
   const code = String(language || "fa").toLowerCase();
@@ -277,8 +376,46 @@ function langOf(user) {
 }
 
 function tr(userOrLang, key) {
-  const language = normalizeLanguage(typeof userOrLang === "string" ? userOrLang : langOf(userOrLang));
+     const language = normalizeLanguage(typeof userOrLang === "string" ? userOrLang : langOf(userOrLang));
   return (TEXT[language] && TEXT[language][key]) || TEXT.en[key] || TEXT.fa[key] || key;
+}
+
+// Replace {placeholders} in localized messages, for example {n} or {users}.
+function replaceText(template, values = {}) {
+  return String(template ?? "").replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
+    return Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : match;
+  });
+}
+
+// Persistent reply keyboard shown at the bottom of Telegram chats.
+function bottomMenu(language) {
+  return {
+    keyboard: [[
+      { text: tr(language, "menuButton") },
+      { text: tr(language, "closeMenu") }
+    ]],
+    resize_keyboard: true,
+    is_persistent: true
+  };
+}
+
+// Expanded reply keyboard. Every label is taken from the selected language dictionary.
+function expandedMenu(language, isAdmin = false) {
+  const rows = [
+    [
+      { text: tr(language, "getMovie") },
+      { text: tr(language, "submitMovie") },
+      { text: tr(language, "requestMovie") }
+    ],
+    [
+      { text: tr(language, "favorites") },
+      { text: tr(language, "invite") },
+      { text: tr(language, "changeLanguage") }
+    ]
+  ];
+  if (isAdmin) rows.push([{ text: tr(language, "admin") }]);
+  rows.push([{ text: tr(language, "closeMenu") }]);
+  return { keyboard: rows, resize_keyboard: true, is_persistent: true };
 }
 
 // Automatic translation has been removed. Language dictionaries are maintained manually.
@@ -420,6 +557,7 @@ async function showLanguagePicker(env, chatId) {
 /* =========================================================
    Referral
 ========================================================= */
+
 async function registerPendingReferral(env, user, parameter, firstStart) {
   if (!firstStart) return;
   const value = String(parameter || "");
@@ -551,7 +689,7 @@ async function recordUniqueView(env, user, movieId) {
   await env.BOT_DATA.put(key, String(now()));
 
   const movies = await getMovies(env);
-  const index = movies.findIndex(movie => String(movie.id) === String(movieId));
+     const index = movies.findIndex(movie => String(movie.id) === String(movieId));
   if (index !== -1) {
     movies[index].views = Number(movies[index].views || 0) + 1;
     await saveMovies(env, movies);
@@ -631,7 +769,7 @@ async function movieKeyboard(env, user, movieId) {
     [
       { text: tr(user, "report"), callback_data: `movie:report:${movieId}` }
     ]
-       ];
+  ];
   if (!rated) {
     rows.push([
       { text: "⭐ 1", callback_data: `movie:rate:${movieId}:1` },
@@ -814,7 +952,7 @@ async function reportMovie(env, callback, movieId, reason) {
     movie_id: String(movieId),
     user_id: String(callback.from.id),
     reason,
-    created_at: now(),
+         created_at: now(),
     status: "open"
   };
   await putJSON(env, `report:${report.id}`, report);
@@ -842,7 +980,7 @@ async function showReportMenu(env, callback, movieId) {
           { text: `❌ ${tr(user, "reportWrong")}`, callback_data: `movie:report:${movieId}:wrong` }
         ],
         [
-                     { text: `🔁 ${tr(user, "reportDuplicate")}`, callback_data: `movie:report:${movieId}:duplicate` },
+          { text: `🔁 ${tr(user, "reportDuplicate")}`, callback_data: `movie:report:${movieId}:duplicate` },
           { text: `⚠️ ${tr(user, "reportOther")}`, callback_data: `movie:report:${movieId}:other` }
         ]
       ]
@@ -1053,7 +1191,7 @@ async function askDeleteAdminMovie(env, callback, movieId, page = 0) {
     chat_id: chatId,
     message_id: messageId,
     text: `❗ مطمئنی این فیلم حذف شود؟\n\n🎬 ${title}`,
-         reply_markup: markup
+    reply_markup: markup
   });
   if (!result.ok) {
     await telegram(env, "sendMessage", {
@@ -1088,7 +1226,7 @@ async function confirmDeleteAdminMovie(env, callback, movieId, page = 0) {
   const result = await telegram(env, "editMessageText", {
     chat_id: chatId,
     message_id: messageId,
-    text: `🗑 فیلم «${title}» حذف شد.`,
+         text: `🗑 فیلم «${title}» حذف شد.`,
     reply_markup: markup
   });
   if (!result.ok) {
@@ -1264,7 +1402,7 @@ async function showAdminRequests(env, chatId) {
     await telegram(env, "sendMessage", {
       chat_id: chatId,
       text: `🔐 درخواست Admin\n\n👤 ${user.first_name || "-"}\n🔖 ${user.username ? `@${user.username}` : "-"}\n🆔 ${user.id}`,
-             reply_markup: {
+      reply_markup: {
         inline_keyboard: [
           [{ text: "👤 مشاهده پروفایل", callback_data: `adminrequest:profile:${user.id}` }],
           [
@@ -1329,7 +1467,7 @@ async function showUserProfileForAdmin(env, callback, targetId, page = 0) {
         `👥 دعوت موفق: ${user.valid_invites || 0}`,
         `🚫 وضعیت: ${user.blocked ? "بلاک" : "فعال"}`,
         `👑 Admin: ${isAdminUser ? "بله" : "خیر"}`
-      ].join("\n")
+             ].join("\n")
     : [
         "👤 User Profile", "",
         `👤 Name: ${user.first_name || "-"}`,
@@ -1443,7 +1581,7 @@ async function showAdminPanel(env, chatId, user) {
 }
 
 /* =========================================================
-   Admin announcement / translated broadcast
+   Admin announcement / language-targeted broadcast
 ========================================================= */
 
 function splitTelegramText(value, maxLength = 3900) {
@@ -1473,8 +1611,9 @@ async function sendLongTelegramMessage(env, chatId, text) {
     if (!result?.ok) return false;
   }
   return true;
-                }
-async function broadcastTranslatedAnnouncement(env, adminChatId, adminUser, sourceText, targetLanguage) {
+}
+
+async function broadcastLanguageAnnouncement(env, adminChatId, adminUser, sourceText, targetLanguage) {
   await telegram(env, "sendMessage", {
     chat_id: adminChatId,
     text: tr(adminUser, "announcementWorking")
@@ -1590,7 +1729,7 @@ async function handleMenuCallback(env, callback, ctx) {
   const needsMembership = !["menu:open", "menu:language"].includes(data);
   if (needsMembership && !(await isAnyAdmin(env, user.id)) && !(await checkMembership(env, user.id))) {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: tr(user, "notMember"), show_alert: true });
-    await sendMembershipMessage(env, chatId, language);
+         await sendMembershipMessage(env, chatId, language);
     return true;
   }
 
@@ -1686,7 +1825,7 @@ async function handleReplyMenuButton(env, message, user, ctx) {
     return true;
   }
   if (action === "admin" && !(await isAnyAdmin(env, user.id))) {
-         await telegram(env, "sendMessage", { chat_id: chatId, text: tr(user, "denied") });
+    await telegram(env, "sendMessage", { chat_id: chatId, text: tr(user, "denied") });
     return true;
   }
 
@@ -1756,7 +1895,7 @@ async function handleMessage(env, message, ctx) {
       return;
     }
     await deleteKey(env, `state:${user.id}`);
-    await broadcastTranslatedAnnouncement(env, message.chat.id, user, announcementText, targetLanguage);
+    await broadcastLanguageAnnouncement(env, message.chat.id, user, announcementText, targetLanguage);
     return;
   }
 
@@ -1870,7 +2009,7 @@ async function handleAdminCallback(env, callback) {
   if (data === "admin:announcement") {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
     const adminUser = await ensureUser(env, callback.from);
-    const rows = [];
+         const rows = [];
     for (let index = 0; index < LANGUAGE_OPTIONS.length; index += 2) {
       rows.push(LANGUAGE_OPTIONS.slice(index, index + 2).map(item => ({
         text: item.label,
@@ -1897,7 +2036,7 @@ async function handleAdminCallback(env, callback) {
       text: `${option ? option.label : language}\n\n${tr(adminUser, "announcementPrompt")}`
     });
     return;
-       }
+  }
 
   if (data === "admin:movies") {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
