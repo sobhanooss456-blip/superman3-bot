@@ -207,7 +207,7 @@ const TEXT = {
     reportDuplicate: "Duplicate",
     reportOther: "Other",
     reportSaved: "✅ Report saved.",
-         rateSaved: "⭐ Your rating was saved.",
+    rateSaved: "⭐ Your rating was saved.",
     alreadyRated: "⚠️ You already rated this movie.",
     deleteNotice: "⏱ This movie will be deleted after 20 seconds.",
     deleted: "🗑 Movie deleted. Tap below to receive it again.",
@@ -229,7 +229,7 @@ const TEXT = {
     pendingApproved: "✅ Your movie was approved and added to the archive.",
     pendingRejected: "❌ Your movie was rejected by the moderator.",
     noMovieRequests: "📭 No movie requests have been submitted.",
-    movieRequestsTitle: "📝 Movie Requests",
+         movieRequestsTitle: "📝 Movie Requests",
     adminPanelStats: "👑 Admin Panel\n\n👥 Users: {users}\n🎬 Movies: {movies}\n👁 Unique views: {views}\n⭐ Ratings: {ratings}\n❤️ Favorites: {favorites}\n🔥 Active 24h: {active}\n📥 Pending: {pending}\n👥 Successful invites: {invites}",
     adminMoviesButton: "🎬 Movies",
     adminPendingButton: "📥 Pending queue",
@@ -303,7 +303,7 @@ Object.assign(TEXT, {
     denied: "⛔ Erişim iznin yok.", useMenu: "☰ Seçenekleri görmek için menü düğmesine bas.", blocked: "🚫 Bot erişimin engellendi.",
     menuClosed: "✅ Menü gizlendi.", alreadyVoted: "⚠️ Zaten oy kullandın.", pendingApproved: "✅ Filmin onaylandı ve arşive eklendi.",
     pendingRejected: "❌ Filmin moderatör tarafından reddedildi.", noMovieRequests: "📭 Film isteği yok.", movieRequestsTitle: "📝 Film İstekleri",
-         adminPanelStats: "👑 Yönetim Paneli\n\n👥 Kullanıcılar: {users}\n🎬 Filmler: {movies}\n👁 Tekil görüntüleme: {views}\n⭐ Puanlar: {ratings}\n❤️ Favoriler: {favorites}\n🔥 Son 24 saatte aktif: {active}\n📥 Bekleyen: {pending}\n👥 Başarılı davetler: {invites}",
+    adminPanelStats: "👑 Yönetim Paneli\n\n👥 Kullanıcılar: {users}\n🎬 Filmler: {movies}\n👁 Tekil görüntüleme: {views}\n⭐ Puanlar: {ratings}\n❤️ Favoriler: {favorites}\n🔥 Son 24 saatte aktif: {active}\n📥 Bekleyen: {pending}\n👥 Başarılı davetler: {invites}",
     announcementButton: "📢 Duyuru Gönder", announcementPrompt: "📢 Duyuru metnini seçilen dilde gönder. Yalnızca aynı dili seçen kullanıcılara gönderilir.\nİptal için /cancel gönder.",
     announcementLanguagePrompt: "🌐 Duyuru dilini seç:", announcementTooLong: "❌ Metin çok uzun. Lütfen 3500 karakter veya daha kısa tut.",
     announcementTextRequired: "Duyuruyu metin olarak gönder. İptal için /cancel gönder.", announcementCancelled: "✅ Duyuru iptal edildi.",
@@ -322,7 +322,7 @@ Object.assign(TEXT, {
     requestPrompt: "📝 Отправьте название нужного фильма.", requestSaved: "✅ Запрос фильма сохранён.", requestInvalid: "❌ Неверный запрос.",
     favoritesEmpty: "❤️ Список избранного пуст.", favoritesTitle: "❤️ Избранные фильмы", movieNumber: "Фильм №",
     addedFavorite: "❤️ Добавлено в избранное.", removedFavorite: "💔 Удалено из избранного.", addFavorite: "❤️ В избранное", removeFavorite: "💔 Удалить из избранного",
-    again: "🔄 Отправить снова", report: "🚫 Пожаловаться", reportTitle: "🚫 Выберите причину жалобы:", reportBroken: "Не работает", reportWrong: "Неверная информация",
+         again: "🔄 Отправить снова", report: "🚫 Пожаловаться", reportTitle: "🚫 Выберите причину жалобы:", reportBroken: "Не работает", reportWrong: "Неверная информация",
     reportDuplicate: "Дубликат", reportOther: "Другое", reportSaved: "✅ Жалоба сохранена.", rateSaved: "⭐ Ваша оценка сохранена.",
     alreadyRated: "⚠️ Вы уже оценивали этот фильм.", deleteNotice: "⏱ Фильм будет удалён через 20 секунд.", deleted: "🗑 Фильм удалён. Нажмите ниже, чтобы получить его снова.",
     resend: "🔄 Отправить фильм снова", inviteTitle: "👥 Пригласить друзей", inviteCount: "✅ Успешные приглашения: {n}",
@@ -366,6 +366,114 @@ Object.assign(TEXT, {
   }
 });
 
+
+// Additional labels and messages for the compact, nested menu and advertisement workflow.
+const EXTRA_TEXT = {
+  fa: {
+    menuOpen: "📋 باز کردن منو", menuHint: "برای نمایش گزینه‌ها دکمه «📋 باز کردن منو» را بزنید.",
+    closeMenu: "⚫ بستن منو", backMain: "⚫ بازگشت به منوی اصلی",
+    getMovie: "دریافت فیلم", submitMovie: "ارسال فیلم", changeLanguage: "تغییر زبان",
+    otherFeatures: "سایر امکانات ربات", otherFeaturesTitle: "سایر امکانات ربات",
+    favorites: "علاقه‌مندی‌ها", invite: "دعوت دوستان", requestMovie: "درخواست فیلم", advertise: "تبلیغ",
+    adminAdsButton: "📢 مدیریت تبلیغات", adminManageAdminsButton: "👑 مدیریت ادمین‌ها",
+    adminMoviesButton: "🎬 فیلم‌ها", adminPendingButton: "📥 صف فیلم‌ها", adminUsersButton: "👥 کاربران", adminStatsButton: "📊 آمار", adminRequestsButton: "🔐 درخواست‌های ادمین", adminBackupButton: "💾 پشتیبان", adminHealthButton: "🏥 وضعیت سیستم", adminMovieRequestsButton: "📝 درخواست‌های فیلم", backButton: "🔙 بازگشت",
+    movieViewsLabel: "بازدید", movieRatingLabel: "امتیاز", movieVotesLabel: "رأی", movieDefaultTitle: "فیلم",
+    adminMovieEditPrompt: "✏️ متن جدیدی که باید زیر فیلم نمایش داده شود ارسال کن. برای لغو /cancel را بفرست.", adminMovieEditSaved: "✅ متن زیر فیلم با موفقیت ویرایش شد.", adminMovieEditTooLong: "❌ متن زیر فیلم باید حداکثر ۱۰۰۰ نویسه باشد.",
+    welcome: "🎬 سلام {name} عزیز! به ربات فیلم خوش آمدی.",
+    advertisePrompt: "📢 پیام تبلیغاتی خود را همین‌جا ارسال کنید. متن، عکس، ویدئو یا فایل قابل قبول است. پس از بررسی مدیر، در صورت تأیید برای کاربران ربات ارسال می‌شود. برای لغو /cancel را بفرستید.",
+    advertiseReceived: "✅ تبلیغ شما برای بررسی مدیر ارسال شد. پس از تأیید، برای کاربران ربات منتشر می‌شود.",
+    advertiseInvalid: "❌ لطفاً یک پیام متنی، عکس، ویدئو یا فایل برای تبلیغ ارسال کنید.",
+    advertiseCancelled: "✅ ارسال تبلیغ لغو شد.", advertiseApproved: "✅ تبلیغ شما تأیید و برای کاربران ربات ارسال شد.", advertiseRejected: "❌ تبلیغ شما توسط مدیریت تأیید نشد.",
+    adOwnerLabel: "🆔 شناسه تبلیغ‌دهنده: {id}",
+    adminAdsTitle: "📢 مدیریت تبلیغات", adminAdsStats: "📊 آمار تبلیغات\n\n⏳ در انتظار: {pending}\n✅ تأییدشده: {approved}\n❌ ردشده: {rejected}\n🗑 حذف‌شده: {deleted}\n📨 مجموع ارسال موفق: {sent}\n⚠️ مجموع ارسال ناموفق: {failed}",
+    adminAdsPending: "⏳ تبلیغات در انتظار", adminAdsAll: "📚 همه تبلیغات", adminAdsEmpty: "📭 تبلیغی در این بخش وجود ندارد.",
+    adminAdApprove: "✅ تأیید و انتشار", adminAdReject: "❌ رد", adminAdEdit: "✏️ ویرایش", adminAdDelete: "🗑 حذف", adminAdResend: "🔄 ارسال مجدد", adminAdView: "👁 مشاهده",
+    adminAdEditPrompt: "✏️ پیام جدید تبلیغ را ارسال کنید. پس از ویرایش، برای انتشار دوباره از دکمه «ارسال مجدد» استفاده کنید. برای لغو /cancel را بفرستید.",
+    adminAdUpdated: "✅ محتوای تبلیغ ویرایش شد. برای انتشار نسخه جدید، «ارسال مجدد» را بزنید.", adminAdDeleted: "🗑 تبلیغ حذف شد.",
+    adminAdWorking: "⏳ تبلیغ در حال ارسال است…", adminAdSent: "✅ ارسال تبلیغ تمام شد.\n📨 موفق: {success}\n❌ ناموفق: {failed}", adminAdNotFound: "❌ تبلیغ پیدا نشد.",
+    adminAdminsTitle: "👑 مدیریت ادمین‌ها\n\nمالک اصلی قابل حذف نیست. برای حذف دسترسی یک ادمین، دکمه کنار نام او را بزنید.", adminAdminsEmpty: "📭 ادمین تأییدشده‌ای وجود ندارد.", adminRemoveAdmin: "🗑 حذف ادمین", adminAdminRemoved: "✅ دسترسی ادمین حذف شد.", adminOwnerOnly: "⛔ این بخش فقط برای مالک اصلی است."
+  },
+  en: {
+    menuOpen: "📋 Open Menu", menuHint: "Tap «📋 Open Menu» to show the options.",
+    closeMenu: "⚫ Close Menu", backMain: "⚫ Back to Main Menu",
+    getMovie: "Get Movie", submitMovie: "Send Movie", changeLanguage: "Change Language",
+    otherFeatures: "Other Features", otherFeaturesTitle: "Other Features",
+         adminAdsButton: "📢 Advertisement Management", adminManageAdminsButton: "👑 Manage Admins",
+    adminMoviesButton: "🎬 Movies", adminPendingButton: "📥 Pending queue", adminUsersButton: "👥 Users", adminStatsButton: "📊 Stats", adminRequestsButton: "🔐 Admin Requests", adminBackupButton: "💾 Backup", adminHealthButton: "🏥 Health", adminMovieRequestsButton: "📝 Movie Requests", backButton: "🔙 Back",
+    movieViewsLabel: "Views", movieRatingLabel: "Rating", movieVotesLabel: "Votes", movieDefaultTitle: "Movie",
+    adminMovieEditPrompt: "✏️ Send the new caption text for this movie. Send /cancel to cancel.", adminMovieEditSaved: "✅ Movie caption updated successfully.", adminMovieEditTooLong: "❌ The movie caption must be 1,000 characters or fewer.",
+    welcome: "🎬 Hello {name}! Welcome to the movie bot.",
+    advertisePrompt: "📢 Send your advertisement here. Text, photo, video or a file is accepted. It will be published to bot users if an admin approves it. Send /cancel to cancel.",
+    advertiseReceived: "✅ Your advertisement was submitted for admin review. It will be published to bot users after approval.",
+    advertiseInvalid: "❌ Please send an advertisement as text, photo, video or file.", advertiseCancelled: "✅ Advertisement submission cancelled.", advertiseApproved: "✅ Your advertisement was approved and sent to bot users.", advertiseRejected: "❌ Your advertisement was not approved by the admins.",
+    adOwnerLabel: "🆔 Advertiser ID: {id}",
+    adminAdsTitle: "📢 Advertisement Management", adminAdsStats: "📊 Advertisement statistics\n\n⏳ Pending: {pending}\n✅ Approved: {approved}\n❌ Rejected: {rejected}\n🗑 Deleted: {deleted}\n📨 Total successful deliveries: {sent}\n⚠️ Total failed deliveries: {failed}",
+    adminAdsPending: "⏳ Pending Ads", adminAdsAll: "📚 All Ads", adminAdsEmpty: "📭 There are no ads in this section.",
+    adminAdApprove: "✅ Approve & Publish", adminAdReject: "❌ Reject", adminAdEdit: "✏️ Edit", adminAdDelete: "🗑 Delete", adminAdResend: "🔄 Resend", adminAdView: "👁 View",
+    adminAdEditPrompt: "✏️ Send the replacement advertisement message. After editing, use «Resend» to publish the new version. Send /cancel to cancel.",
+    adminAdUpdated: "✅ Advertisement updated. Press «Resend» to publish the new version.", adminAdDeleted: "🗑 Advertisement deleted.",
+    adminAdWorking: "⏳ Sending advertisement…", adminAdSent: "✅ Advertisement delivery finished.\n📨 Successful: {success}\n❌ Failed: {failed}", adminAdNotFound: "❌ Advertisement not found.",
+    adminAdminsTitle: "👑 Admin Management\n\nThe owner cannot be removed. Use the button beside an admin to revoke their access.", adminAdminsEmpty: "📭 There are no approved admins.", adminRemoveAdmin: "🗑 Remove Admin", adminAdminRemoved: "✅ Admin access removed.", adminOwnerOnly: "⛔ This section is for the owner only."
+  },
+  ar: {
+    menuOpen: "📋 فتح القائمة", menuHint: "اضغط «📋 فتح القائمة» لعرض الخيارات.", closeMenu: "⚫ إغلاق القائمة", backMain: "⚫ العودة إلى القائمة الرئيسية",
+    getMovie: "الحصول على فيلم", submitMovie: "إرسال فيلم", changeLanguage: "تغيير اللغة", otherFeatures: "ميزات أخرى", otherFeaturesTitle: "ميزات أخرى",
+    favorites: "المفضلة", invite: "دعوة الأصدقاء", requestMovie: "طلب فيلم", advertise: "إعلان", adminAdsButton: "📢 إدارة الإعلانات", adminManageAdminsButton: "👑 إدارة المشرفين",
+    adminMoviesButton: "🎬 الأفلام", adminPendingButton: "📥 قيد المراجعة", adminUsersButton: "👥 المستخدمون", adminStatsButton: "📊 الإحصاءات", adminRequestsButton: "🔐 طلبات المشرفين", adminBackupButton: "💾 نسخة احتياطية", adminHealthButton: "🏥 حالة النظام", adminMovieRequestsButton: "📝 طلبات الأفلام", backButton: "🔙 رجوع",
+    movieViewsLabel: "المشاهدات", movieRatingLabel: "التقييم", movieVotesLabel: "الأصوات", movieDefaultTitle: "فيلم",
+    adminMovieEditPrompt: "✏️ أرسل النص الجديد الذي سيظهر أسفل الفيلم. للإلغاء أرسل /cancel.", adminMovieEditSaved: "✅ تم تعديل نص الفيلم بنجاح.", adminMovieEditTooLong: "❌ يجب ألا يتجاوز النص 1000 حرف.", adminRequestSent: "⏳ تم إرسال طلب الإدارة إلى المالك الرئيسي.", adminPending: "⏳ طلب الإدارة قيد المراجعة بالفعل.", alreadyAdmin: "✅ أنت مشرف بالفعل.", adminApproved: "👑 تمت الموافقة على طلب الإدارة.", adminRejected: "❌ تم رفض طلب الإدارة.", alreadyVoted: "⚠️ لقد صوّت من قبل.",
+    welcome: "🎬 مرحباً {name}! أهلاً بك في بوت الأفلام.", advertisePrompt: "📢 أرسل إعلانك هنا. يُقبل النص أو الصورة أو الفيديو أو الملف. سينشر لمستخدمي البوت بعد موافقة المشرف. للإلغاء أرسل /cancel.",
+    advertiseReceived: "✅ تم إرسال إعلانك للمراجعة. سينشر بعد الموافقة.", advertiseInvalid: "❌ أرسل إعلاناً كنص أو صورة أو فيديو أو ملف.", advertiseCancelled: "✅ تم إلغاء إرسال الإعلان.", advertiseApproved: "✅ تمت الموافقة على إعلانك وإرساله للمستخدمين.", advertiseRejected: "❌ لم تتم الموافقة على إعلانك.", adOwnerLabel: "🆔 معرّف المعلن: {id}",
+    adminAdsTitle: "📢 إدارة الإعلانات", adminAdsStats: "📊 إحصائيات الإعلانات\n\n⏳ قيد الانتظار: {pending}\n✅ تمت الموافقة: {approved}\n❌ مرفوضة: {rejected}\n🗑 محذوفة: {deleted}\n📨 الإرسالات الناجحة: {sent}\n⚠️ الإرسالات الفاشلة: {failed}",
+    adminAdsPending: "⏳ الإعلانات المعلقة", adminAdsAll: "📚 كل الإعلانات", adminAdsEmpty: "📭 لا توجد إعلانات في هذا القسم.", adminAdApprove: "✅ موافقة ونشر", adminAdReject: "❌ رفض", adminAdEdit: "✏️ تعديل", adminAdDelete: "🗑 حذف", adminAdResend: "🔄 إعادة الإرسال", adminAdView: "👁 عرض",
+    adminAdEditPrompt: "✏️ أرسل رسالة الإعلان البديلة. بعد التعديل اضغط إعادة الإرسال لنشر النسخة الجديدة. للإلغاء أرسل /cancel.", adminAdUpdated: "✅ تم تعديل الإعلان. اضغط إعادة الإرسال لنشر النسخة الجديدة.", adminAdDeleted: "🗑 تم حذف الإعلان.", adminAdWorking: "⏳ جارٍ إرسال الإعلان…", adminAdSent: "✅ انتهى الإرسال.\n📨 ناجح: {success}\n❌ فاشل: {failed}", adminAdNotFound: "❌ لم يتم العثور على الإعلان.",
+    adminAdminsTitle: "👑 إدارة المشرفين\n\nلا يمكن حذف المالك. استخدم الزر بجانب اسم المشرف لإلغاء صلاحياته.", adminAdminsEmpty: "📭 لا يوجد مشرفون معتمدون.", adminRemoveAdmin: "🗑 إزالة المشرف", adminAdminRemoved: "✅ تمت إزالة صلاحية المشرف.", adminOwnerOnly: "⛔ هذا القسم للمالك فقط."
+  },
+  tr: {
+    menuOpen: "📋 Menüyü Aç", menuHint: "Seçenekleri görmek için «📋 Menüyü Aç» düğmesine bas.", closeMenu: "⚫ Menüyü Kapat", backMain: "⚫ Ana Menüye Dön",
+    getMovie: "Film Al", submitMovie: "Film Gönder", changeLanguage: "Dili Değiştir", otherFeatures: "Diğer Özellikler", otherFeaturesTitle: "Diğer Özellikler",
+    favorites: "Favoriler", invite: "Arkadaşlarını Davet Et", requestMovie: "Film İste", advertise: "Reklam", adminAdsButton: "📢 Reklamları Yönet", adminManageAdminsButton: "👑 Adminleri Yönet",
+    adminMoviesButton: "🎬 Filmler", adminPendingButton: "📥 Bekleyenler", adminUsersButton: "👥 Kullanıcılar", adminStatsButton: "📊 İstatistikler", adminRequestsButton: "🔐 Yönetici İstekleri", adminBackupButton: "💾 Yedek", adminHealthButton: "🏥 Sistem Durumu", adminMovieRequestsButton: "📝 Film İstekleri", backButton: "🔙 Geri",
+    movieViewsLabel: "Görüntüleme", movieRatingLabel: "Puan", movieVotesLabel: "Oy", movieDefaultTitle: "Film",
+    adminMovieEditPrompt: "✏️ Filmin altında görünecek yeni açıklamayı gönder. İptal için /cancel gönder.", adminMovieEditSaved: "✅ Film açıklaması güncellendi.", adminMovieEditTooLong: "❌ Film açıklaması en fazla 1000 karakter olmalı.", adminRequestSent: "⏳ Yönetici isteğin ana sahibine gönderildi.", adminPending: "⏳ Yönetici isteğin zaten inceleniyor.", alreadyAdmin: "✅ Zaten yöneticisin.", adminApproved: "👑 Yönetici isteğin onaylandı.", adminRejected: "❌ Yönetici isteğin reddedildi.", alreadyVoted: "⚠️ Zaten oy kullandın.",
+    welcome: "🎬 Merhaba {name}! Film botuna hoş geldin.", advertisePrompt: "📢 Reklamını buraya gönder. Metin, fotoğraf, video veya dosya kabul edilir. Yönetici onaylarsa bot kullanıcılarına yayınlanır. İptal için /cancel gönder.",
+    advertiseReceived: "✅ Reklamın yönetici incelemesine gönderildi. Onaylanırsa yayınlanacak.", advertiseInvalid: "❌ Lütfen reklamını metin, fotoğraf, video veya dosya olarak gönder.", advertiseCancelled: "✅ Reklam gönderimi iptal edildi.", advertiseApproved: "✅ Reklamın onaylandı ve bot kullanıcılarına gönderildi.", advertiseRejected: "❌ Reklamın yönetici tarafından onaylanmadı.", adOwnerLabel: "🆔 Reklamveren ID: {id}",
+    adminAdsTitle: "📢 Reklam Yönetimi", adminAdsStats: "📊 Reklam istatistikleri\n\n⏳ Bekleyen: {pending}\n✅ Onaylanan: {approved}\n❌ Reddedilen: {rejected}\n🗑 Silinen: {deleted}\n📨 Başarılı gönderimler: {sent}\n⚠️ Başarısız gönderimler: {failed}",
+    adminAdsPending: "⏳ Bekleyen Reklamlar", adminAdsAll: "📚 Tüm Reklamlar", adminAdsEmpty: "📭 Bu bölümde reklam yok.", adminAdApprove: "✅ Onayla ve Yayınla", adminAdReject: "❌ Reddet", adminAdEdit: "✏️ Düzenle", adminAdDelete: "🗑 Sil", adminAdResend: "🔄 Yeniden Gönder", adminAdView: "👁 Görüntüle",
+    adminAdEditPrompt: "✏️ Yeni reklam mesajını gönder. Düzenledikten sonra yayınlamak için Yeniden Gönder'e bas. İptal için /cancel gönder.", adminAdUpdated: "✅ Reklam düzenlendi. Yeni sürümü yayınlamak için Yeniden Gönder'e bas.", adminAdDeleted: "🗑 Reklam silindi.", adminAdWorking: "⏳ Reklam gönderiliyor…", adminAdSent: "✅ Reklam gönderimi tamamlandı.\n📨 Başarılı: {success}\n❌ Başarısız: {failed}", adminAdNotFound: "❌ Reklam bulunamadı.",
+    adminAdminsTitle: "👑 Admin Yönetimi\n\nSahip kaldırılamaz. Yetkisini kaldırmak için adminin yanındaki düğmeye bas.", adminAdminsEmpty: "📭 Onaylanmış admin yok.", adminRemoveAdmin: "🗑 Admini Kaldır", adminAdminRemoved: "✅ Admin yetkisi kaldırıldı.", adminOwnerOnly: "⛔ Bu bölüm yalnızca sahibine açıktır."
+       },
+  ru: {
+    menuOpen: "📋 Открыть меню", menuHint: "Нажмите «📋 Открыть меню», чтобы увидеть варианты.", closeMenu: "⚫ Закрыть меню", backMain: "⚫ В главное меню",
+    getMovie: "Получить фильм", submitMovie: "Отправить фильм", changeLanguage: "Изменить язык", otherFeatures: "Другие функции", otherFeaturesTitle: "Другие функции",
+    favorites: "Избранное", invite: "Пригласить друзей", requestMovie: "Запросить фильм", advertise: "Реклама", adminAdsButton: "📢 Управление рекламой", adminManageAdminsButton: "👑 Управление админами",
+    adminMoviesButton: "🎬 Фильмы", adminPendingButton: "📥 Ожидают", adminUsersButton: "👥 Пользователи", adminStatsButton: "📊 Статистика", adminRequestsButton: "🔐 Запросы админов", adminBackupButton: "💾 Резервная копия", adminHealthButton: "🏥 Состояние", adminMovieRequestsButton: "📝 Запросы фильмов", backButton: "🔙 Назад",
+    movieViewsLabel: "Просмотры", movieRatingLabel: "Оценка", movieVotesLabel: "Голоса", movieDefaultTitle: "Фильм",
+    adminMovieEditPrompt: "✏️ Отправьте новый текст подписи под фильмом. Для отмены отправьте /cancel.", adminMovieEditSaved: "✅ Подпись фильма обновлена.", adminMovieEditTooLong: "❌ Подпись фильма должна содержать не более 1000 символов.", adminRequestSent: "⏳ Запрос администратора отправлен владельцу.", adminPending: "⏳ Ваш запрос администратора уже рассматривается.", alreadyAdmin: "✅ Вы уже администратор.", adminApproved: "👑 Ваш запрос администратора одобрен.", adminRejected: "❌ Ваш запрос администратора отклонён.", alreadyVoted: "⚠️ Вы уже голосовали.",
+    welcome: "🎬 Здравствуйте, {name}! Добро пожаловать в кинобот.", advertisePrompt: "📢 Отправьте сюда рекламу. Можно отправить текст, фото, видео или файл. После одобрения администратором реклама будет опубликована для пользователей бота. Для отмены отправьте /cancel.",
+    advertiseReceived: "✅ Реклама отправлена на проверку. После одобрения она будет опубликована.", advertiseInvalid: "❌ Отправьте рекламу текстом, фото, видео или файлом.", advertiseCancelled: "✅ Отправка рекламы отменена.", advertiseApproved: "✅ Ваша реклама одобрена и отправлена пользователям бота.", advertiseRejected: "❌ Ваша реклама не была одобрена.", adOwnerLabel: "🆔 ID рекламодателя: {id}",
+    adminAdsTitle: "📢 Управление рекламой", adminAdsStats: "📊 Статистика рекламы\n\n⏳ Ожидают: {pending}\n✅ Одобрено: {approved}\n❌ Отклонено: {rejected}\n🗑 Удалено: {deleted}\n📨 Успешные отправки: {sent}\n⚠️ Неудачные отправки: {failed}",
+    adminAdsPending: "⏳ Ожидающая реклама", adminAdsAll: "📚 Вся реклама", adminAdsEmpty: "📭 В этом разделе нет рекламы.", adminAdApprove: "✅ Одобрить и опубликовать", adminAdReject: "❌ Отклонить", adminAdEdit: "✏️ Изменить", adminAdDelete: "🗑 Удалить", adminAdResend: "🔄 Отправить снова", adminAdView: "👁 Просмотр",
+    adminAdEditPrompt: "✏️ Отправьте новое рекламное сообщение. После изменения нажмите «Отправить снова», чтобы опубликовать новую версию. Для отмены отправьте /cancel.", adminAdUpdated: "✅ Реклама изменена. Нажмите «Отправить снова», чтобы опубликовать новую версию.", adminAdDeleted: "🗑 Реклама удалена.", adminAdWorking: "⏳ Отправка рекламы…", adminAdSent: "✅ Отправка завершена.\n📨 Успешно: {success}\n❌ Ошибки: {failed}", adminAdNotFound: "❌ Реклама не найдена.",
+    adminAdminsTitle: "👑 Управление администраторами\n\nВладельца удалить нельзя. Нажмите кнопку рядом с администратором, чтобы отозвать доступ.", adminAdminsEmpty: "📭 Нет одобренных администраторов.", adminRemoveAdmin: "🗑 Удалить администратора", adminAdminRemoved: "✅ Доступ администратора удалён.", adminOwnerOnly: "⛔ Этот раздел доступен только владельцу."
+  },
+  es: {
+    menuOpen: "📋 Abrir menú", menuHint: "Pulsa «📋 Abrir menú» para ver las opciones.", closeMenu: "⚫ Cerrar menú", backMain: "⚫ Volver al menú principal",
+    getMovie: "Obtener película", submitMovie: "Enviar película", changeLanguage: "Cambiar idioma", otherFeatures: "Otras funciones", otherFeaturesTitle: "Otras funciones",
+    favorites: "Favoritos", invite: "Invitar amigos", requestMovie: "Solicitar película", advertise: "Anunciar", adminAdsButton: "📢 Gestionar anuncios", adminManageAdminsButton: "👑 Gestionar administradores",
+    adminMoviesButton: "🎬 Películas", adminPendingButton: "📥 Pendientes", adminUsersButton: "👥 Usuarios", adminStatsButton: "📊 Estadísticas", adminRequestsButton: "🔐 Solicitudes de admin", adminBackupButton: "💾 Copia de seguridad", adminHealthButton: "🏥 Estado del sistema", adminMovieRequestsButton: "📝 Solicitudes de películas", backButton: "🔙 Volver",
+    movieViewsLabel: "Vistas", movieRatingLabel: "Valoración", movieVotesLabel: "Votos", movieDefaultTitle: "Película",
+    adminMovieEditPrompt: "✏️ Envía el nuevo texto que aparecerá debajo de la película. Envía /cancel para cancelar.", adminMovieEditSaved: "✅ Texto de la película actualizado.", adminMovieEditTooLong: "❌ El texto de la película debe tener 1000 caracteres o menos.", adminRequestSent: "⏳ Tu solicitud de administrador se envió al propietario.", adminPending: "⏳ Tu solicitud de administrador ya está pendiente.", alreadyAdmin: "✅ Ya eres administrador.", adminApproved: "👑 Tu solicitud de administrador fue aprobada.", adminRejected: "❌ Tu solicitud de administrador fue rechazada.", alreadyVoted: "⚠️ Ya has votado.",
+    welcome: "🎬 ¡Hola {name}! Bienvenido al bot de películas.", advertisePrompt: "📢 Envía aquí tu anuncio. Se acepta texto, foto, vídeo o archivo. Si un administrador lo aprueba, se publicará a los usuarios del bot. Envía /cancel para cancelar.",
+    advertiseReceived: "✅ Tu anuncio se envió para revisión. Se publicará cuando sea aprobado.", advertiseInvalid: "❌ Envía un anuncio como texto, foto, vídeo o archivo.", advertiseCancelled: "✅ Envío del anuncio cancelado.", advertiseApproved: "✅ Tu anuncio fue aprobado y enviado a los usuarios del bot.", advertiseRejected: "❌ Tu anuncio no fue aprobado por la administración.", adOwnerLabel: "🆔 ID del anunciante: {id}",
+    adminAdsTitle: "📢 Gestión de anuncios", adminAdsStats: "📊 Estadísticas de anuncios\n\n⏳ Pendientes: {pending}\n✅ Aprobados: {approved}\n❌ Rechazados: {rejected}\n🗑 Eliminados: {deleted}\n📨 Envíos correctos: {sent}\n⚠️ Envíos fallidos: {failed}",
+    adminAdsPending: "⏳ Anuncios pendientes", adminAdsAll: "📚 Todos los anuncios", adminAdsEmpty: "📭 No hay anuncios en esta sección.", adminAdApprove: "✅ Aprobar y publicar", adminAdReject: "❌ Rechazar", adminAdEdit: "✏️ Editar", adminAdDelete: "🗑 Eliminar", adminAdResend: "🔄 Reenviar", adminAdView: "👁 Ver",
+    adminAdEditPrompt: "✏️ Envía el nuevo mensaje del anuncio. Después de editarlo, pulsa «Reenviar» para publicar la nueva versión. Envía /cancel para cancelar.", adminAdUpdated: "✅ Anuncio editado. Pulsa «Reenviar» para publicar la nueva versión.", adminAdDeleted: "🗑 Anuncio eliminado.", adminAdWorking: "⏳ Enviando anuncio…", adminAdSent: "✅ Envío finalizado.\n📨 Correctos: {success}\n❌ Fallidos: {failed}", adminAdNotFound: "❌ No se encontró el anuncio.",
+    adminAdminsTitle: "👑 Gestión de administradores\n\nEl propietario no se puede eliminar. Usa el botón junto al administrador para quitar su acceso.", adminAdminsEmpty: "📭 No hay administradores aprobados.", adminRemoveAdmin: "🗑 Eliminar administrador", adminAdminRemoved: "✅ Se eliminó el acceso de administrador.", adminOwnerOnly: "⛔ Esta sección es solo para el propietario."
+  }
+};
+for (const [language, values] of Object.entries(EXTRA_TEXT)) Object.assign(TEXT[language], values);
+
 function normalizeLanguage(language) {
   const code = String(language || "fa").toLowerCase();
   return LANGUAGE_CODES.has(code) ? code : "fa";
@@ -376,7 +484,7 @@ function langOf(user) {
 }
 
 function tr(userOrLang, key) {
-     const language = normalizeLanguage(typeof userOrLang === "string" ? userOrLang : langOf(userOrLang));
+  const language = normalizeLanguage(typeof userOrLang === "string" ? userOrLang : langOf(userOrLang));
   return (TEXT[language] && TEXT[language][key]) || TEXT.en[key] || TEXT.fa[key] || key;
 }
 
@@ -390,33 +498,48 @@ function replaceText(template, values = {}) {
 // Persistent reply keyboard shown at the bottom of Telegram chats.
 function bottomMenu(language) {
   return {
-    keyboard: [[
-      { text: tr(language, "menuButton") },
-      { text: tr(language, "closeMenu") }
-    ]],
-    resize_keyboard: true,
+    keyboard: [[{ text: tr(language, "menuOpen") }]],
+    resize_keyboard: false,
+    one_time_keyboard: false,
     is_persistent: true
   };
 }
 
-// Expanded reply keyboard. Every label is taken from the selected language dictionary.
-function expandedMenu(language, isAdmin = false) {
+// Main menu: exactly four feature entries; the final button hides the menu.
+function expandedMenu(language) {
+  return {
+    keyboard: [
+      [
+        { text: tr(language, "getMovie") },
+        { text: tr(language, "submitMovie") }
+      ],
+      [
+        { text: tr(language, "changeLanguage") },
+        { text: tr(language, "otherFeatures") }
+      ],
+      [{ text: tr(language, "closeMenu") }]
+    ],
+    resize_keyboard: false,
+    one_time_keyboard: false,
+    is_persistent: true
+  };
+}
+
+function otherFeaturesMenu(language, isAdmin = false) {
   const rows = [
     [
-      { text: tr(language, "getMovie") },
-      { text: tr(language, "submitMovie") },
-      { text: tr(language, "requestMovie") }
+      { text: tr(language, "favorites") },
+      { text: tr(language, "invite") }
     ],
     [
-      { text: tr(language, "favorites") },
-      { text: tr(language, "invite") },
-      { text: tr(language, "changeLanguage") }
+      { text: tr(language, "requestMovie") },
+      { text: tr(language, "advertise") }
     ]
   ];
   if (isAdmin) rows.push([{ text: tr(language, "admin") }]);
-  rows.push([{ text: tr(language, "closeMenu") }]);
-  return { keyboard: rows, resize_keyboard: true, is_persistent: true };
-}
+  rows.push([{ text: tr(language, "backMain") }]);
+  return { keyboard: rows, resize_keyboard: false, one_time_keyboard: false, is_persistent: true };
+   }
 
 // Automatic translation has been removed. Language dictionaries are maintained manually.
 async function ensureLanguageDictionary(_env, _requestedLanguage) {
@@ -528,12 +651,26 @@ async function isAnyAdmin(env, userId) {
    Menu / start / language
 ========================================================= */
 
+async function sendWelcomeIfNeeded(env, chatId, user) {
+  if (user.welcome_sent_at) return;
+  const name = String(user.first_name || (langOf(user) === "fa" ? "دوست" : "Friend"))
+    .replace(/[\r\n]+/g, " ").slice(0, 80);
+  const result = await telegram(env, "sendMessage", {
+    chat_id: chatId,
+    text: replaceText(tr(user, "welcome"), { name })
+  });
+  if (result?.ok) {
+    user.welcome_sent_at = now();
+    await saveUser(env, user);
+  }
+}
+
 async function sendMainMenu(env, chatId, user) {
   const language = langOf(user);
   const admin = await isAnyAdmin(env, user.id);
   await telegram(env, "sendMessage", {
     chat_id: chatId,
-    text: `${tr(user, "welcome")}\n\n${tr(user, "menuHint")}`,
+    text: tr(user, "menuHint"),
     reply_markup: bottomMenu(language)
   });
   return admin;
@@ -549,7 +686,7 @@ async function showLanguagePicker(env, chatId) {
   }
   await telegram(env, "sendMessage", {
     chat_id: chatId,
-    text: tr("fa", "chooseLanguage"),
+    text: "🌐 Please choose your language:",
     reply_markup: { inline_keyboard: rows }
   });
 }
@@ -689,9 +826,9 @@ async function recordUniqueView(env, user, movieId) {
   await env.BOT_DATA.put(key, String(now()));
 
   const movies = await getMovies(env);
-     const index = movies.findIndex(movie => String(movie.id) === String(movieId));
+  const index = movies.findIndex(movie => String(movie.id) === String(movieId));
   if (index !== -1) {
-    movies[index].views = Number(movies[index].views || 0) + 1;
+         movies[index].views = Number(movies[index].views || 0) + 1;
     await saveMovies(env, movies);
   }
 
@@ -735,17 +872,16 @@ function cleanMovieCaptionBase(caption) {
 
 async function buildMovieCaption(env, movie, user) {
   const info = await movieRatingInfo(env, movie.id);
-  const language = langOf(user);
   const country = movieCountry(movie, user);
   const id = movie.movie_code || movie.id;
   const originalBase = cleanMovieCaptionBase(movie.caption);
-  const base = originalBase || (language === "fa" ? "🎬 فیلم" : "🎬 Movie");
+  const base = originalBase || `🎬 ${tr(user, "movieDefaultTitle")}`;
   const tail = [
     "",
     "",
-    `👁 ${language === "fa" ? "بازدید" : "Views"}: ${Number(movie.views || 0)}`,
-    `⭐ ${language === "fa" ? "امتیاز" : "Rating"}: ${info.average ? info.average.toFixed(1) : "0.0"}/5`,
-    `👥 ${language === "fa" ? "رأی" : "Votes"}: ${info.count}`,
+    `👁 ${tr(user, "movieViewsLabel")}: ${Number(movie.views || 0)}`,
+    `⭐ ${tr(user, "movieRatingLabel")}: ${info.average ? info.average.toFixed(1) : "0.0"}/5`,
+    `👥 ${tr(user, "movieVotesLabel")}: ${info.count}`,
     `🌍 ${countryFlag(country)} ${country}`,
     `🆔 ${id}`,
     "",
@@ -933,7 +1069,7 @@ async function showFavorites(env, chatId, user) {
   }
   const rows = list.slice(0, 50).map((movie, index) => ([{
     text: `🎬 ${tr(user, "movieNumber")} ${index + 1}`,
-    callback_data: `favorite:view:${movie.id}`
+         callback_data: `favorite:view:${movie.id}`
   }]));
   await telegram(env, "sendMessage", {
     chat_id: chatId,
@@ -952,7 +1088,7 @@ async function reportMovie(env, callback, movieId, reason) {
     movie_id: String(movieId),
     user_id: String(callback.from.id),
     reason,
-         created_at: now(),
+    created_at: now(),
     status: "open"
   };
   await putJSON(env, `report:${report.id}`, report);
@@ -1159,6 +1295,7 @@ async function showAdminMovie(env, callback, movieId, page) {
   const caption = await buildMovieCaption(env, movie, adminUser);
   await sendRawMovie(env, callback.message.chat.id, { ...movie, caption }, {
     inline_keyboard: [
+      [{ text: "✏️ ادیت", callback_data: `adminmovie:edit:${movie.id}:${page}` }],
       [{ text: "🗑 حذف فیلم", callback_data: `adminmovie:delete:${movie.id}:${page}` }],
       [{ text: movie.featured ? "☆ حذف پیشنهادی" : "⭐ پیشنهادی", callback_data: `adminmovie:featured:${movie.id}:${page}` }],
       [{ text: "🔙 بازگشت", callback_data: `adminmovie:list:${page}` }]
@@ -1203,7 +1340,7 @@ async function askDeleteAdminMovie(env, callback, movieId, page = 0) {
 }
 
 async function confirmDeleteAdminMovie(env, callback, movieId, page = 0) {
-  const chatId = callback.message.chat.id;
+     const chatId = callback.message.chat.id;
   const messageId = callback.message.message_id;
   const movie = await findMovie(env, movieId);
   const markup = { inline_keyboard: [[{ text: "🎬 بازگشت به لیست فیلم‌ها", callback_data: `adminmovie:list:${page}` }]] };
@@ -1226,7 +1363,7 @@ async function confirmDeleteAdminMovie(env, callback, movieId, page = 0) {
   const result = await telegram(env, "editMessageText", {
     chat_id: chatId,
     message_id: messageId,
-         text: `🗑 فیلم «${title}» حذف شد.`,
+    text: `🗑 فیلم «${title}» حذف شد.`,
     reply_markup: markup
   });
   if (!result.ok) {
@@ -1437,8 +1574,7 @@ async function showAdminUsers(env, chatId, page = 0) {
   rows.push([{ text: "🔙 پنل مدیریت", callback_data: "admin:panel" }]);
 
   const text = users.length
-    ? `👥 لیست کاربران\n\nصفحه ${safePage + 1} از ${totalPages}\nتعداد کل: ${users.length}`
-    : "📭 کاربری ثبت نشده است.";
+       : "📭 کاربری ثبت نشده است.";
   await telegram(env, "sendMessage", { chat_id: chatId, text, reply_markup: { inline_keyboard: rows } });
 }
 
@@ -1467,7 +1603,7 @@ async function showUserProfileForAdmin(env, callback, targetId, page = 0) {
         `👥 دعوت موفق: ${user.valid_invites || 0}`,
         `🚫 وضعیت: ${user.blocked ? "بلاک" : "فعال"}`,
         `👑 Admin: ${isAdminUser ? "بله" : "خیر"}`
-             ].join("\n")
+      ].join("\n")
     : [
         "👤 User Profile", "",
         `👤 Name: ${user.first_name || "-"}`,
@@ -1523,7 +1659,8 @@ async function createBackup(env) {
     pending: await getPending(env),
     requests: await getJSON(env, "movie_requests", []),
     admin_requests: await getJSON(env, "admin:requests", []),
-    approved_admins: await approvedAdmins(env)
+    approved_admins: await approvedAdmins(env),
+    advertisements: await getAdvertisements(env)
   };
   const key = `backup:${new Date().toISOString().replace(/[:.]/g, "-")}`;
   await putJSON(env, key, payload);
@@ -1573,9 +1710,11 @@ async function showAdminPanel(env, chatId, user) {
       { text: tr(user, "adminHealthButton"), callback_data: "admin:health" }
     ],
     [{ text: tr(user, "adminMovieRequestsButton"), callback_data: "admin:movie_requests" }],
-    [{ text: tr(user, "announcementButton"), callback_data: "admin:announcement" }],
-    [{ text: tr(user, "backButton"), callback_data: "menu:open" }]
+    [{ text: tr(user, "adminAdsButton"), callback_data: "admin:ads" }],
+    [{ text: tr(user, "announcementButton"), callback_data: "admin:announcement" }]
   ];
+  if (isMainAdmin(env, user.id)) buttons.push([{ text: tr(user, "adminManageAdminsButton"), callback_data: "admin:manage_admins" }]);
+  buttons.push([{ text: tr(user, "backButton"), callback_data: "menu:open" }]);
   await telegram(env, "sendMessage", { chat_id: chatId, text, reply_markup: { inline_keyboard: buttons } });
   await logAction(env, user.id, "admin_panel_open");
 }
@@ -1661,6 +1800,373 @@ async function broadcastLanguageAnnouncement(env, adminChatId, adminUser, source
 }
 
 /* =========================================================
+   User advertisements / moderation / delivery
+========================================================= */
+
+async function getAdvertisements(env) {
+  const items = await getJSON(env, "advertisements", []);
+  return Array.isArray(items) ? items : [];
+}
+
+async function saveAdvertisements(env, items) {
+  await putJSON(env, "advertisements", items);
+}
+
+async function findAdvertisement(env, adId) {
+  const ads = await getAdvertisements(env);
+  return ads.find(item => String(item.id) === String(adId)) || null;
+}
+
+function isCopyableAdvertisementMessage(message) {
+  if (!message || !message.message_id || !message.chat?.id) return false;
+  return Boolean(
+    message.text || message.caption || message.photo || message.video || message.document ||
+    message.animation || message.audio || message.voice || message.video_note || message.sticker ||
+    message.contact || message.location || message.venue || message.poll || message.game
+  );
+}
+
+function advertisementControls(ad, language = "fa") {
+  const rows = [];
+  if (ad.status === "pending") {
+    rows.push([{ text: tr(language, "adminAdApprove"), callback_data: `ad:approve:${ad.id}` }]);
+    rows.push([{ text: tr(language, "adminAdReject"), callback_data: `ad:reject:${ad.id}` }]);
+  }
+  if (ad.status !== "deleted") {
+    rows.push([{ text: tr(language, "adminAdEdit"), callback_data: `ad:edit:${ad.id}` }]);
+    if (ad.status === "approved") rows.push([{ text: tr(language, "adminAdResend"), callback_data: `ad:resend:${ad.id}` }]);
+    rows.push([{ text: tr(language, "adminAdDelete"), callback_data: `ad:delete:${ad.id}` }]);
+  }
+  rows.push([{ text: tr(language, "backButton"), callback_data: "ad:list:all:0" }]);
+  return { inline_keyboard: rows };
+}
+
+async function submitAdvertisement(env, message, user) {
+  const ad = {
+    id: randomId(),
+    user_id: String(user.id),
+    advertiser_username: user.username ? String(user.username) : null,
+    advertiser_name: String(user.first_name || ""),
+    source_chat_id: message.chat.id,
+    source_message_id: message.message_id,
+    status: "pending",
+    created_at: now(),
+    approved_at: null,
+    rejected_at: null,
+    edited_at: null,
+    last_sent_at: null,
+    send_success_count: 0,
+    send_failed_count: 0,
+    broadcast_count: 0,
+    resend_count: 0
+  };
+  const ads = await getAdvertisements(env);
+  ads.push(ad);
+  await saveAdvertisements(env, ads);
+
+  const ownerId = getAdminId(env);
+  if (ownerId) {
+    const admin = await getUser(env, ownerId);
+    const source = await telegram(env, "copyMessage", {
+      chat_id: ownerId,
+      from_chat_id: message.chat.id,
+      message_id: message.message_id,
+      reply_markup: advertisementControls(ad, langOf(admin))
+    }).catch(() => ({ ok: false }));
+    if (!source?.ok) {
+      await telegram(env, "sendMessage", {
+        chat_id: ownerId,
+        text: `📢 تبلیغ جدید برای بررسی\n\n🆔 شناسه تبلیغ: ${ad.id}\n👤 فرستنده: ${ad.advertiser_username ? `@${ad.advertiser_username}` : ad.user_id}`,
+        reply_markup: advertisementControls(ad, langOf(admin))
+      }).catch(() => {});
+    } else {
+      const advertiserId = ad.advertiser_username ? `@${ad.advertiser_username}` : String(ad.user_id);
+      await telegram(env, "sendMessage", {
+        chat_id: ownerId,
+        text: `🆔 شناسه تبلیغ‌دهنده: ${advertiserId}\nشناسه داخلی تبلیغ: ${ad.id}`
+      }).catch(() => {});
+    }
+  }
+
+  await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "advertiseReceived") });
+  await logAction(env, user.id, "advertisement_submitted", { advertisement_id: ad.id });
+}
+
+async function sendAdvertisementToUser(env, ad, user) {
+  const copied = await telegram(env, "copyMessage", {
+    chat_id: user.id,
+    from_chat_id: ad.source_chat_id,
+    message_id: ad.source_message_id
+  });
+  if (!copied?.ok) return false;
+  const identifier = ad.advertiser_username ? `@${String(ad.advertiser_username).replace(/^@/, "")}` : String(ad.user_id);
+  const label = replaceText(tr(user, "adOwnerLabel"), { id: identifier });
+  const idMessage = await telegram(env, "sendMessage", { chat_id: user.id, text: label }).catch(() => ({ ok: false }));
+  return Boolean(idMessage?.ok);
+}
+
+async function broadcastAdvertisement(env, adId, adminChatId, adminUser) {
+  const ad = await findAdvertisement(env, adId);
+  if (!ad || ad.status !== "approved") {
+    await telegram(env, "sendMessage", { chat_id: adminChatId, text: tr(adminUser, "adminAdNotFound") }).catch(() => {});
+    return;
+  }
+  await telegram(env, "sendMessage", { chat_id: adminChatId, text: tr(adminUser, "adminAdWorking") }).catch(() => {});
+  const recipients = (await getAllUsers(env)).filter(user => user?.id && !user.blocked && user.notifications !== false);
+  let success = 0;
+  let failed = 0;
+  const batchSize = 5;
+  for (let index = 0; index < recipients.length; index += batchSize) {
+    const batch = recipients.slice(index, index + batchSize);
+    const results = await Promise.all(batch.map(async target => {
+      try {
+        return await sendAdvertisementToUser(env, ad, target);
+      } catch (error) {
+        console.error("Advertisement delivery failed:", target.id, error?.message || error);
+        return false;
+      }
+    }));
+    for (const result of results) result ? success++ : failed++;
+  }
+
+  const ads = await getAdvertisements(env);
+  const current = ads.find(item => String(item.id) === String(adId));
+  if (current) {
+    current.last_sent_at = now();
+    current.send_success_count = Number(current.send_success_count || 0) + success;
+    current.send_failed_count = Number(current.send_failed_count || 0) + failed;
+    current.broadcast_count = Number(current.broadcast_count || 0) + 1;
+    await saveAdvertisements(env, ads);
+  }
+  await telegram(env, "sendMessage", {
+    chat_id: adminChatId,
+    text: replaceText(tr(adminUser, "adminAdSent"), { success, failed })
+  }).catch(() => {});
+  await logAction(env, adminUser.id, "advertisement_broadcast", { advertisement_id: adId, success, failed });
+}
+
+async function showAdvertisementManagement(env, chatId, adminUser) {
+  const ads = await getAdvertisements(env);
+  const active = ads.filter(ad => ad.status !== "deleted");
+  const stats = {
+    pending: active.filter(ad => ad.status === "pending").length,
+    approved: active.filter(ad => ad.status === "approved").length,
+    rejected: active.filter(ad => ad.status === "rejected").length,
+    deleted: ads.filter(ad => ad.status === "deleted").length,
+    sent: ads.reduce((sum, ad) => sum + Number(ad.send_success_count || 0), 0),
+    failed: ads.reduce((sum, ad) => sum + Number(ad.send_failed_count || 0), 0)
+  };
+  const text = `${tr(adminUser, "adminAdsTitle")}\n\n${replaceText(tr(adminUser, "adminAdsStats"), stats)}`;
+  await telegram(env, "sendMessage", {
+    chat_id: chatId,
+    text,
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: tr(adminUser, "adminAdsPending"), callback_data: "ad:list:pending:0" },
+          { text: tr(adminUser, "adminAdsAll"), callback_data: "ad:list:all:0" }
+        ],
+        [{ text: tr(adminUser, "backButton"), callback_data: "admin:panel" }]
+      ]
+    }
+  });
+}
+
+async function showAdvertisementList(env, chatId, language, filter = "all", page = 0) {
+  const all = await getAdvertisements(env);
+  const filtered = all.filter(ad => {
+    if (filter === "pending") return ad.status === "pending";
+    return true;
+  }).sort((a, b) => Number(b.created_at || 0) - Number(a.created_at || 0));
+  if (!filtered.length) {
+    await telegram(env, "sendMessage", {
+      chat_id: chatId,
+      text: tr(language, "adminAdsEmpty"),
+      reply_markup: { inline_keyboard: [[{ text: tr(language, "backButton"), callback_data: "admin:ads" }]] }
+    });
+    return;
+  }
+  const pageSize = 8;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.max(0, Math.min(Number(page) || 0, totalPages - 1));
+  const current = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
+  for (const ad of current) {
+    const advertiser = ad.advertiser_username ? `@${ad.advertiser_username}` : String(ad.user_id);
+    const summary = `📢 ${ad.status}\n🆔 ${ad.id}\n👤 ${advertiser}\n📅 ${new Date(ad.created_at).toLocaleString("en-GB")}\n📨 ${ad.send_success_count || 0} / ⚠️ ${ad.send_failed_count || 0}`;
+    const rows = [[{ text: tr(language, "adminAdView"), callback_data: `ad:detail:${ad.id}` }]];
+    if (ad.status === "pending") rows.push([
+      { text: tr(language, "adminAdApprove"), callback_data: `ad:approve:${ad.id}` },
+      { text: tr(language, "adminAdReject"), callback_data: `ad:reject:${ad.id}` }
+    ]);
+    if (ad.status !== "deleted") {
+      rows.push([{ text: tr(language, "adminAdEdit"), callback_data: `ad:edit:${ad.id}` }]);
+      if (ad.status === "approved") rows.push([{ text: tr(language, "adminAdResend"), callback_data: `ad:resend:${ad.id}` }]);
+      rows.push([{ text: tr(language, "adminAdDelete"), callback_data: `ad:delete:${ad.id}` }]);
+    }
+    await telegram(env, "sendMessage", { chat_id: chatId, text: summary, reply_markup: { inline_keyboard: rows } });
+  }
+  const nav = [];
+  if (safePage > 0) nav.push({ text: "⬅️", callback_data: `ad:list:${filter}:${safePage - 1}` });
+  if (safePage < totalPages - 1) nav.push({ text: "➡️", callback_data: `ad:list:${filter}:${safePage + 1}` });
+  nav.push({ text: tr(language, "backButton"), callback_data: "admin:ads" });
+     await telegram(env, "sendMessage", { chat_id: chatId, text: `${safePage + 1}/${totalPages}`, reply_markup: { inline_keyboard: [nav] } });
+}
+
+async function showAdvertisementDetail(env, callback, ad) {
+  const language = langOf(await ensureUser(env, callback.from));
+  const copied = await telegram(env, "copyMessage", {
+    chat_id: callback.message.chat.id,
+    from_chat_id: ad.source_chat_id,
+    message_id: ad.source_message_id,
+    reply_markup: advertisementControls(ad, language)
+  }).catch(() => ({ ok: false }));
+  const advertiser = ad.advertiser_username ? `@${ad.advertiser_username}` : String(ad.user_id);
+  await telegram(env, "sendMessage", {
+    chat_id: callback.message.chat.id,
+    text: `📢 ${ad.status}\n🆔 ${ad.id}\n👤 ${advertiser}\n📨 ${ad.send_success_count || 0} / ⚠️ ${ad.send_failed_count || 0}${copied?.ok ? "" : "\n⚠️ پیام اصلی قابل کپی نیست؛ از فهرست مدیریت استفاده کن."}`,
+    reply_markup: advertisementControls(ad, language)
+  });
+}
+
+async function handleAdCallback(env, callback, ctx) {
+  const adminId = String(callback.from.id);
+  if (!(await isAnyAdmin(env, adminId))) {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "⛔", show_alert: true });
+    return;
+  }
+  const parts = String(callback.data || "").split(":");
+  const action = parts[1];
+  if (action === "list") {
+    const admin = await ensureUser(env, callback.from);
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
+    await showAdvertisementList(env, callback.message.chat.id, langOf(admin), parts[2] || "all", Number(parts[3] || 0));
+    return;
+  }
+  const adId = parts[2];
+  const ad = await findAdvertisement(env, adId);
+  if (!ad) {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "❌", show_alert: true });
+    return;
+  }
+  const admin = await ensureUser(env, callback.from);
+  if (action === "detail") {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
+    await showAdvertisementDetail(env, callback, ad);
+    return;
+  }
+  if (action === "approve") {
+    if (ad.status !== "pending") {
+      await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "⚠️", show_alert: true });
+      return;
+    }
+    const ads = await getAdvertisements(env);
+    const current = ads.find(item => String(item.id) === String(adId));
+    current.status = "approved";
+    current.approved_at = now();
+    current.approved_by = adminId;
+    await saveAdvertisements(env, ads);
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "✅ Approved" });
+    const advertiser = await getUser(env, ad.user_id);
+    await telegram(env, "sendMessage", { chat_id: ad.user_id, text: tr(advertiser, "advertiseApproved") }).catch(() => {});
+    await logAction(env, adminId, "advertisement_approved", { advertisement_id: adId });
+    const task = broadcastAdvertisement(env, adId, callback.message.chat.id, admin);
+    if (ctx?.waitUntil) ctx.waitUntil(task);
+    else await task;
+    return;
+  }
+  if (action === "reject") {
+    const ads = await getAdvertisements(env);
+    const current = ads.find(item => String(item.id) === String(adId));
+    current.status = "rejected";
+    current.rejected_at = now();
+    current.rejected_by = adminId;
+    await saveAdvertisements(env, ads);
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "❌ Rejected" });
+    const advertiser = await getUser(env, ad.user_id);
+    await telegram(env, "sendMessage", { chat_id: ad.user_id, text: tr(advertiser, "advertiseRejected") }).catch(() => {});
+    await logAction(env, adminId, "advertisement_rejected", { advertisement_id: adId });
+    return;
+  }
+  if (action === "edit") {
+    await env.BOT_DATA.put(`state:${adminId}`, `admin_ad_edit:${adId}`, { expirationTtl: 600 });
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
+    await telegram(env, "sendMessage", { chat_id: callback.message.chat.id, text: tr(admin, "adminAdEditPrompt") });
+    return;
+  }
+  if (action === "delete") {
+    const ads = await getAdvertisements(env);
+    const current = ads.find(item => String(item.id) === String(adId));
+    current.status = "deleted";
+    current.deleted_at = now();
+    current.deleted_by = adminId;
+    await saveAdvertisements(env, ads);
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "🗑" });
+    await telegram(env, "sendMessage", { chat_id: callback.message.chat.id, text: tr(admin, "adminAdDeleted") });
+    await logAction(env, adminId, "advertisement_deleted", { advertisement_id: adId });
+    return;
+  }
+  if (action === "resend") {
+    if (ad.status !== "approved") {
+      await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "⚠️", show_alert: true });
+      return;
+    }
+    const ads = await getAdvertisements(env);
+    const current = ads.find(item => String(item.id) === String(adId));
+    current.resend_count = Number(current.resend_count || 0) + 1;
+    await saveAdvertisements(env, ads);
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "🔄" });
+    const task = broadcastAdvertisement(env, adId, callback.message.chat.id, admin);
+    if (ctx?.waitUntil) ctx.waitUntil(task);
+    else await task;
+    return;
+  }
+}
+
+/* =========================================================
+   Owner-only admin management
+========================================================= */
+
+async function showAdminManagement(env, chatId) {
+  const owner = await getUser(env, chatId);
+  const admins = await approvedAdmins(env);
+  if (!admins.length) {
+    await telegram(env, "sendMessage", { chat_id: chatId, text: tr(owner, "adminAdminsEmpty"), reply_markup: { inline_keyboard: [[{ text: tr(owner, "backButton"), callback_data: "admin:panel" }]] } });
+    return;
+  }
+  const rows = [];
+  for (const id of admins) {
+    const user = await getUser(env, id);
+    const label = user.username ? `@${user.username}` : (user.first_name || id);
+    rows.push([{ text: `🗑 ${String(label).slice(0, 40)} (${id})`, callback_data: `admin:remove_admin:${id}` }]);
+  }
+  rows.push([{ text: tr(owner, "backButton"), callback_data: "admin:panel" }]);
+  await telegram(env, "sendMessage", { chat_id: chatId, text: tr(owner, "adminAdminsTitle"), reply_markup: { inline_keyboard: rows } });
+}
+
+async function removeApprovedAdmin(env, callback, targetId) {
+  if (!isMainAdmin(env, callback.from.id)) {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "⛔", show_alert: true });
+    return;
+  }
+  if (String(targetId) === getAdminId(env)) {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "❌ مالک قابل حذف نیست.", show_alert: true });
+    return;
+  }
+  const admins = await approvedAdmins(env);
+  const remaining = admins.filter(id => id !== String(targetId));
+  if (remaining.length === admins.length) {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "ادمین پیدا نشد.", show_alert: true });
+    return;
+  }
+  await putJSON(env, "admin:approved", remaining);
+  await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "✅" });
+  const target = await getUser(env, targetId);
+  await telegram(env, "sendMessage", { chat_id: targetId, text: tr(target, "adminAdminRemoved") }).catch(() => {});
+  await logAction(env, callback.from.id, "admin_removed", { target: String(targetId) });
+  await showAdminManagement(env, callback.message.chat.id);
+}
+
+/* =========================================================
    Main update handler
 ========================================================= */
 
@@ -1686,6 +2192,7 @@ async function handleStart(env, message, user) {
   user.joined = true;
   await saveUser(env, user);
   await completeReferral(env, user);
+  await sendWelcomeIfNeeded(env, message.chat.id, user);
   await sendMainMenu(env, message.chat.id, user);
 }
 
@@ -1705,11 +2212,12 @@ async function handleLanguageCallback(env, callback) {
   user.joined = true;
   await saveUser(env, user);
   await completeReferral(env, user);
+  await sendWelcomeIfNeeded(env, callback.message.chat.id, user);
   await sendMainMenu(env, callback.message.chat.id, user);
 }
 
 async function handleMembershipCallback(env, callback) {
-  const user = await ensureUser(env, callback.from);
+     const user = await ensureUser(env, callback.from);
   if (!(await checkMembership(env, user.id))) {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: tr(user, "notMember"), show_alert: true });
     return;
@@ -1718,6 +2226,7 @@ async function handleMembershipCallback(env, callback) {
   await saveUser(env, user);
   await completeReferral(env, user);
   await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "✅" });
+  await sendWelcomeIfNeeded(env, callback.message.chat.id, user);
   await sendMainMenu(env, callback.message.chat.id, user);
 }
 
@@ -1729,17 +2238,16 @@ async function handleMenuCallback(env, callback, ctx) {
   const needsMembership = !["menu:open", "menu:language"].includes(data);
   if (needsMembership && !(await isAnyAdmin(env, user.id)) && !(await checkMembership(env, user.id))) {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: tr(user, "notMember"), show_alert: true });
-         await sendMembershipMessage(env, chatId, language);
+    await sendMembershipMessage(env, chatId, language);
     return true;
   }
 
   if (data === "menu:open") {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
-    const admin = await isAnyAdmin(env, user.id);
     await telegram(env, "sendMessage", {
       chat_id: chatId,
       text: tr(user, "menuTitle"),
-      reply_markup: expandedMenu(language, admin)
+      reply_markup: expandedMenu(language)
     });
     return true;
   }
@@ -1789,17 +2297,16 @@ async function handleReplyMenuButton(env, message, user, ctx) {
   const language = langOf(user);
   const chatId = message.chat.id;
 
-  if ([tr(user, "menuButton"), "☰ منو", "☰ Menu"].includes(text)) {
-    const admin = await isAnyAdmin(env, user.id);
+  if ([tr(user, "menuOpen"), "📋 باز کردن منو", "📋 Open Menu"].includes(text)) {
     await telegram(env, "sendMessage", {
       chat_id: chatId,
       text: tr(user, "menuTitle"),
-      reply_markup: expandedMenu(language, admin)
+      reply_markup: expandedMenu(language)
     });
     return true;
   }
 
-  if ([tr(user, "closeMenu"), "🔽 بستن منو", "🔽 Hide menu"].includes(text)) {
+  if ([tr(user, "closeMenu"), "⚫ بستن منو", "⚫ Close Menu"].includes(text)) {
     await telegram(env, "sendMessage", {
       chat_id: chatId,
       text: tr(user, "menuClosed"),
@@ -1808,13 +2315,33 @@ async function handleReplyMenuButton(env, message, user, ctx) {
     return true;
   }
 
+  if ([tr(user, "backMain"), "⚫ بازگشت به منوی اصلی", "⚫ Back to Main Menu"].includes(text)) {
+    await telegram(env, "sendMessage", {
+      chat_id: chatId,
+      text: tr(user, "menuTitle"),
+      reply_markup: expandedMenu(language)
+    });
+    return true;
+  }
+
+  if ([tr(user, "otherFeatures"), tr(user, "otherFeaturesTitle")].includes(text)) {
+    const admin = await isAnyAdmin(env, user.id);
+    await telegram(env, "sendMessage", {
+      chat_id: chatId,
+      text: tr(user, "otherFeaturesTitle"),
+      reply_markup: otherFeaturesMenu(language, admin)
+    });
+    return true;
+  }
+
   const actions = new Map([
     [tr(user, "getMovie"), "get"],
     [tr(user, "submitMovie"), "submit"],
-    [tr(user, "requestMovie"), "request"],
+    [tr(user, "changeLanguage"), "language"],
     [tr(user, "favorites"), "favorites"],
     [tr(user, "invite"), "invite"],
-    [tr(user, "changeLanguage"), "language"],
+    [tr(user, "requestMovie"), "request"],
+    [tr(user, "advertise"), "advertise"],
     [tr(user, "admin"), "admin"]
   ]);
   const action = actions.get(text);
@@ -1829,9 +2356,7 @@ async function handleReplyMenuButton(env, message, user, ctx) {
     return true;
   }
 
-  // A menu selection cancels any previous text-input state before setting a new one.
   await deleteKey(env, `state:${user.id}`);
-
   if (action === "get") {
     await getMovieForUser(env, chatId, user, ctx);
   } else if (action === "submit") {
@@ -1846,6 +2371,9 @@ async function handleReplyMenuButton(env, message, user, ctx) {
     await showInvite(env, chatId, user);
   } else if (action === "language") {
     await showLanguagePicker(env, chatId);
+  } else if (action === "advertise") {
+    await env.BOT_DATA.put(`state:${user.id}`, "advertisement_submit", { expirationTtl: 1800 });
+    await telegram(env, "sendMessage", { chat_id: chatId, text: tr(user, "advertisePrompt") });
   } else if (action === "admin") {
     await showAdminPanel(env, chatId, user);
   }
@@ -1899,14 +2427,99 @@ async function handleMessage(env, message, ctx) {
     return;
   }
 
+  if (typeof activeState === "string" && activeState.startsWith("admin_movie_edit:")) {
+    if (!(await isAnyAdmin(env, user.id))) {
+      await deleteKey(env, `state:${user.id}`);
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "denied") });
+      return;
+    }
+    if (message.text?.trim() === "/cancel") {
+      await deleteKey(env, `state:${user.id}`);
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: "✅ لغو شد." });
+      return;
+    }
+    const newCaption = String(message.text || "").trim();
+    if (!newCaption) {
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "adminMovieEditPrompt") });
+      return;
+    }
+    if (newCaption.length > 1000) {
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "adminMovieEditTooLong") });
+      return;
+    }
+    const movieId = activeState.slice("admin_movie_edit:".length);
+    const movies = await getMovies(env);
+    const movie = movies.find(item => String(item.id) === String(movieId));
+    if (!movie) {
+      await deleteKey(env, `state:${user.id}`);
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: "❌ فیلم پیدا نشد." });
+      return;
+    }
+    movie.caption = newCaption;
+    await saveMovies(env, movies);
+    await deleteKey(env, `state:${user.id}`);
+         await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "adminMovieEditSaved") });
+    await logAction(env, user.id, "movie_caption_edited", { movie_id: movieId });
+    return;
+  }
+
+  if (typeof activeState === "string" && activeState.startsWith("admin_ad_edit:")) {
+    if (!(await isAnyAdmin(env, user.id))) {
+      await deleteKey(env, `state:${user.id}`);
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "denied") });
+      return;
+    }
+    if (message.text?.trim() === "/cancel") {
+      await deleteKey(env, `state:${user.id}`);
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "advertiseCancelled") });
+      return;
+    }
+    if (!isCopyableAdvertisementMessage(message)) {
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "advertiseInvalid") });
+      return;
+    }
+    const adId = activeState.slice("admin_ad_edit:".length);
+    const ads = await getAdvertisements(env);
+    const ad = ads.find(item => String(item.id) === String(adId));
+    if (!ad || ad.status === "deleted") {
+      await deleteKey(env, `state:${user.id}`);
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "adminAdNotFound") });
+      return;
+    }
+    ad.source_chat_id = message.chat.id;
+    ad.source_message_id = message.message_id;
+    ad.edited_at = now();
+    ad.edited_by = String(user.id);
+    await saveAdvertisements(env, ads);
+    await deleteKey(env, `state:${user.id}`);
+    await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "adminAdUpdated") });
+    await logAction(env, user.id, "advertisement_edited", { advertisement_id: adId });
+    return;
+  }
+
   if (message.text && /^admin$/i.test(message.text.trim())) {
     await submitAdminRequest(env, user);
     return;
   }
 
-  if (await handleReplyMenuButton(env, message, user, ctx)) return;
-
   const state = await env.BOT_DATA.get(`state:${user.id}`);
+
+  if (state === "advertisement_submit") {
+    if (message.text?.trim() === "/cancel") {
+      await deleteKey(env, `state:${user.id}`);
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "advertiseCancelled") });
+      return;
+    }
+    if (!isCopyableAdvertisementMessage(message)) {
+      await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "advertiseInvalid") });
+      return;
+    }
+    await deleteKey(env, `state:${user.id}`);
+    await submitAdvertisement(env, message, user);
+    return;
+  }
+
+  if (await handleReplyMenuButton(env, message, user, ctx)) return;
 
   if (message.video || message.document) {
     if (state !== "submit") {
@@ -1990,7 +2603,7 @@ async function handleMovieCallback(env, callback, ctx) {
 
 }
 
-async function handleAdminCallback(env, callback) {
+async function handleAdminCallback(env, callback, ctx) {
   const userId = String(callback.from.id);
   if (!(await isAnyAdmin(env, userId))) {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: tr("fa", "denied"), show_alert: true });
@@ -2006,10 +2619,37 @@ async function handleAdminCallback(env, callback) {
     return;
   }
 
+  if (data === "admin:ads") {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
+    const adminUser = await ensureUser(env, callback.from);
+    await showAdvertisementManagement(env, chatId, adminUser);
+    return;
+  }
+
+  if (data === "admin:manage_admins") {
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
+    if (!isMainAdmin(env, userId)) {
+      await telegram(env, "sendMessage", { chat_id: chatId, text: tr(await ensureUser(env, callback.from), "adminOwnerOnly") });
+      return;
+    }
+    await showAdminManagement(env, chatId);
+    return;
+  }
+
+  if (data.startsWith("admin:remove_admin:")) {
+    if (!isMainAdmin(env, userId)) {
+      await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: "⛔", show_alert: true });
+      return;
+    }
+    const targetId = data.split(":")[2];
+    await removeApprovedAdmin(env, callback, targetId);
+    return;
+  }
+
   if (data === "admin:announcement") {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
     const adminUser = await ensureUser(env, callback.from);
-         const rows = [];
+    const rows = [];
     for (let index = 0; index < LANGUAGE_OPTIONS.length; index += 2) {
       rows.push(LANGUAGE_OPTIONS.slice(index, index + 2).map(item => ({
         text: item.label,
@@ -2066,7 +2706,7 @@ async function handleAdminCallback(env, callback) {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
     const adminUser = await ensureUser(env, callback.from);
     await showMovieRequestList(env, chatId, langOf(adminUser));
-    return;
+         return;
   }
 
   if (data === "admin:stats") {
@@ -2111,6 +2751,20 @@ async function handleAdminCallback(env, callback) {
   if (data.startsWith("adminmovie:deleteconfirm:")) {
     const parts = data.split(":");
     await confirmDeleteAdminMovie(env, callback, parts[2], Number(parts[3] || 0));
+    return;
+  }
+
+  if (data.startsWith("adminmovie:edit:")) {
+    const parts = data.split(":");
+    const movieId = parts[2];
+    const movie = await findMovie(env, movieId);
+    await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
+    if (!movie) {
+      await telegram(env, "sendMessage", { chat_id: chatId, text: "❌ فیلم پیدا نشد." });
+      return;
+    }
+    await env.BOT_DATA.put(`state:${userId}`, `admin_movie_edit:${movieId}`, { expirationTtl: 600 });
+    await telegram(env, "sendMessage", { chat_id: chatId, text: tr(await getUser(env, userId), "adminMovieEditPrompt") });
     return;
   }
 
@@ -2216,7 +2870,8 @@ async function handleCallback(env, callback, ctx) {
       if (parts[1] === "profile") return await showUserProfileForAdmin(env, callback, parts[2], 0);
       if (parts[1] === "approve" || parts[1] === "reject") return await reviewAdminRequest(env, callback, parts[1], parts[2]);
     }
-    if (data.startsWith("admin:") || data.startsWith("adminmovie:") || data.startsWith("adminuser:")) return await handleAdminCallback(env, callback);
+    if (data.startsWith("ad:")) return await handleAdCallback(env, callback, ctx);
+    if (data.startsWith("admin:") || data.startsWith("adminmovie:") || data.startsWith("adminuser:")) return await handleAdminCallback(env, callback, ctx);
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
   } catch (error) {
     console.error("Callback error:", error);
