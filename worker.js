@@ -500,7 +500,7 @@ function replaceText(template, values = {}) {
 function bottomMenu(language) {
   return {
     keyboard: [[{ text: tr(language, "menuOpen") }]],
-    resize_keyboard: false,
+    resize_keyboard: true,
     one_time_keyboard: false,
     is_persistent: true
   };
@@ -520,7 +520,7 @@ function expandedMenu(language) {
       ],
       [{ text: tr(language, "closeMenu") }]
     ],
-    resize_keyboard: false,
+    resize_keyboard: true,
     one_time_keyboard: false,
     is_persistent: true
   };
