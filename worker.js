@@ -539,7 +539,7 @@ function otherFeaturesMenu(language, isAdmin = false) {
   ];
   if (isAdmin) rows.push([{ text: tr(language, "admin") }]);
   rows.push([{ text: tr(language, "backMain") }]);
-  return { keyboard: rows, resize_keyboard: false, one_time_keyboard: false, is_persistent: true };
+  return { keyboard: rows, resize_keyboard: true, one_time_keyboard: false, is_persistent: true };
 }
 
 // Automatic translation has been removed. Language dictionaries are maintained manually.
