@@ -1,7 +1,7 @@
 const MOVIE_COOLDOWN = 10_000;
 const AUTO_DELETE_TIME = 20_000;
-const MOVIE_PAGE_SIZE = 1;
-const USER_PAGE_SIZE = 10;
+const MOVIE_PAGE_SIZE = 15;
+const USER_PAGE_SIZE = 15;
 const HISTORY_TTL = 24 * 60 * 60 * 1000;
 const REFERRAL_REWARD = 3;
 
