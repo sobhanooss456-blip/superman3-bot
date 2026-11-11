@@ -229,7 +229,7 @@ const TEXT = {
     pendingApproved: "✅ Your movie was approved and added to the archive.",
     pendingRejected: "❌ Your movie was rejected by the moderator.",
     noMovieRequests: "📭 No movie requests have been submitted.",
-         movieRequestsTitle: "📝 Movie Requests",
+    movieRequestsTitle: "📝 Movie Requests",
     adminPanelStats: "👑 Admin Panel\n\n👥 Users: {users}\n🎬 Movies: {movies}\n👁 Unique views: {views}\n⭐ Ratings: {ratings}\n❤️ Favorites: {favorites}\n🔥 Active 24h: {active}\n📥 Pending: {pending}\n👥 Successful invites: {invites}",
     adminMoviesButton: "🎬 Movies",
     adminPendingButton: "📥 Pending queue",
@@ -250,7 +250,6 @@ const TEXT = {
     announcementResult: "✅ Announcement delivery finished.\n\n🌐 Language: {language}\n📨 Sent: {success}\n❌ Failed: {failed}\n⏭ Skipped (blocked/disabled or another language): {skipped}"
   }
  };
-
 // Static, manually maintained dictionaries. No translation API or external translator is used.
 // The common user flow and menu are localized; rare admin-only labels fall back to English.
 Object.assign(TEXT, {
@@ -279,7 +278,8 @@ Object.assign(TEXT, {
     adminPanelStats: "👑 لوحة الإدارة\n\n👥 المستخدمون: {users}\n🎬 الأفلام: {movies}\n👁 المشاهدات الفريدة: {views}\n⭐ التقييمات: {ratings}\n❤️ المفضلة: {favorites}\n🔥 النشطون خلال 24 ساعة: {active}\n📥 بانتظار المراجعة: {pending}\n👥 الدعوات الناجحة: {invites}",
     announcementButton: "📢 إرسال إعلان", announcementPrompt: "📢 أرسل نص الإعلان باللغة المحددة. سيُرسل فقط للمستخدمين الذين اختاروا اللغة نفسها.\nللإلغاء أرسل /cancel.",
     announcementLanguagePrompt: "🌐 اختر لغة الإعلان:", announcementTooLong: "❌ النص طويل جداً. اجعله 3500 حرف أو أقل.",
-    announcementTextRequired: "أرسل الإعلان كنص. للإلغاء أرسل /cancel.", announcementCancelled: "✅ تم إلغاء الإعلان.",
+    announcementTextRequired: "أرسل الإعلان كنص. للإلغاء أرسل /cancel.",
+    announcementCancelled: "✅ تم إلغاء الإعلان.",
     announcementWorking: "⏳ جارٍ إرسال الإعلان لمستخدمي اللغة المحددة…",
     announcementResult: "✅ انتهى إرسال الإعلان.\n\n🌐 اللغة: {language}\n📨 تم الإرسال: {success}\n❌ فشل: {failed}\n⏭ تم التخطي: {skipped}"
   },
@@ -322,7 +322,7 @@ Object.assign(TEXT, {
     requestPrompt: "📝 Отправьте название нужного фильма.", requestSaved: "✅ Запрос фильма сохранён.", requestInvalid: "❌ Неверный запрос.",
     favoritesEmpty: "❤️ Список избранного пуст.", favoritesTitle: "❤️ Избранные фильмы", movieNumber: "Фильм №",
     addedFavorite: "❤️ Добавлено в избранное.", removedFavorite: "💔 Удалено из избранного.", addFavorite: "❤️ В избранное", removeFavorite: "💔 Удалить из избранного",
-         again: "🔄 Отправить снова", report: "🚫 Пожаловаться", reportTitle: "🚫 Выберите причину жалобы:", reportBroken: "Не работает", reportWrong: "Неверная информация",
+    again: "🔄 Отправить снова", report: "🚫 Пожаловаться", reportTitle: "🚫 Выберите причину жалобы:", reportBroken: "Не работает", reportWrong: "Неверная информация",
     reportDuplicate: "Дубликат", reportOther: "Другое", reportSaved: "✅ Жалоба сохранена.", rateSaved: "⭐ Ваша оценка сохранена.",
     alreadyRated: "⚠️ Вы уже оценивали этот фильм.", deleteNotice: "⏱ Фильм будет удалён через 20 секунд.", deleted: "🗑 Фильм удалён. Нажмите ниже, чтобы получить его снова.",
     resend: "🔄 Отправить фильм снова", inviteTitle: "👥 Пригласить друзей", inviteCount: "✅ Успешные приглашения: {n}",
@@ -396,9 +396,10 @@ const EXTRA_TEXT = {
   en: {
     menuOpen: "📋 Open Menu", menuHint: "Tap «📋 Open Menu» to show the options.",
     closeMenu: "⚫ Close Menu", backMain: "⚫ Back to Main Menu",
-    getMovie: "Get Movie", submitMovie: "Send Movie", changeLanguage: "Change Language",
+         getMovie: "Get Movie", submitMovie: "Send Movie", changeLanguage: "Change Language",
     otherFeatures: "Other Features", otherFeaturesTitle: "Other Features",
-         adminAdsButton: "📢 Advertisement Management", adminManageAdminsButton: "👑 Manage Admins",
+    favorites: "Favorites", invite: "Invite Friends", requestMovie: "Request Movie", advertise: "Advertise",
+    adminAdsButton: "📢 Advertisement Management", adminManageAdminsButton: "👑 Manage Admins",
     adminMoviesButton: "🎬 Movies", adminPendingButton: "📥 Pending queue", adminUsersButton: "👥 Users", adminStatsButton: "📊 Stats", adminRequestsButton: "🔐 Admin Requests", adminBackupButton: "💾 Backup", adminHealthButton: "🏥 Health", adminMovieRequestsButton: "📝 Movie Requests", backButton: "🔙 Back",
     movieViewsLabel: "Views", movieRatingLabel: "Rating", movieVotesLabel: "Votes", movieDefaultTitle: "Movie",
     adminMovieEditPrompt: "✏️ Send the new caption text for this movie. Send /cancel to cancel.", adminMovieEditSaved: "✅ Movie caption updated successfully.", adminMovieEditTooLong: "❌ The movie caption must be 1,000 characters or fewer.",
@@ -442,7 +443,7 @@ const EXTRA_TEXT = {
     adminAdsPending: "⏳ Bekleyen Reklamlar", adminAdsAll: "📚 Tüm Reklamlar", adminAdsEmpty: "📭 Bu bölümde reklam yok.", adminAdApprove: "✅ Onayla ve Yayınla", adminAdReject: "❌ Reddet", adminAdEdit: "✏️ Düzenle", adminAdDelete: "🗑 Sil", adminAdResend: "🔄 Yeniden Gönder", adminAdView: "👁 Görüntüle",
     adminAdEditPrompt: "✏️ Yeni reklam mesajını gönder. Düzenledikten sonra yayınlamak için Yeniden Gönder'e bas. İptal için /cancel gönder.", adminAdUpdated: "✅ Reklam düzenlendi. Yeni sürümü yayınlamak için Yeniden Gönder'e bas.", adminAdDeleted: "🗑 Reklam silindi.", adminAdWorking: "⏳ Reklam gönderiliyor…", adminAdSent: "✅ Reklam gönderimi tamamlandı.\n📨 Başarılı: {success}\n❌ Başarısız: {failed}", adminAdNotFound: "❌ Reklam bulunamadı.",
     adminAdminsTitle: "👑 Admin Yönetimi\n\nSahip kaldırılamaz. Yetkisini kaldırmak için adminin yanındaki düğmeye bas.", adminAdminsEmpty: "📭 Onaylanmış admin yok.", adminRemoveAdmin: "🗑 Admini Kaldır", adminAdminRemoved: "✅ Admin yetkisi kaldırıldı.", adminOwnerOnly: "⛔ Bu bölüm yalnızca sahibine açıktır."
-       },
+  },
   ru: {
     menuOpen: "📋 Открыть меню", menuHint: "Нажмите «📋 Открыть меню», чтобы увидеть варианты.", closeMenu: "⚫ Закрыть меню", backMain: "⚫ В главное меню",
     getMovie: "Получить фильм", submitMovie: "Отправить фильм", changeLanguage: "Изменить язык", otherFeatures: "Другие функции", otherFeaturesTitle: "Другие функции",
@@ -539,7 +540,7 @@ function otherFeaturesMenu(language, isAdmin = false) {
   if (isAdmin) rows.push([{ text: tr(language, "admin") }]);
   rows.push([{ text: tr(language, "backMain") }]);
   return { keyboard: rows, resize_keyboard: false, one_time_keyboard: false, is_persistent: true };
-   }
+}
 
 // Automatic translation has been removed. Language dictionaries are maintained manually.
 async function ensureLanguageDictionary(_env, _requestedLanguage) {
@@ -564,7 +565,7 @@ async function saveUser(env, user) {
 async function ensureUser(env, from) {
   const user = await getUser(env, from.id);
   user.id = String(from.id);
-  if (from.username) user.username = from.username;
+   if (from.username) user.username = from.username;
   if (from.first_name) user.first_name = from.first_name;
   if (from.language_code) user.telegram_language_code = from.language_code;
   user.language = normalizeLanguage(user.language);
@@ -583,7 +584,7 @@ async function ensureUser(env, from) {
 }
 
 async function getAllUsers(env) {
-  const users = [];
+     const users = [];
   let cursor;
   do {
     const result = await env.BOT_DATA.list({
@@ -806,7 +807,7 @@ async function deleteMovie(env, movieId) {
   const movies = await getMovies(env);
   await saveMovies(env, movies.filter(movie => String(movie.id) !== String(movieId)));
   await deleteKey(env, `ratings:${movieId}`);
-}
+   }
 
 async function movieRatingInfo(env, movieId) {
   const list = await getJSON(env, `ratings:${movieId}`, []);
@@ -828,7 +829,7 @@ async function recordUniqueView(env, user, movieId) {
   const movies = await getMovies(env);
   const index = movies.findIndex(movie => String(movie.id) === String(movieId));
   if (index !== -1) {
-         movies[index].views = Number(movies[index].views || 0) + 1;
+    movies[index].views = Number(movies[index].views || 0) + 1;
     await saveMovies(env, movies);
   }
 
@@ -999,16 +1000,15 @@ async function getMovieForUser(env, chatId, user, ctx) {
   if (!movies.length) {
     await telegram(env, "sendMessage", { chat_id: chatId, text: tr(user, "movieEmpty") });
     return;
-  }
-
-  const cutoff = now() - HISTORY_TTL;
+         }
+     const cutoff = now() - HISTORY_TTL;
   user.history = (Array.isArray(user.history) ? user.history : []).filter(item => Number(item.at || 0) >= cutoff);
   const unseen = movies.filter(movie => !user.history.some(item => String(item.movie_id) === String(movie.id)));
   const pool = unseen.length ? unseen : movies;
   const movie = pool[Math.floor(Math.random() * pool.length)];
   const sent = await sendUserMovie(env, chatId, movie, user, ctx);
   if (sent?.ok && !unlimited) {
-    await env.BOT_DATA.put(cooldownKey, String(now()), { expirationTtl: Math.ceil(MOVIE_COOLDOWN / 1000) + 5 });
+    await env.BOT_DATA.put(cooldownKey, String(now()), { expirationTtl: 60 });
   }
 }
 
@@ -1069,7 +1069,7 @@ async function showFavorites(env, chatId, user) {
   }
   const rows = list.slice(0, 50).map((movie, index) => ([{
     text: `🎬 ${tr(user, "movieNumber")} ${index + 1}`,
-         callback_data: `favorite:view:${movie.id}`
+    callback_data: `favorite:view:${movie.id}`
   }]));
   await telegram(env, "sendMessage", {
     chat_id: chatId,
@@ -1218,7 +1218,6 @@ async function rejectPending(env, movieId) {
   await savePending(env, list);
   return movie;
 }
-
 async function showPendingList(env, chatId) {
   const list = await getPending(env);
   if (!list.length) {
@@ -1340,7 +1339,7 @@ async function askDeleteAdminMovie(env, callback, movieId, page = 0) {
 }
 
 async function confirmDeleteAdminMovie(env, callback, movieId, page = 0) {
-     const chatId = callback.message.chat.id;
+  const chatId = callback.message.chat.id;
   const messageId = callback.message.message_id;
   const movie = await findMovie(env, movieId);
   const markup = { inline_keyboard: [[{ text: "🎬 بازگشت به لیست فیلم‌ها", callback_data: `adminmovie:list:${page}` }]] };
@@ -1557,7 +1556,7 @@ async function showAdminRequests(env, chatId) {
 ========================================================= */
 
 async function showAdminUsers(env, chatId, page = 0) {
-  const users = await getAllUsers(env);
+     const users = await getAllUsers(env);
   users.sort((a, b) => Number(b.created_at || 0) - Number(a.created_at || 0));
   const totalPages = Math.max(1, Math.ceil(users.length / USER_PAGE_SIZE));
   const safePage = Math.max(0, Math.min(Number(page) || 0, totalPages - 1));
@@ -1574,7 +1573,8 @@ async function showAdminUsers(env, chatId, page = 0) {
   rows.push([{ text: "🔙 پنل مدیریت", callback_data: "admin:panel" }]);
 
   const text = users.length
-       : "📭 کاربری ثبت نشده است.";
+    ? `👥 لیست کاربران\n\nصفحه ${safePage + 1} از ${totalPages}\nتعداد کل: ${users.length}`
+    : "📭 کاربری ثبت نشده است.";
   await telegram(env, "sendMessage", { chat_id: chatId, text, reply_markup: { inline_keyboard: rows } });
 }
 
@@ -1587,13 +1587,20 @@ async function showUserProfileForAdmin(env, callback, targetId, page = 0) {
   const admin = await getUser(env, callback.from.id);
   const isAdminUser = await isAnyAdmin(env, targetId);
   const language = langOf(admin);
+  const targetLanguage = langOf(user);
+  const targetLanguageNameFa = ({
+    fa: "فارسی", en: "انگلیسی", ar: "عربی", tr: "ترکی", ru: "روسی", es: "اسپانیایی"
+  })[targetLanguage] || targetLanguage;
+  const targetLanguageNameEn = ({
+    fa: "Persian", en: "English", ar: "Arabic", tr: "Turkish", ru: "Russian", es: "Spanish"
+  })[targetLanguage] || targetLanguage;
   const text = language === "fa"
     ? [
         "👤 پروفایل کاربر", "",
         `👤 نام: ${user.first_name || "-"}`,
         `🔖 یوزرنیم: ${user.username ? `@${user.username}` : "-"}`,
         `🆔 ID: ${user.id}`,
-        `🌐 زبان: ${langOf(user) === "fa" ? "🇮🇷 فارسی" : "🇬🇧 English"}`,
+        `🌐 زبان: ${targetLanguageNameFa}`,
         `📅 عضویت: ${user.created_at ? new Date(user.created_at).toLocaleString("fa-IR") : "-"}`,
         `🕐 آخرین فعالیت: ${user.last_active ? new Date(user.last_active).toLocaleString("fa-IR") : "-"}`,
         `🎬 فیلم‌های دریافت‌شده: ${user.movies_received || 0}`,
@@ -1609,7 +1616,7 @@ async function showUserProfileForAdmin(env, callback, targetId, page = 0) {
         `👤 Name: ${user.first_name || "-"}`,
         `🔖 Username: ${user.username ? `@${user.username}` : "-"}`,
         `🆔 ID: ${user.id}`,
-        `🌐 Language: ${langOf(user) === "fa" ? "🇮🇷 Persian" : "🇬🇧 English"}`,
+        `🌐 Language: ${targetLanguageNameEn}`,
         `📅 Joined: ${user.created_at ? new Date(user.created_at).toLocaleString("en-GB") : "-"}`,
         `🕐 Last active: ${user.last_active ? new Date(user.last_active).toLocaleString("en-GB") : "-"}`,
         `🎬 Movies received: ${user.movies_received || 0}`,
@@ -1704,8 +1711,7 @@ async function showAdminPanel(env, chatId, user) {
       { text: tr(user, "adminUsersButton"), callback_data: "admin:users" },
       { text: tr(user, "adminStatsButton"), callback_data: "admin:stats" }
     ],
-    [{ text: tr(user, "adminRequestsButton"), callback_data: "admin:requests" }],
-    [
+         [
       { text: tr(user, "adminBackupButton"), callback_data: "admin:backup" },
       { text: tr(user, "adminHealthButton"), callback_data: "admin:health" }
     ],
@@ -1713,7 +1719,10 @@ async function showAdminPanel(env, chatId, user) {
     [{ text: tr(user, "adminAdsButton"), callback_data: "admin:ads" }],
     [{ text: tr(user, "announcementButton"), callback_data: "admin:announcement" }]
   ];
-  if (isMainAdmin(env, user.id)) buttons.push([{ text: tr(user, "adminManageAdminsButton"), callback_data: "admin:manage_admins" }]);
+  if (isMainAdmin(env, user.id)) {
+    buttons.splice(2, 0, [{ text: tr(user, "adminRequestsButton"), callback_data: "admin:requests" }]);
+    buttons.push([{ text: tr(user, "adminManageAdminsButton"), callback_data: "admin:manage_admins" }]);
+  }
   buttons.push([{ text: tr(user, "backButton"), callback_data: "menu:open" }]);
   await telegram(env, "sendMessage", { chat_id: chatId, text, reply_markup: { inline_keyboard: buttons } });
   await logAction(env, user.id, "admin_panel_open");
@@ -2009,7 +2018,7 @@ async function showAdvertisementList(env, chatId, language, filter = "all", page
   if (safePage > 0) nav.push({ text: "⬅️", callback_data: `ad:list:${filter}:${safePage - 1}` });
   if (safePage < totalPages - 1) nav.push({ text: "➡️", callback_data: `ad:list:${filter}:${safePage + 1}` });
   nav.push({ text: tr(language, "backButton"), callback_data: "admin:ads" });
-     await telegram(env, "sendMessage", { chat_id: chatId, text: `${safePage + 1}/${totalPages}`, reply_markup: { inline_keyboard: [nav] } });
+  await telegram(env, "sendMessage", { chat_id: chatId, text: `${safePage + 1}/${totalPages}`, reply_markup: { inline_keyboard: [nav] } });
 }
 
 async function showAdvertisementDetail(env, callback, ad) {
@@ -2021,7 +2030,7 @@ async function showAdvertisementDetail(env, callback, ad) {
     reply_markup: advertisementControls(ad, language)
   }).catch(() => ({ ok: false }));
   const advertiser = ad.advertiser_username ? `@${ad.advertiser_username}` : String(ad.user_id);
-  await telegram(env, "sendMessage", {
+     await telegram(env, "sendMessage", {
     chat_id: callback.message.chat.id,
     text: `📢 ${ad.status}\n🆔 ${ad.id}\n👤 ${advertiser}\n📨 ${ad.send_success_count || 0} / ⚠️ ${ad.send_failed_count || 0}${copied?.ok ? "" : "\n⚠️ پیام اصلی قابل کپی نیست؛ از فهرست مدیریت استفاده کن."}`,
     reply_markup: advertisementControls(ad, language)
@@ -2217,7 +2226,7 @@ async function handleLanguageCallback(env, callback) {
 }
 
 async function handleMembershipCallback(env, callback) {
-     const user = await ensureUser(env, callback.from);
+  const user = await ensureUser(env, callback.from);
   if (!(await checkMembership(env, user.id))) {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id, text: tr(user, "notMember"), show_alert: true });
     return;
@@ -2360,8 +2369,7 @@ async function handleReplyMenuButton(env, message, user, ctx) {
   if (action === "get") {
     await getMovieForUser(env, chatId, user, ctx);
   } else if (action === "submit") {
-    await env.BOT_DATA.put(`state:${user.id}`, "submit");
-    await telegram(env, "sendMessage", { chat_id: chatId, text: tr(user, "sendPrompt") });
+         await telegram(env, "sendMessage", { chat_id: chatId, text: tr(user, "sendPrompt") });
   } else if (action === "request") {
     await env.BOT_DATA.put(`state:${user.id}`, "request");
     await telegram(env, "sendMessage", { chat_id: chatId, text: tr(user, "requestPrompt") });
@@ -2458,7 +2466,7 @@ async function handleMessage(env, message, ctx) {
     movie.caption = newCaption;
     await saveMovies(env, movies);
     await deleteKey(env, `state:${user.id}`);
-         await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "adminMovieEditSaved") });
+    await telegram(env, "sendMessage", { chat_id: message.chat.id, text: tr(user, "adminMovieEditSaved") });
     await logAction(env, user.id, "movie_caption_edited", { movie_id: movieId });
     return;
   }
@@ -2697,6 +2705,14 @@ async function handleAdminCallback(env, callback, ctx) {
   }
 
   if (data === "admin:requests") {
+    if (!isMainAdmin(env, userId)) {
+      await telegram(env, "answerCallbackQuery", {
+        callback_query_id: callback.id,
+        text: tr(await ensureUser(env, callback.from), "adminOwnerOnly"),
+        show_alert: true
+      });
+      return;
+    }
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
     await showAdminRequests(env, chatId);
     return;
@@ -2706,7 +2722,7 @@ async function handleAdminCallback(env, callback, ctx) {
     await telegram(env, "answerCallbackQuery", { callback_query_id: callback.id });
     const adminUser = await ensureUser(env, callback.from);
     await showMovieRequestList(env, chatId, langOf(adminUser));
-         return;
+    return;
   }
 
   if (data === "admin:stats") {
@@ -2901,4 +2917,5 @@ export default {
       return new Response("OK", { status: 200 });
     }
   }
-};
+}; 
+   
